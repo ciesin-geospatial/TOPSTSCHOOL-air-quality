@@ -14,7 +14,6 @@ format:
 lightbox: true
 execute: 
   warning: false
-
 website:
   navbar:
     background: primary

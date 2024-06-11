@@ -1,6 +1,8 @@
 ---
 title: "Welcome SCHOOL Module 2: Air Quality"
-output: html
+format:
+  html:
+    fontsize: 1em
 ---
 
 <img src="https://raw.githubusercontent.com/ciesin-geospatial/TOPSTSCHOOL/main/images/TOPSTSCHOOL-updated-logo02.png" align="right" height="200" style="padding-left: 15px; padding-bottom: 15px;"/>
