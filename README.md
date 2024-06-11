@@ -3,30 +3,35 @@
 
 <img src='https://raw.githubusercontent.com/ciesin-geospatial/TOPSTSCHOOL/main/images/TOPTSCHOOL-logo02.hi-res.png' align="right" height="175" style="padding-left: 25px; padding-bottom: 25px;"/>
 
-# Welcome to the Water Module!
+# Welcome to the Air Quality Module!
 
-The first TOPSTSCHOOL Module on Water consists of three vignettes which
-cover examples of water use, safety, and anomalies such as droughts and
-floods. The vignettes use three datasets to walk users through lessons
-in accessing and analyzing data, and users will be able to adapt the
-code in all three examples to perform analyses including data cleaning,
-processing to subset to an area of interest, and creating visualizations
-to share what they have learned with their communities. Users will
-understand an Open Science workflow including accessing and citing open
-data. The three datasets and vignettes cover:
+The second SCHOOL module on the theme of "Water and related-resources" 
+explores how the water cycle impacts humans and how they are affected 
+by the changes. The module consists of three use cases that cover 
+examples of ...... and .... such as .....
 
-- **WSIM-GLDAS:** Exploring water anomalies using a historical dataset.
-  - [Lesson 1a: Acquiring and Pre-Processing
-    WSIM-GLDAS](https://ciesin-geospatial.github.io/TOPSTSCHOOL-water/m101a-wsim-gldas-acquisition.html)
-  - [Lesson 1b: Advanced Visualizations with
-    WSIM-GLDAS](https://ciesin-geospatial.github.io/TOPSTSCHOOL-water/m101b-wsim-gldas-vis.html)
-- **MODIS Near Real Time flood data:** Lessons in data acquisition and
-  analysis of recent water anomalies.
-  - [Lesson 2: Acquiring and Exploring MODIS NRT Flood
-    Data](https://ciesin-geospatial.github.io/TOPSTSCHOOL-water/m102-lance-modis-nrt-global-flood.html)
-- **Lead in New York State Schools:** Exploring lead contamination data
-  and US Census data and lessons in data cleaning and visualization,
-  with a discerning eye towards data limitations.
-  - [Lesson 3: NYC School Water Quality: Exposure to Lead Data](https://topstschool.shinyapps.io/nyc-lead/)
+Each use case uses a unique dataset to walk users through lessons in 
+accessing and analyzing data, and further adapting the code to perform 
+their analyses including data cleaning, processing to subset to an area 
+of interest, and creating visualizations to share what they have learned 
+with their communities.
+      
+Module 2: Air Quality datasets and use cases cover:
 
-This course was made possible thanks to the work of our NASA Transform to Open Science (TOPS) team, our SCHOOL Open Science team, open science Subject Matter Experts (SMEs), and the SCHOOL Development team!
+-   **Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York:** 
+Examining the relationship between two environmental hazards -- hazardous air quality 
+and temperature -- and socioeconomic characteristics of New York State (NYS) schools.
+    -   [Lesson 1: Acquiring, Pre-Processing, and Visualizing Student-Monitored Data for New York City (NYC) Schools]()
+-   **EJSCREEN:** Environmental justice mapping and screening tool that helps users 
+understand the environmental and demographic characteristics of a specific area.
+    -   [Lesson 2: Exploring the EJSCREEN tool]()
+-   **Social Vulnerability Index (SVI):** Exploring social determinants of health 
+within the USA.
+    -   [Lesson 3: Social Vulnerability Index (SVI): Social Determinants of Health]()
+-   **Global (GL) Annual PM2.5 Grids from MODIS, MISR and SeaWiFS Aerosol Optical Depth:** 
+Global particulate matter concentrations over years.
+    -   [Lesson 4: Global (GL) Annual PM2.5 Grids]()
+
+This course was made possible thanks to the work of our NASA Transform to Open Science 
+(TOPS) team, our SCHOOL Open Science team, open science Subject Matter Experts (SMEs), 
+and the SCHOOL Development team!
