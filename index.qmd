@@ -1,0 +1,35 @@
+---
+title: "Welcome SCHOOL Module 2: Air Quality"
+output: html
+---
+
+<img src="https://raw.githubusercontent.com/ciesin-geospatial/TOPSTSCHOOL/main/images/TOPSTSCHOOL-updated-logo02.png" align="right" height="200" style="padding-left: 15px; padding-bottom: 15px;"/>
+
+Welcome to the second module of the SCHOOL curriculum!
+
+The Science Core Heuristics for Open Science Outcomes in Learning (SCHOOL) is part of the [NASA Transform to Open Science (TOPS)](https://nasa.github.io/Transform-to-Open-Science/) Training (TOPST) initiative, designed to teach the data science lifecycle using data from the NASA Earth Sciences division and to foster an inclusive culture of open science. You can learn more about the SCHOOL Project and other modules on the [SCHOOL Project home page.](https://ciesin-geospatial.github.io/TOPSTSCHOOL/)
+
+The second SCHOOL module on the theme of "Water and related-resources" explores how the water cycle impacts humans and how they are affected by the changes. The module consists of three use cases that cover examples of ...... and .... such as .....
+
+Each use case uses a unique dataset to walk users through lessons in accessing and analyzing data, and further adapting the code to perform their analyses including data cleaning, processing to subset to an area of interest, and creating visualizations to share what they have learned with their communities.
+
+**This module is tailored to instruct undergraduate students and early-career researchers with some coding language exposure about the data science life cycle, illustrating how Open Science principles can be effectively applied to earth sciences, particularly in the context of water.**
+
+The SCHOOL Modules do not intend to teach all-encompassing earth science lessons nor provide learners with total coding expertise. Instead, the SCHOOL Project aims to provide users with the skills to adapt the SCHOOL lessons to the users' own Open Science workflow. To learn more about Open Science, explore [NASA's TOPS Open Science 101 Curriculum](https://openscience101.org/). To explore other themes in the SCHOOL project, visit our [Modules Page](https://ciesin-geospatial.github.io/TOPSTSCHOOL/modules.html).
+
+Module 2: Air Quality datasets and use cases cover:
+
+-   **Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York:** Examining the relationship between two environmental hazards -- hazardous air quality and temperature -- and socioeconomic characteristics of New York State (NYS) schools.
+    -   [Lesson 1: Acquiring, Pre-Processing, and Visualizing Student-Monitored Data for New York City (NYC) Schools]()
+-   **EJSCREEN:** Environmental justice mapping and screening tool that helps users understand the environmental and demographic characteristics of a specific area.
+    -   [Lesson 2: Exploring the EJSCREEN tool]()
+-   **Social Vulnerability Index (SVI):** Exploring social determinants of health within the USA.
+    -   [Lesson 3: Social Vulnerability Index (SVI): Social Determinants of Health]()
+-   **Global (GL) Annual PM2.5 Grids from MODIS, MISR and SeaWiFS Aerosol Optical Depth:** Global particulate matter concentrations over years.
+    -   [Lesson 4: Global (GL) Annual PM2.5 Grids]()
+
+::: {style="text-align: right;"}
+[Start Lesson 1](){.btn .btn-primary .btn role="button"}
+:::
+
+This course was made possible thanks to the work of our NASA Transform to Open Science (TOPS) team, our SCHOOL Open Science team, open science Subject Matter Experts (SMEs), and the SCHOOL Development team!
