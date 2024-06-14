@@ -1,0 +1,82 @@
+---
+title: "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York"
+format: html
+---
+# Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York
+
+## Overview
+
+In this lesson, you will use...
+
+## Learning Objectives
+
+After completing this lesson, you should be able to:
+
+- Determine...
+
+## Introduction
+
+This project, "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York," led by Carolynne Hultquist and her team, aims to engage students in monitoring environmental hazards, specifically hazardous air quality and extreme temperature, outside and inside New York State schools. The focus is on New York City (NYC) schools serving low-income minority populations located in environmental justice communities characterized by high levels of hazard exposure. By incorporating mobile and static monitoring techniques, students contribute to data collection and analysis, integrating satellite data and sensor networks. This initiative not only provides valuable data on environmental conditions but also educates students on the principles of open science and the data science life cycle.
+
+
+## Data Collection and Preparation
+
+
+### Mobile and Static Monitoring 
+Equip students with mobile sensors to collect air quality data. Compare this with data from static sensors placed in schools and remote sensing sources.
+
+### Satellite Data Integration 
+Utilize satellite data such as MODIS, OMI, MERRA-2, GOES, CHIRTS-daily, and SEDAC’s Air Quality Data to complement ground data.
+
+### Data Upload and Management
+Students upload collected data to an online platform, ensuring proper documentation and metadata inclusion to maintain data quality and integrity.
+
+## Data Cleaning and Preprocessing
+
+### Data Validation
+Check for inconsistencies or anomalies in the collected data. This includes cross-referencing mobile sensor data with static and satellite data to ensure accuracy.
+
+### Handling Missing Data
+Apply techniques such as interpolation or imputation to address missing data points, ensuring a complete dataset for analysis.
+
+## Data Analysis and Visualization
+
+### Descriptive Statistics
+Calculate basic statistics (mean, median, mode, standard deviation) to understand the distribution and central tendencies of the data.
+
+### Correlation Analysis
+Examine relationships between air quality, temperature, and socioeconomic characteristics of the schools.
+
+### Visualization
+Use tools like ArcGIS Online for participatory mapping and visualizations to represent data spatially and temporally.
+Modeling and Interpretation
+
+### Predictive Modeling
+Develop models to predict air quality and temperature variations based on historical data and current trends.
+Impact Analysis: Assess the health impacts of hazardous air quality and extreme temperatures on school populations, with a focus on vulnerable groups.
+Reporting and Communication
+
+### Story Development
+Engage with the Solutions Journalism Network to develop stories that highlight the project’s findings and advocate for environmental justice.
+### Publications and Presentations
+Compile findings into reports, articles, and presentations for dissemination through academic channels and public forums.
+
+## Open Science Principles and Data Sharing
+
+### Transparency
+Ensure all data processing steps, methodologies, and code are well-documented and accessible.
+### Reproducibility
+Provide clear instructions and datasets for others to replicate the study.
+### Data Sharing
+Publish datasets and findings in open-access repositories to promote further research and collaboration.
+
+
+Congratulations! .... Now you should be able to:
+
+-   
+
+## Lesson 2
+
+In this lesson, we explored ....
+
+[Lesson 2: Particulate Matter 2.5](){.btn .btn-primary .btn role="button"}
