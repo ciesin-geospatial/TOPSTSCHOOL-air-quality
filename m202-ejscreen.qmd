@@ -63,7 +63,7 @@ Communicate findings through reports, presentatio
 
 Congratulations! .... Now you should be able to:
 
--   Test test. 
+-   Test test... 
 
 ## Lesson 3 
 
