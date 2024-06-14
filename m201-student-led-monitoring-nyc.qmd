@@ -2,7 +2,6 @@
 title: "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York"
 format: html
 ---
-# Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York
 
 ## Overview
 
