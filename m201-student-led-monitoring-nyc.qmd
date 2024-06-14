@@ -75,7 +75,7 @@ Congratulations! .... Now you should be able to:
 
 -   
 
-## Lesson 2
+## Lesson 2 
 
 In this lesson, we explored ....
 
