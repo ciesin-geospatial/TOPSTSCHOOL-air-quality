@@ -65,8 +65,8 @@ Congratulations! .... Now you should be able to:
 
 -   Test test. 
 
-## Lesson 2 
+## Lesson 3 
 
 In this lesson, we explored ....
 
-[Lesson 2: EJSCREEN](){.btn .btn-primary .btn role="button"}
+[Lesson 3](){.btn .btn-primary .btn role="button"}

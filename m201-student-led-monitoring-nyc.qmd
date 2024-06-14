@@ -81,4 +81,4 @@ Congratulations! .... Now you should be able to:
 
 In this lesson, we explored ....
 
-[Lesson 2: EJSCREEN](){.btn .btn-primary .btn role="button"}
+[Lesson 2: EJSCREEN](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-ejscreen.html){.btn .btn-primary .btn role="button"}
