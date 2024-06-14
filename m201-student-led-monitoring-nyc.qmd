@@ -57,6 +57,7 @@ Reporting and Communication
 
 ### Story Development
 Engage with the Solutions Journalism Network to develop stories that highlight the project’s findings and advocate for environmental justice.
+
 ### Publications and Presentations
 Compile findings into reports, articles, and presentations for dissemination through academic channels and public forums.
 
@@ -64,8 +65,10 @@ Compile findings into reports, articles, and presentations for dissemination thr
 
 ### Transparency
 Ensure all data processing steps, methodologies, and code are well-documented and accessible.
+
 ### Reproducibility
 Provide clear instructions and datasets for others to replicate the study.
+
 ### Data Sharing
 Publish datasets and findings in open-access repositories to promote further research and collaboration.
 
@@ -78,4 +81,4 @@ Congratulations! .... Now you should be able to:
 
 In this lesson, we explored ....
 
-[Lesson 2: Particulate Matter 2.5](){.btn .btn-primary .btn role="button"}
+[Lesson 2: EJSCREEN](){.btn .btn-primary .btn role="button"}

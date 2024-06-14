@@ -11,7 +11,7 @@
     "href": "m201-student-led-monitoring-nyc.html",
     "title": "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York",
     "section": "",
-    "text": "In this lesson, you will use…"
+    "text": "In this lesson, you will use…."
   },
   {
     "objectID": "m201-student-led-monitoring-nyc.html#learning-objectives",
@@ -46,20 +46,62 @@
     "href": "m201-student-led-monitoring-nyc.html#data-analysis-and-visualization",
     "title": "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York",
     "section": "Data Analysis and Visualization",
-    "text": "Data Analysis and Visualization\n\nDescriptive Statistics\nCalculate basic statistics (mean, median, mode, standard deviation) to understand the distribution and central tendencies of the data.\n\n\nCorrelation Analysis\nExamine relationships between air quality, temperature, and socioeconomic characteristics of the schools.\n\n\nVisualization\nUse tools like ArcGIS Online for participatory mapping and visualizations to represent data spatially and temporally. Modeling and Interpretation\n\n\nPredictive Modeling\nDevelop models to predict air quality and temperature variations based on historical data and current trends. Impact Analysis: Assess the health impacts of hazardous air quality and extreme temperatures on school populations, with a focus on vulnerable groups. Reporting and Communication\n\n\nStory Development\nEngage with the Solutions Journalism Network to develop stories that highlight the project’s findings and advocate for environmental justice. ### Publications and Presentations Compile findings into reports, articles, and presentations for dissemination through academic channels and public forums."
+    "text": "Data Analysis and Visualization\n\nDescriptive Statistics\nCalculate basic statistics (mean, median, mode, standard deviation) to understand the distribution and central tendencies of the data.\n\n\nCorrelation Analysis\nExamine relationships between air quality, temperature, and socioeconomic characteristics of the schools.\n\n\nVisualization\nUse tools like ArcGIS Online for participatory mapping and visualizations to represent data spatially and temporally. Modeling and Interpretation\n\n\nPredictive Modeling\nDevelop models to predict air quality and temperature variations based on historical data and current trends. Impact Analysis: Assess the health impacts of hazardous air quality and extreme temperatures on school populations, with a focus on vulnerable groups. Reporting and Communication\n\n\nStory Development\nEngage with the Solutions Journalism Network to develop stories that highlight the project’s findings and advocate for environmental justice.\n\n\nPublications and Presentations\nCompile findings into reports, articles, and presentations for dissemination through academic channels and public forums."
   },
   {
     "objectID": "m201-student-led-monitoring-nyc.html#open-science-principles-and-data-sharing",
     "href": "m201-student-led-monitoring-nyc.html#open-science-principles-and-data-sharing",
     "title": "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York",
     "section": "Open Science Principles and Data Sharing",
-    "text": "Open Science Principles and Data Sharing\n\nTransparency\nEnsure all data processing steps, methodologies, and code are well-documented and accessible. ### Reproducibility Provide clear instructions and datasets for others to replicate the study. ### Data Sharing Publish datasets and findings in open-access repositories to promote further research and collaboration.\nCongratulations! …. Now you should be able to:\n\nTest test."
+    "text": "Open Science Principles and Data Sharing\n\nTransparency\nEnsure all data processing steps, methodologies, and code are well-documented and accessible.\n\n\nReproducibility\nProvide clear instructions and datasets for others to replicate the study.\n\n\nData Sharing\nPublish datasets and findings in open-access repositories to promote further research and collaboration.\nCongratulations! …. Now you should be able to:\n\nTest test."
   },
   {
     "objectID": "m201-student-led-monitoring-nyc.html#lesson-2",
     "href": "m201-student-led-monitoring-nyc.html#lesson-2",
     "title": "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York",
     "section": "Lesson 2",
-    "text": "Lesson 2\nIn this lesson, we explored ….\nLesson 2: Particulate Matter 2.5"
+    "text": "Lesson 2\nIn this lesson, we explored ….\nLesson 2: EJSCREEN"
+  },
+  {
+    "objectID": "m202-ejscreen.html",
+    "href": "m202-ejscreen.html",
+    "title": "EJSCREEN tool",
+    "section": "",
+    "text": "In this lesson, you will use…."
+  },
+  {
+    "objectID": "m202-ejscreen.html#learning-objectives",
+    "href": "m202-ejscreen.html#learning-objectives",
+    "title": "EJSCREEN tool",
+    "section": "Learning Objectives",
+    "text": "Learning Objectives\nAfter completing this lesson, you should be able to:\n\nDetermine…"
+  },
+  {
+    "objectID": "m202-ejscreen.html#introduction",
+    "href": "m202-ejscreen.html#introduction",
+    "title": "EJSCREEN tool",
+    "section": "Introduction",
+    "text": "Introduction\nIn recent years, researchers have explored the intersection between environmental factors and public health, particularly concerning diseases like COVID-19 and non-small cell lung cancer (NSCLC). Studies have highlighted the impact of air pollution on disease susceptibility and outcomes, emphasizing the need for rigorous analysis and understanding of these relationships. This overview focuses on several key studies that utilize data science principles to investigate how environmental justice, air pollution, and demographic factors intersect, providing insights that contribute to open science principles and the data science life cycle."
+  },
+  {
+    "objectID": "m202-ejscreen.html#data-collection-and-integration",
+    "href": "m202-ejscreen.html#data-collection-and-integration",
+    "title": "EJSCREEN tool",
+    "section": "Data Collection and Integration",
+    "text": "Data Collection and Integration\nGather comprehensive datasets from reliable sources such as the US EPA’s EJSCREEN tool and other public health databases like John Hopkins and County Health Rankings. Integrate relevant environmental data (e.g., air pollutant concentrations, pollution source proximity) with health outcomes data (e.g., COVID-19 prevalence, NSCLC incidence). Ensure data compatibility and quality through data cleaning and validation procedures.\n\nExploratory Data Analysis (EDA)\nConduct initial exploratory analyses to understand the distribution and relationships within the data. Visualize data using plots and charts to identify patterns and correlations between environmental factors, demographic variables, and health outcomes. Perform statistical tests to assess associations and identify potential confounding factors.\n\n\nModel Development and Analysis\nApply statistical models (e.g., regression analyses, machine learning algorithms) to quantify the relationships between environmental exposures and health outcomes. Adjust for confounders such as demographic characteristics (e.g., age, race/ethnicity) and socioeconomic factors (e.g., income, education). Validate models using cross-validation techniques to ensure robustness and generalizability of findings.\n\n\nInterpretation and Communication of Results\nInterpret findings in the context of environmental justice principles, highlighting disparities and vulnerabilities observed in different populations. Discuss implications for public health policy and environmental regulations based on study outcomes. Communicate results transparently using accessible language and visual aids to engage stakeholders and the broader community."
+  },
+  {
+    "objectID": "m202-ejscreen.html#the-data-science-life-cycle",
+    "href": "m202-ejscreen.html#the-data-science-life-cycle",
+    "title": "EJSCREEN tool",
+    "section": "The Data Science Life Cycle",
+    "text": "The Data Science Life Cycle\nThe data science life cycle guides the systematic approach to handling data from collection to interpretation:\n\nData Acquisition\nObtain relevant datasets from sources like EJSCREEN, County Health Rankings, and specific studies’ databases. ### Data Preparation Clean and preprocess data to ensure accuracy and consistency, handling missing values and outliers appropriately.\n\n\nExploratory Data Analysis\nExplore data distributions, correlations, and initial insights to guide further analysis.\n\n\nModeling\nDevelop statistical models to test hypotheses and predict outcomes, considering factors like pollution exposure and demographic variables.\n\n\nEvaluation\nAssess model performance and validity through metrics and cross-validation techniques.\n\n\nDeployment\nCommunicate findings through reports, presentatio\nCongratulations! …. Now you should be able to:\n\nTest test."
+  },
+  {
+    "objectID": "m202-ejscreen.html#lesson-2",
+    "href": "m202-ejscreen.html#lesson-2",
+    "title": "EJSCREEN tool",
+    "section": "Lesson 2",
+    "text": "Lesson 2\nIn this lesson, we explored ….\nLesson 2: EJSCREEN"
   }
 ]
