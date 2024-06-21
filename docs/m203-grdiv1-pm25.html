@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York</title>
+<title>EJSCREEN tool</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -3962,33 +3962,21 @@ vertical-align: -.125em;
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
   <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link" data-scroll-target="#learning-objectives">Learning Objectives</a></li>
   <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
-  <li><a href="#data-collection-and-preparation" id="toc-data-collection-and-preparation" class="nav-link" data-scroll-target="#data-collection-and-preparation">Data Collection and Preparation</a>
+  <li><a href="#data-collection-and-integration" id="toc-data-collection-and-integration" class="nav-link" data-scroll-target="#data-collection-and-integration">Data Collection and Integration</a>
   <ul class="collapse">
-  <li><a href="#mobile-and-static-monitoring" id="toc-mobile-and-static-monitoring" class="nav-link" data-scroll-target="#mobile-and-static-monitoring">Mobile and Static Monitoring</a></li>
-  <li><a href="#satellite-data-integration" id="toc-satellite-data-integration" class="nav-link" data-scroll-target="#satellite-data-integration">Satellite Data Integration</a></li>
-  <li><a href="#data-upload-and-management" id="toc-data-upload-and-management" class="nav-link" data-scroll-target="#data-upload-and-management">Data Upload and Management</a></li>
+  <li><a href="#exploratory-data-analysis-eda" id="toc-exploratory-data-analysis-eda" class="nav-link" data-scroll-target="#exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</a></li>
+  <li><a href="#model-development-and-analysis" id="toc-model-development-and-analysis" class="nav-link" data-scroll-target="#model-development-and-analysis">Model Development and Analysis</a></li>
+  <li><a href="#interpretation-and-communication-of-results" id="toc-interpretation-and-communication-of-results" class="nav-link" data-scroll-target="#interpretation-and-communication-of-results">Interpretation and Communication of Results</a></li>
   </ul></li>
-  <li><a href="#data-cleaning-and-preprocessing" id="toc-data-cleaning-and-preprocessing" class="nav-link" data-scroll-target="#data-cleaning-and-preprocessing">Data Cleaning and Preprocessing</a>
+  <li><a href="#the-data-science-life-cycle" id="toc-the-data-science-life-cycle" class="nav-link" data-scroll-target="#the-data-science-life-cycle">The Data Science Life Cycle</a>
   <ul class="collapse">
-  <li><a href="#data-validation" id="toc-data-validation" class="nav-link" data-scroll-target="#data-validation">Data Validation</a></li>
-  <li><a href="#handling-missing-data" id="toc-handling-missing-data" class="nav-link" data-scroll-target="#handling-missing-data">Handling Missing Data</a></li>
+  <li><a href="#data-acquisition" id="toc-data-acquisition" class="nav-link" data-scroll-target="#data-acquisition">Data Acquisition</a></li>
+  <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">Exploratory Data Analysis</a></li>
+  <li><a href="#modeling" id="toc-modeling" class="nav-link" data-scroll-target="#modeling">Modeling</a></li>
+  <li><a href="#evaluation" id="toc-evaluation" class="nav-link" data-scroll-target="#evaluation">Evaluation</a></li>
+  <li><a href="#deployment" id="toc-deployment" class="nav-link" data-scroll-target="#deployment">Deployment</a></li>
   </ul></li>
-  <li><a href="#data-analysis-and-visualization" id="toc-data-analysis-and-visualization" class="nav-link" data-scroll-target="#data-analysis-and-visualization">Data Analysis and Visualization</a>
-  <ul class="collapse">
-  <li><a href="#descriptive-statistics" id="toc-descriptive-statistics" class="nav-link" data-scroll-target="#descriptive-statistics">Descriptive Statistics</a></li>
-  <li><a href="#correlation-analysis" id="toc-correlation-analysis" class="nav-link" data-scroll-target="#correlation-analysis">Correlation Analysis</a></li>
-  <li><a href="#visualization" id="toc-visualization" class="nav-link" data-scroll-target="#visualization">Visualization</a></li>
-  <li><a href="#predictive-modeling" id="toc-predictive-modeling" class="nav-link" data-scroll-target="#predictive-modeling">Predictive Modeling</a></li>
-  <li><a href="#story-development" id="toc-story-development" class="nav-link" data-scroll-target="#story-development">Story Development</a></li>
-  <li><a href="#publications-and-presentations" id="toc-publications-and-presentations" class="nav-link" data-scroll-target="#publications-and-presentations">Publications and Presentations</a></li>
-  </ul></li>
-  <li><a href="#open-science-principles-and-data-sharing" id="toc-open-science-principles-and-data-sharing" class="nav-link" data-scroll-target="#open-science-principles-and-data-sharing">Open Science Principles and Data Sharing</a>
-  <ul class="collapse">
-  <li><a href="#transparency" id="toc-transparency" class="nav-link" data-scroll-target="#transparency">Transparency</a></li>
-  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
-  <li><a href="#data-sharing" id="toc-data-sharing" class="nav-link" data-scroll-target="#data-sharing">Data Sharing</a></li>
-  </ul></li>
-  <li><a href="#lesson-2" id="toc-lesson-2" class="nav-link" data-scroll-target="#lesson-2">Lesson 2</a></li>
+  <li><a href="#module-2-air-quality-home" id="toc-module-2-air-quality-home" class="nav-link" data-scroll-target="#module-2-air-quality-home">Module 2: Air Quality Home</a></li>
   </ul>
 </nav>
 </nav>
@@ -4000,7 +3988,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York</h1>
+<h1 class="title">EJSCREEN tool</h1>
 </div>
 
 
@@ -4027,84 +4015,56 @@ vertical-align: -.125em;
 </section>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>This project, “Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York,” led by Carolynne Hultquist and her team, aims to engage students in monitoring environmental hazards, specifically hazardous air quality and extreme temperature, outside and inside New York State schools. The focus is on New York City (NYC) schools serving low-income minority populations located in environmental justice communities characterized by high levels of hazard exposure. By incorporating mobile and static monitoring techniques, students contribute to data collection and analysis, integrating satellite data and sensor networks. This initiative not only provides valuable data on environmental conditions but also educates students on the principles of open science and the data science life cycle.</p>
+<p>In recent years, researchers have explored the intersection between environmental factors and public health, particularly concerning diseases like COVID-19 and non-small cell lung cancer (NSCLC). Studies have highlighted the impact of air pollution on disease susceptibility and outcomes, emphasizing the need for rigorous analysis and understanding of these relationships. This overview focuses on several key studies that utilize data science principles to investigate how environmental justice, air pollution, and demographic factors intersect, providing insights that contribute to open science principles and the data science life cycle.</p>
 </section>
-<section id="data-collection-and-preparation" class="level2">
-<h2 class="anchored" data-anchor-id="data-collection-and-preparation">Data Collection and Preparation</h2>
-<section id="mobile-and-static-monitoring" class="level3">
-<h3 class="anchored" data-anchor-id="mobile-and-static-monitoring">Mobile and Static Monitoring</h3>
-<p>Equip students with mobile sensors to collect air quality data. Compare this with data from static sensors placed in schools and remote sensing sources.</p>
+<section id="data-collection-and-integration" class="level2">
+<h2 class="anchored" data-anchor-id="data-collection-and-integration">Data Collection and Integration</h2>
+<p>Gather comprehensive datasets from reliable sources such as the US EPA’s EJSCREEN tool and other public health databases like John Hopkins and County Health Rankings. Integrate relevant environmental data (e.g., air pollutant concentrations, pollution source proximity) with health outcomes data (e.g., COVID-19 prevalence, NSCLC incidence). Ensure data compatibility and quality through data cleaning and validation procedures.</p>
+<section id="exploratory-data-analysis-eda" class="level3">
+<h3 class="anchored" data-anchor-id="exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</h3>
+<p>Conduct initial exploratory analyses to understand the distribution and relationships within the data. Visualize data using plots and charts to identify patterns and correlations between environmental factors, demographic variables, and health outcomes. Perform statistical tests to assess associations and identify potential confounding factors.</p>
 </section>
-<section id="satellite-data-integration" class="level3">
-<h3 class="anchored" data-anchor-id="satellite-data-integration">Satellite Data Integration</h3>
-<p>Utilize satellite data such as MODIS, OMI, MERRA-2, GOES, CHIRTS-daily, and SEDAC’s Air Quality Data to complement ground data.</p>
+<section id="model-development-and-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="model-development-and-analysis">Model Development and Analysis</h3>
+<p>Apply statistical models (e.g., regression analyses, machine learning algorithms) to quantify the relationships between environmental exposures and health outcomes. Adjust for confounders such as demographic characteristics (e.g., age, race/ethnicity) and socioeconomic factors (e.g., income, education). Validate models using cross-validation techniques to ensure robustness and generalizability of findings.</p>
 </section>
-<section id="data-upload-and-management" class="level3">
-<h3 class="anchored" data-anchor-id="data-upload-and-management">Data Upload and Management</h3>
-<p>Students upload collected data to an online platform, ensuring proper documentation and metadata inclusion to maintain data quality and integrity.</p>
-</section>
-</section>
-<section id="data-cleaning-and-preprocessing" class="level2">
-<h2 class="anchored" data-anchor-id="data-cleaning-and-preprocessing">Data Cleaning and Preprocessing</h2>
-<section id="data-validation" class="level3">
-<h3 class="anchored" data-anchor-id="data-validation">Data Validation</h3>
-<p>Check for inconsistencies or anomalies in the collected data. This includes cross-referencing mobile sensor data with static and satellite data to ensure accuracy.</p>
-</section>
-<section id="handling-missing-data" class="level3">
-<h3 class="anchored" data-anchor-id="handling-missing-data">Handling Missing Data</h3>
-<p>Apply techniques such as interpolation or imputation to address missing data points, ensuring a complete dataset for analysis.</p>
+<section id="interpretation-and-communication-of-results" class="level3">
+<h3 class="anchored" data-anchor-id="interpretation-and-communication-of-results">Interpretation and Communication of Results</h3>
+<p>Interpret findings in the context of environmental justice principles, highlighting disparities and vulnerabilities observed in different populations. Discuss implications for public health policy and environmental regulations based on study outcomes. Communicate results transparently using accessible language and visual aids to engage stakeholders and the broader community.</p>
 </section>
 </section>
-<section id="data-analysis-and-visualization" class="level2">
-<h2 class="anchored" data-anchor-id="data-analysis-and-visualization">Data Analysis and Visualization</h2>
-<section id="descriptive-statistics" class="level3">
-<h3 class="anchored" data-anchor-id="descriptive-statistics">Descriptive Statistics</h3>
-<p>Calculate basic statistics (mean, median, mode, standard deviation) to understand the distribution and central tendencies of the data.</p>
+<section id="the-data-science-life-cycle" class="level2">
+<h2 class="anchored" data-anchor-id="the-data-science-life-cycle">The Data Science Life Cycle</h2>
+<p>The data science life cycle guides the systematic approach to handling data from collection to interpretation:</p>
+<section id="data-acquisition" class="level3">
+<h3 class="anchored" data-anchor-id="data-acquisition">Data Acquisition</h3>
+<p>Obtain relevant datasets from sources like EJSCREEN, County Health Rankings, and specific studies’ databases. ### Data Preparation Clean and preprocess data to ensure accuracy and consistency, handling missing values and outliers appropriately.</p>
 </section>
-<section id="correlation-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h3>
-<p>Examine relationships between air quality, temperature, and socioeconomic characteristics of the schools.</p>
+<section id="exploratory-data-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory Data Analysis</h3>
+<p>Explore data distributions, correlations, and initial insights to guide further analysis.</p>
 </section>
-<section id="visualization" class="level3">
-<h3 class="anchored" data-anchor-id="visualization">Visualization</h3>
-<p>Use tools like ArcGIS Online for participatory mapping and visualizations to represent data spatially and temporally. Modeling and Interpretation</p>
+<section id="modeling" class="level3">
+<h3 class="anchored" data-anchor-id="modeling">Modeling</h3>
+<p>Develop statistical models to test hypotheses and predict outcomes, considering factors like pollution exposure and demographic variables.</p>
 </section>
-<section id="predictive-modeling" class="level3">
-<h3 class="anchored" data-anchor-id="predictive-modeling">Predictive Modeling</h3>
-<p>Develop models to predict air quality and temperature variations based on historical data and current trends. Impact Analysis: Assess the health impacts of hazardous air quality and extreme temperatures on school populations, with a focus on vulnerable groups. Reporting and Communication</p>
+<section id="evaluation" class="level3">
+<h3 class="anchored" data-anchor-id="evaluation">Evaluation</h3>
+<p>Assess model performance and validity through metrics and cross-validation techniques.</p>
 </section>
-<section id="story-development" class="level3">
-<h3 class="anchored" data-anchor-id="story-development">Story Development</h3>
-<p>Engage with the Solutions Journalism Network to develop stories that highlight the project’s findings and advocate for environmental justice.</p>
-</section>
-<section id="publications-and-presentations" class="level3">
-<h3 class="anchored" data-anchor-id="publications-and-presentations">Publications and Presentations</h3>
-<p>Compile findings into reports, articles, and presentations for dissemination through academic channels and public forums.</p>
-</section>
-</section>
-<section id="open-science-principles-and-data-sharing" class="level2">
-<h2 class="anchored" data-anchor-id="open-science-principles-and-data-sharing">Open Science Principles and Data Sharing</h2>
-<section id="transparency" class="level3">
-<h3 class="anchored" data-anchor-id="transparency">Transparency</h3>
-<p>Ensure all data processing steps, methodologies, and code are well-documented and accessible.</p>
-</section>
-<section id="reproducibility" class="level3">
-<h3 class="anchored" data-anchor-id="reproducibility">Reproducibility</h3>
-<p>Provide clear instructions and datasets for others to replicate the study.</p>
-</section>
-<section id="data-sharing" class="level3">
-<h3 class="anchored" data-anchor-id="data-sharing">Data Sharing</h3>
-<p>Publish datasets and findings in open-access repositories to promote further research and collaboration.</p>
+<section id="deployment" class="level3">
+<h3 class="anchored" data-anchor-id="deployment">Deployment</h3>
+<p>Communicate findings through reports, presentatio</p>
 <p>Congratulations! …. Now you should be able to:</p>
 <ul>
-<li>Test test.</li>
+<li>Test test…</li>
 </ul>
 </section>
 </section>
-<section id="lesson-2" class="level2">
-<h2 class="anchored" data-anchor-id="lesson-2">Lesson 2</h2>
+<section id="module-2-air-quality-home" class="level2">
+<h2 class="anchored" data-anchor-id="module-2-air-quality-home">Module 2: Air Quality Home</h2>
 <p>In this lesson, we explored ….</p>
-<p><a href="https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-ejscreen.html" class="btn btn-primary btn" role="button">Lesson 2: EJSCREEN</a></p>
+<p><a href="https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html" class="btn btn-primary btn" role="button">Module 2: Air Quality</a></p>
 
 
 </section>

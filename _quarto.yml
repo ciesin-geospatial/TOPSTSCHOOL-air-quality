@@ -23,14 +23,13 @@ website:
         url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html
       - text: "Lessons"
         menu:
-          - text: "Lesson 1"
-            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html 
-          - text: "Lesson 2"
-            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html
-          - text: "Lesson 3"
-            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html
-          - text: "Lesson 4"
-            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html
+          - text: "Lesson 1: Student-Led Monitoring"
+            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html
+          - text: "Lesson 2: SVI and EJScreen"
+            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-ejscreen.html
+          - text: "Lesson 3: GRDIv1 and PM.25"
+            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-grdiv1-pm25.html
+         
     tools:
       - icon: github
         menu:

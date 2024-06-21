@@ -1,0 +1,72 @@
+---
+title: "EJSCREEN tool"
+format: html
+---
+
+## Overview
+
+In this lesson, you will use....
+
+## Learning Objectives
+
+After completing this lesson, you should be able to:
+
+- Determine...
+
+## Introduction
+
+In recent years, researchers have explored the intersection between environmental factors and public health, particularly concerning diseases like COVID-19 and non-small cell lung cancer (NSCLC). Studies have highlighted the impact of air pollution on disease susceptibility and outcomes, emphasizing the need for rigorous analysis and understanding of these relationships. This overview focuses on several key studies that utilize data science principles to investigate how environmental justice, air pollution, and demographic factors intersect, providing insights that contribute to open science principles and the data science life cycle.
+
+## Data Collection and Integration
+
+Gather comprehensive datasets from reliable sources such as the US EPA's EJSCREEN tool and other public health databases like John Hopkins and County Health Rankings. Integrate relevant environmental data (e.g., air pollutant concentrations, pollution source proximity) with health outcomes data (e.g., COVID-19 prevalence, NSCLC incidence). Ensure data compatibility and quality through data cleaning and validation procedures.
+
+### Exploratory Data Analysis (EDA)
+
+Conduct initial exploratory analyses to understand the distribution and relationships within the data.
+Visualize data using plots and charts to identify patterns and correlations between environmental factors, demographic variables, and health outcomes.
+Perform statistical tests to assess associations and identify potential confounding factors.
+
+### Model Development and Analysis
+
+Apply statistical models (e.g., regression analyses, machine learning algorithms) to quantify the relationships between environmental exposures and health outcomes.
+Adjust for confounders such as demographic characteristics (e.g., age, race/ethnicity) and socioeconomic factors (e.g., income, education).
+Validate models using cross-validation techniques to ensure robustness and generalizability of findings.
+
+### Interpretation and Communication of Results
+
+Interpret findings in the context of environmental justice principles, highlighting disparities and vulnerabilities observed in different populations.
+Discuss implications for public health policy and environmental regulations based on study outcomes.
+Communicate results transparently using accessible language and visual aids to engage stakeholders and the broader community.
+
+## The Data Science Life Cycle
+
+The data science life cycle guides the systematic approach to handling data from collection to interpretation:
+
+### Data Acquisition
+Obtain relevant datasets from sources like EJSCREEN, County Health Rankings, and specific studies' databases.
+### Data Preparation
+Clean and preprocess data to ensure accuracy and consistency, handling missing values and outliers appropriately.
+
+### Exploratory Data Analysis
+Explore data distributions, correlations, and initial insights to guide further analysis.
+
+### Modeling
+Develop statistical models to test hypotheses and predict outcomes, considering factors like pollution exposure and demographic variables.
+
+### Evaluation
+Assess model performance and validity through metrics and cross-validation techniques.
+
+### Deployment
+Communicate findings through reports, presentatio
+
+
+Congratulations! .... Now you should be able to:
+
+-   Test test... 
+
+## Module 2: Air Quality Home 
+
+In this lesson, we explored ....
+
+[Module 2: Air Quality](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html){.btn .btn-primary .btn role="button"}

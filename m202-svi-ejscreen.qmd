@@ -69,4 +69,4 @@ Congratulations! .... Now you should be able to:
 
 In this lesson, we explored ....
 
-[Lesson 3](){.btn .btn-primary .btn role="button"}
+[Lesson 3](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-grdiv1-pm25.html){.btn .btn-primary .btn role="button"}

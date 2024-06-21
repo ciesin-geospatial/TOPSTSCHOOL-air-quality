@@ -21,16 +21,13 @@ Module 2: Air Quality datasets and use cases cover:
 -   **Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York:** 
 Examining the relationship between two environmental hazards -- hazardous air quality 
 and temperature -- and socioeconomic characteristics of New York State (NYS) schools.
-    -   [Lesson 1: Acquiring, Pre-Processing, and Visualizing Student-Monitored Data for New York City (NYC) Schools]()
--   **EJSCREEN:** Environmental justice mapping and screening tool that helps users 
-understand the environmental and demographic characteristics of a specific area.
-    -   [Lesson 2: Exploring the EJSCREEN tool]()
--   **Social Vulnerability Index (SVI):** Exploring social determinants of health 
-within the USA.
-    -   [Lesson 3: Social Vulnerability Index (SVI): Social Determinants of Health]()
--   **Global (GL) Annual PM2.5 Grids from MODIS, MISR and SeaWiFS Aerosol Optical Depth:** 
-Global particulate matter concentrations over years.
-    -   [Lesson 4: Global (GL) Annual PM2.5 Grids]()
+    -   [Lesson 1: Acquiring, Pre-Processing, and Visualizing Student-Monitored Data for New York City (NYC) Schools](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html)
+- **Social Vulnerability Index (SVI) Social Determinants of Health, and the EJScreen: Environmental Justice Screening and Mapping Tool:** 
+Exploring social determinants of health within the USA with the SVI; EJScreen is the Environmental justice mapping and screening tool that helps users understand the environmental and demographic characteristics of a specific area.
+    -   [Lesson 2: Exploring the Social Vulnerability Index (SVI) Social Determinants of Health, and the EJScreen: Environmental Justice Screening and Mapping Tool](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-ejscreen.html)
+-   **Global Gridded Relative Deprivation Index Version 1 (GRDIv1), and the Global (GL) Annual PM2.5 Grids from MODIS, MISR and SeaWiFS Aerosol Optical Depth:** 
+Analyzing the global relationships between socioeconomic vulnerability and particulate matter concentrations over years.
+    -   [Lesson 3:  Global Gridded Relative Deprivation Index Version 1 (GRDIv1) and the Global Annual PM2.5 Grids](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-grdiv1-pm25.html)
 
 This course was made possible thanks to the work of our NASA Transform to Open Science 
 (TOPS) team, our SCHOOL Open Science team, open science Subject Matter Experts (SMEs), 
