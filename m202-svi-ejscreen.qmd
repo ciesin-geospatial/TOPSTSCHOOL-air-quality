@@ -1,5 +1,5 @@
 ---
-title: "EJSCREEN tool"
+title: "SVI, TRI, and Health Outcomes"
 format: html
 ---
 
@@ -11,61 +11,106 @@ In this lesson, you will use....
 
 After completing this lesson, you should be able to:
 
-- Determine...
+-   Manipulating and processing raster data; mainly loading and cropping.
+-   Exploring SVI/raster by mapping and processing different sub datasets (overall/racial/socioeconomic).
+-   Connecting to API’s for pollution and public health data.
+-   Geolocating tabular data with latitude and longitude.
+-   Joining tabular data to spatial data (probably polygons).
+-   Connecting to OpenStreetMap API for basemaps.
+-   Creating regional basemaps.
+-   Layering spatial data on basemaps.
+    -   Semi-transparent SVI, TRI points, PLACES boundaries.
+-   Creating maps with graduated point symbols for point source pollution releases.
+-   Creating choropleths with census tract polygons for health outcomes data.
+-   Zonal statistics with census tracts for:
+    -   Mean SVI values
+
+    -   Health outcomes summaries weighted by SVI.
+-   (Maybe) Interpolate pollution load raster surface from point data.
+-   Spatial correlation analysis between SVI, point pollution, and health outcomes. .
 
 ## Introduction
 
-In recent years, researchers have explored the intersection between environmental factors and public health, particularly concerning diseases like COVID-19 and non-small cell lung cancer (NSCLC). Studies have highlighted the impact of air pollution on disease susceptibility and outcomes, emphasizing the need for rigorous analysis and understanding of these relationships. This overview focuses on several key studies that utilize data science principles to investigate how environmental justice, air pollution, and demographic factors intersect, providing insights that contribute to open science principles and the data science life cycle.
+-   Lots of opportunities for different background information.
 
-## Data Collection and Integration
+-   General air quality issues and EPA.
 
-Gather comprehensive datasets from reliable sources such as the US EPA's EJSCREEN tool and other public health databases like John Hopkins and County Health Rankings. Integrate relevant environmental data (e.g., air pollutant concentrations, pollution source proximity) with health outcomes data (e.g., COVID-19 prevalence, NSCLC incidence). Ensure data compatibility and quality through data cleaning and validation procedures.
+-   Air pollution data and data availability.
 
-### Exploratory Data Analysis (EDA)
+-   Social vulnerability, EJ, and NIMBY.
 
-Conduct initial exploratory analyses to understand the distribution and relationships within the data.
-Visualize data using plots and charts to identify patterns and correlations between environmental factors, demographic variables, and health outcomes.
-Perform statistical tests to assess associations and identify potential confounding factors.
+-   The difficulty of assessing health outcomes and types of publicly available data.
 
-### Model Development and Analysis
+-   Possible brief discussion on scale and appropriate data.
 
-Apply statistical models (e.g., regression analyses, machine learning algorithms) to quantify the relationships between environmental exposures and health outcomes.
-Adjust for confounders such as demographic characteristics (e.g., age, race/ethnicity) and socioeconomic factors (e.g., income, education).
-Validate models using cross-validation techniques to ensure robustness and generalizability of findings.
+## Load the Data
 
-### Interpretation and Communication of Results
+```{python}
+import rioxarray as rio
+import xarray as xr
 
-Interpret findings in the context of environmental justice principles, highlighting disparities and vulnerabilities observed in different populations.
-Discuss implications for public health policy and environmental regulations based on study outcomes.
-Communicate results transparently using accessible language and visual aids to engage stakeholders and the broader community.
+file_path = "data/svi/svi_2020_tract_overall_wgs84.tif" 
+# Open with rioxarray
+svi = xr.open_dataset(file_path, engine="rasterio")
 
-## The Data Science Life Cycle
+svi
+```
 
-The data science life cycle guides the systematic approach to handling data from collection to interpretation:
 
-### Data Acquisition
-Obtain relevant datasets from sources like EJSCREEN, County Health Rankings, and specific studies' databases.
-### Data Preparation
-Clean and preprocess data to ensure accuracy and consistency, handling missing values and outliers appropriately.
+```{python}
+from pygris import metro_divisions
+import matplotlib.pyplot as plt
 
-### Exploratory Data Analysis
-Explore data distributions, correlations, and initial insights to guide further analysis.
+# Get the default TIGER/Line file for counties in Michigan
+detroit = metro_divisions()
 
-### Modeling
-Develop statistical models to test hypotheses and predict outcomes, considering factors like pollution exposure and demographic variables.
+detroit = detroit[detroit["NAME"].str.contains("Detroit")]
+```
 
-### Evaluation
-Assess model performance and validity through metrics and cross-validation techniques.
+```{python}
+detroit_svi = svi.rio.clip(detroit.geometry.values)
+detroit_svi.band_data.plot(cmap = "Reds", aspect = 1, size = 5, cbar_kwargs =  {'orientation':'horizontal', 'label':'Social Vulnerability Index'})
+```
 
+```{python}
+# places asthma url
+"https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=MI&measure=Current%20asthma%20among%20adults%20aged%20%3E=18%20years"
+```
+
+```{python}
+# tri url
+"https://data.epa.gov/efservice/tri_facility/state_abbr/MI/city_name/DETROIT/"
+```
 ### Deployment
-Communicate findings through reports, presentatio
 
+```{python}
+
+```
+
+```{python}
+import matplotlib.pyplot as pl
+import contextily as cx
+
+extent = detroit.total_bounds[[0,2,1,3]]
+detroit_svi = detroit_svi.rio.reproject("EPSG:4326")
+detroit_boundary = detroit.to_crs(epsg=3857)
+
+ax = detroit_boundary.boundary.plot(figsize=(10, 10))
+# ax = detroit_svi.band_data.plot(alpha = 0.5)
+cx.add_basemap(ax)
+ax.set_title('Detroit Census MSA Boundary',fontsize=16)
+
+
+# 
+# detroit.boundary.plot(ax = ax1)
+# pl.show()
+```
 
 Congratulations! .... Now you should be able to:
 
--   Test test... 
+-   Test test...
 
-## Lesson 3 
+## Lesson 3
 
 In this lesson, we explored ....
 
