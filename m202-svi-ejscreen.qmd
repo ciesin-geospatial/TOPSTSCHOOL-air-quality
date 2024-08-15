@@ -45,66 +45,178 @@ After completing this lesson, you should be able to:
 
 ## Load the Data
 
+SVI has a primary overall SVI score, but also provides sublayers. These include minority, socioeconomic, housing, and household data.
+
 ```{python}
-import rioxarray as rio
 import xarray as xr
-
-file_path = "data/svi/svi_2020_tract_overall_wgs84.tif" 
-# Open with rioxarray
-svi = xr.open_dataset(file_path, engine="rasterio")
-
-svi
-```
-
-
-```{python}
-from pygris import metro_divisions
+import rasterio
+import rasterio.mask
+import geopandas as gpd
 import matplotlib.pyplot as plt
+import pygris
+import numpy as np
 
-# Get the default TIGER/Line file for counties in Michigan
-detroit = metro_divisions()
+# Fetch Detroit boundary using pygris
+detroit = pygris.places(state="MI", year=2022)
+detroit = detroit[detroit['NAME'] == 'Detroit']
 
-detroit = detroit[detroit["NAME"].str.contains("Detroit")]
+# Convert to GeoDataFrame (it already is, but let's ensure it)
+detroit = gpd.GeoDataFrame(detroit, geometry='geometry', crs='EPSG:4269')
+
+# Specify the TIF files
+tif_files = [
+    "data/svi/svi_2020_tract_overall_wgs84.tif",
+    "data/svi/svi_2020_tract_minority_wgs84.tif",
+    "data/svi/svi_2020_tract_socioeconomic_wgs84.tif",
+    "data/svi/svi_2020_tract_housing_wgs84.tif",
+    "data/svi/svi_2020_tract_household_wgs84.tif"
+]
+
+# Create an empty list to store the individual DataArrays
+data_arrays = []
+
+# Read each TIF file, clip it to Detroit's extent, and append it to the list
+for file in tif_files:
+    with rasterio.open(file) as src:
+        # Reproject Detroit boundary to match the raster CRS
+        detroit_reprojected = detroit.to_crs(src.crs)
+        
+        # Clip the raster to Detroit's geometry
+        out_image, out_transform = rasterio.mask.mask(src, detroit_reprojected.geometry, crop=True)
+        out_meta = src.meta.copy()
+        
+        # Update the metadata
+        out_meta.update({"driver": "GTiff",
+                         "height": out_image.shape[1],
+                         "width": out_image.shape[2],
+                         "transform": out_transform})
+        
+        # Create coordinates
+        height = out_meta['height']
+        width = out_meta['width']
+        cols, rows = np.meshgrid(np.arange(width), np.arange(height))
+        xs, ys = rasterio.transform.xy(out_transform, rows, cols)
+        
+        # Convert lists to numpy arrays
+        xs = np.array(xs)
+        ys = np.array(ys)
+        
+        # Reshape coordinates to match dimensions of the raster
+        xs = xs.reshape(height, width)
+        ys = ys.reshape(height, width)
+        
+        # Create a DataArray from the clipped data
+        da = xr.DataArray(out_image[0],  # Use the first band
+                          coords={'y': ('y', ys[:, 0]),
+                                  'x': ('x', xs[0, :])},
+                          dims=['y', 'x'])
+        da.attrs['crs'] = str(src.crs)  # Convert CRS to string
+        da.attrs['transform'] = out_transform
+        data_arrays.append(da)
+
+# Combine all DataArrays into a single DataSet
+ds = xr.concat(data_arrays, dim='layer')
+
+# Rename the layers using the appropriate dimension
+ds = ds.assign_coords(layer=('layer', ['Overall', 'Minority', 'Socioeconomic', 'Housing', 'Household']))
+
+# Define the colorbar limits
+vmin, vmax = 0, 1
+
+# Create a multipanel plot
+fig, axes = plt.subplots(3, 2, figsize=(15, 20))
+axes = axes.flatten()
+
+# Plot each layer
+for i, layer in enumerate(ds.layer.values):
+    # Plot with custom color limits
+    im = ds.sel(layer=layer).plot(ax=axes[i], add_colorbar=False, vmin=vmin, vmax=vmax)
+    axes[i].set_title(layer)
+    
+    # Plot Detroit boundary
+    detroit_reprojected.boundary.plot(ax=axes[i], color='red', linewidth=1)
+
+# Remove the extra subplot
+fig.delaxes(axes[5])
+
+# Add a single colorbar with a custom range
+cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
+cbar = fig.colorbar(im, cax=cbar_ax, label='SVI Score')
+
+# Set the colorbar limits
+cbar.set_clim(vmin, vmax)
+
+plt.tight_layout()
+plt.show()
 ```
 
 ```{python}
-detroit_svi = svi.rio.clip(detroit.geometry.values)
-detroit_svi.band_data.plot(cmap = "Reds", aspect = 1, size = 5, cbar_kwargs =  {'orientation':'horizontal', 'label':'Social Vulnerability Index'})
-```
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import contextily as ctx
+import requests
+from shapely.geometry import Point
 
+# Step 1: Define the area of interest (Detroit, MI)
+detroit_bounds = [-83.287, 42.255, -82.910, 42.450]  # [min_lon, min_lat, max_lon, max_lat]
+
+# Step 2: Fetch TRI facility data from EPA API
+api_url = "https://data.epa.gov/efservice/tri_facility/state_abbr/MI/city_name/DETROIT/JSON"
+response = requests.get(api_url)
+tri_data = response.json()
+
+print(f"Number of facilities fetched: {len(tri_data)}")
+
+# Step 3: Create a GeoDataFrame from the TRI facility data
+valid_facilities = []
+geometry = []
+
+for facility in tri_data:
+    if facility['pref_latitude'] is not None and facility['pref_longitude'] is not None:
+        valid_facilities.append(facility)
+        lon, lat = -float(facility['pref_longitude']), float(facility['pref_latitude'])  # Note the negative sign for longitude
+        geometry.append(Point(lon, lat))
+        print(f"Facility coordinates: {lon}, {lat}")  # Debug print
+
+print(f"Number of valid facilities: {len(valid_facilities)}")
+
+gdf = gpd.GeoDataFrame(valid_facilities, geometry=geometry, crs="EPSG:4326")
+
+print(f"GeoDataFrame shape: {gdf.shape}")
+print(gdf.head())
+
+# Step 4: Create the map
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Step 5: Plot the data
+gdf.plot(ax=ax, color='red', markersize=50, alpha=0.7)
+
+# Step 6: Set the extent
+ax.set_xlim(detroit_bounds[0], detroit_bounds[2])
+ax.set_ylim(detroit_bounds[1], detroit_bounds[3])
+
+# Step 7: Add the basemap
+ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Step 8: Customize the map
+ax.set_axis_off()
+plt.title("Toxic Release Inventory Facilities in Detroit, MI", fontsize=16)
+
+# Step 9: Show the map
+plt.tight_layout()
+plt.show()
+
+# Additional debugging: print the bounds of the data
+print(f"Data bounds: {gdf.total_bounds}")
+print(f"Map bounds: {detroit_bounds}")
+```
 ```{python}
 # places asthma url
 "https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=MI&measure=Current%20asthma%20among%20adults%20aged%20%3E=18%20years"
 ```
 
-```{python}
-# tri url
-"https://data.epa.gov/efservice/tri_facility/state_abbr/MI/city_name/DETROIT/"
-```
 ### Deployment
 
-```{python}
-
-```
-
-```{python}
-import matplotlib.pyplot as pl
-import contextily as cx
-
-extent = detroit.total_bounds[[0,2,1,3]]
-detroit_svi = detroit_svi.rio.reproject("EPSG:4326")
-detroit_boundary = detroit.to_crs(epsg=3857)
-
-ax = detroit_boundary.boundary.plot(figsize=(10, 10))
-# ax = detroit_svi.band_data.plot(alpha = 0.5)
-cx.add_basemap(ax)
-ax.set_title('Detroit Census MSA Boundary',fontsize=16)
-
-
-# 
-# detroit.boundary.plot(ax = ax1)
-# pl.show()
-```
 
 Congratulations! .... Now you should be able to:
 
