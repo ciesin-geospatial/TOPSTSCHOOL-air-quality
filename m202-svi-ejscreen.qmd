@@ -189,7 +189,7 @@ print(gdf.head())
 fig, ax = plt.subplots(figsize=(12, 8))
 
 # Step 5: Plot the data
-gdf.plot(ax=ax, color='red', markersize=50, alpha=0.7)
+gdf.plot(ax=ax, color='purple', markersize=50, alpha=0.7)
 
 # Step 6: Set the extent
 ax.set_xlim(detroit_bounds[0], detroit_bounds[2])
@@ -205,16 +205,137 @@ plt.title("Toxic Release Inventory Facilities in Detroit, MI", fontsize=16)
 # Step 9: Show the map
 plt.tight_layout()
 plt.show()
-
-# Additional debugging: print the bounds of the data
-print(f"Data bounds: {gdf.total_bounds}")
-print(f"Map bounds: {detroit_bounds}")
 ```
 ```{python}
 # places asthma url
 "https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=MI&measure=Current%20asthma%20among%20adults%20aged%20%3E=18%20years"
 ```
 
+```{python}
+import requests
+import json
+import pandas as pd
+import plotly.express as px
+import zipfile
+import io
+
+# Base URL for CDC PLACES GIS Tract Data
+base_url = "https://chronicdata.cdc.gov/resource/yjkw-uj5s.geojson"
+
+# Parameters for Michigan census tracts, including asthma data
+params = {
+    "stateabbr": "MI",
+    "$limit": 5000  # Adjust this if there are more tracts
+}
+
+# Make the API request
+response = requests.get(base_url, params=params)
+response
+
+data = response.json()
+    
+    # Convert to DataFrame
+    gdf = gpd.GeoDataFrame.from_features(data['features'])
+
+census_tracts = pygris.tracts(state = "MI")
+
+    # Define the URL for the shapefile zip file from the Census Bureau
+url = 'https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_tract_20m.zip'
+
+# Fetch the zip file from the URL
+response = requests.get(url)
+with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+    # Extract the shapefile from the zip file
+    z.extractall('cb_2023_us_tract_20m.zip')
+
+# Load the shapefile into a GeoDataFrame
+census_tracts = gpd.read_file('cb_2023_us_tract_20m/cb_2023_us_tract_20m.shp')
+
+    # Assuming 'gdf' is your GeoDataFrame and it has a column named 'value' for the choropleth colors
+fig = px.choropleth(
+    gdf,
+    geojson=gdf.geometry,
+    locations=gdf.index,
+    color='casthma_crudeprev',
+    hover_name=gdf.index,  # or any column you want to show on hover
+    projection="mercator"
+)
+
+fig.update_geos(fitbounds="locations", visible=False)
+fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+fig.show()
+
+    # Create the choropleth map
+    fig = px.choropleth(
+        df,
+        geojson="https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json",
+        locations="tractfips",
+        color="asthma_crude_prev",
+        scope="usa",
+        labels={"asthma_crude_prev": "Asthma Prevalence (%)"},
+        title="Asthma Prevalence in Michigan Census Tracts",
+        hover_data=["tractfips", "asthma_crude_prev"]
+    )
+    
+    # Update the map layout to zoom in on Michigan
+    fig.update_geos(
+        visible=False,
+        scope="usa",
+        center={"lat": 44.3148, "lon": -85.6024},
+        projection_scale=5,
+    )
+    
+    # Show the map
+    fig.show()
+    
+    print(f"Choropleth map created with {len(df)} census tracts.")
+else:
+    print(f"Error: Unable to fetch data. Status code: {response.status_code}")
+    print(response.text)
+```
+
+```{python}
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+import requests
+import io
+
+# Step 1: Install required libraries (if not already installed)
+# !pip install geopandas pandas matplotlib requests
+
+# Step 2: Download CDC Places data for Detroit
+url = "https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=MI&measure=Current%20asthma%20among%20adults%20aged%20%3E=18%20years"
+detroit_data = pd.read_json(url)
+
+# Filter for Detroit and the asthma measure
+detroit_asthma = detroit_data[(detroit_data['PlaceName'] == 'Detroit') & 
+                              (detroit_data['MeasureId'] == 'CASTHMA')]
+
+# Step 3: Download GeoJSON for Detroit
+detroit_geojson_url = "https://opendata.arcgis.com/datasets/0d44a906548244378396dd9e89560d9a_0.geojson"
+response = requests.get(detroit_geojson_url)
+detroit_gdf = gpd.read_file(io.BytesIO(response.content))
+
+# Merge the asthma data with the GeoJSON
+merged_gdf = detroit_gdf.merge(detroit_asthma, left_on='zip', right_on='LocationName')
+
+# Step 4: Create the choropleth map
+fig, ax = plt.subplots(1, 1, figsize=(15, 10))
+merged_gdf.plot(column='Data_Value', 
+                ax=ax, 
+                legend=True, 
+                legend_kwds={'label': 'Asthma Prevalence (%)', 'orientation': 'horizontal'},
+                cmap='YlOrRd',
+                missing_kwds={'color': 'lightgrey'})
+
+ax.set_title('Adult Asthma Prevalence in Detroit, MI')
+ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+```
 ### Deployment
 
 
