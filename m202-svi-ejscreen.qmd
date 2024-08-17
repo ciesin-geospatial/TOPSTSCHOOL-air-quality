@@ -31,17 +31,77 @@ After completing this lesson, you should be able to:
 
 ## Introduction
 
--   Lots of opportunities for different background information.
+Air Quality and Environmental Justice:
 
--   General air quality issues and EPA.
+In many urban areas, air quality issues disproportionately affect low-income communities and communities of color. This disparity is a key focus of environmental justice efforts. In cities like Detroit and Chicago, industrial facilities, highways, and other pollution sources are often concentrated in disadvantaged neighborhoods.
 
--   Air pollution data and data availability.
+NIMBY and Environmental Justice:
 
--   Social vulnerability, EJ, and NIMBY.
+The NIMBY phenomenon can sometimes conflict with environmental justice goals. While wealthier communities may successfully oppose new polluting facilities in their areas, this can lead to these facilities being placed in less affluent neighborhoods with less political clout, exacerbating environmental injustices.
 
--   The difficulty of assessing health outcomes and types of publicly available data.
+Community-Driven Science:
 
--   Possible brief discussion on scale and appropriate data.
+In response to these challenges, community-driven science initiatives have emerged. These efforts involve local residents in collecting data on air quality and other environmental factors, often using low-cost sensors and mobile monitoring techniques. This approach helps fill gaps in official monitoring networks and empowers communities to advocate for themselves. Detroit and Chicago Examples:
+
+Detroit: The city has a history of industrial pollution and is working to address air quality issues in areas like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic.
+
+Chicago: The city has seen community efforts to address air pollution in areas like the Southeast Side, where residents have fought against polluting industries and advocated for stricter regulations.
+
+These topics are interconnected, as community-driven science often arises in response to environmental justice concerns, while NIMBY attitudes can influence the distribution of pollution sources across urban areas.
+
+EPA (Environmental Protection Agency):
+
+The EPA is the primary federal agency responsible for environmental protection in the United States. It sets and enforces air quality standards, including the National Ambient Air Quality Standards (NAAQS) for six criteria pollutants. The EPA also maintains the AirNow system, which provides real-time air quality data to the public. CDC (Centers for Disease Control and Prevention): While primarily focused on public health, the CDC plays a crucial role in understanding the health impacts of air pollution. It conducts research on the relationships between air quality and various health outcomes, and provides guidance on protecting public health from environmental hazards. Importance of Open Data: Open data is crucial for community-driven solutions in several ways:
+
+Transparency: Open data allows communities to verify official reports and hold authorities accountable. Accessibility: When air quality data is freely available, communities can use it to inform local decision-making and advocacy efforts. Innovation: Open data enables researchers, activists, and tech developers to create new tools and analyses that can benefit communities. Collaboration: Open data facilitates collaboration between communities, scientists, and policymakers, leading to more effective solutions.
+
+Examples of Open Data in Action:
+
+-   The EPA's Air Quality System (AQS) database is publicly accessible, allowing researchers and community groups to analyze historical air quality trends.
+
+-   In Chicago, the Array of Things project has installed sensors throughout the city, providing open data on various environmental factors including air quality.
+
+-   Detroit's Community Air Monitoring Project uses low-cost sensors to collect and share air quality data in areas underserved by official monitoring stations.
+
+-   Community-Driven Solutions: With access to open data, communities can:
+
+-   Identify local air quality hotspots that may be missed by sparse official monitoring networks.
+
+-   Correlate air quality data with health outcomes to strengthen advocacy efforts.
+
+-   Develop targeted interventions, such as promoting indoor air filtration on high-pollution days.
+
+-   Create custom alerts and information systems tailored to local needs.
+
+Challenges and Opportunities: While open data provides many benefits, challenges remain:
+
+-   Ensuring data quality and consistency, especially when integrating data from various sources.
+
+-   Addressing the "digital divide" to ensure all community members can access and use the data. Balancing the need for detailed local data with privacy concerns.
+
+-   Building capacity within communities to effectively use and interpret complex environmental data.
+
+The EPA, CDC, and other agencies are increasingly recognizing the value of community-driven science and open data. This has led to initiatives like the EPA's Community-Focused Exposure and Risk Screening Tool (C-FERST) and the CDC's Environmental Public Health Tracking Network, which aim to make environmental health data more accessible to communities.
+
+EGLE and Environmental Justice in Detroit
+
+-   Certainly. Detroit, Michigan has indeed seen significant environmental justice efforts, particularly in collaboration with EGLE (Michigan Department of Environment, Great Lakes, and Energy). Here are some examples:
+
+-   Detroit Environmental Agenda: This community-led initiative works closely with EGLE to address environmental concerns in Detroit. It focuses on issues like air quality, water quality, and waste management.
+
+-   48217 Community Air Monitoring Project: Named after the zip code of a heavily industrialized area in Southwest Detroit, this project involves community members working with EGLE to monitor air quality using low-cost sensors.
+
+-   Detroit Climate Action Plan: Developed in partnership with EGLE, this plan addresses climate change impacts on the city, with a focus on vulnerable communities.
+
+-   Delray Neighborhood Initiatives: EGLE has been involved in efforts to address air quality concerns in the Delray neighborhood, which is impacted by industrial emissions and heavy truck traffic.
+
+-   Green Door Initiative: This Detroit-based organization collaborates with EGLE on various environmental justice projects, including lead abatement and air quality improvement efforts.
+
+-   Detroit River Sediment Cleanup: EGLE has been involved in efforts to clean up contaminated sediments in the Detroit River, which disproportionately affects nearby low-income communities.
+
+-   Asthma Prevention Programs: EGLE supports community-based asthma prevention programs in Detroit, recognizing the link between air quality and asthma rates in disadvantaged neighborhoods.
+
+These examples demonstrate the ongoing collaboration between community groups, local government, and EGLE to address environmental justice concerns in Detroit. However, as with many environmental justice efforts, challenges remain and work is ongoing.
 
 ## Load the Data
 
@@ -206,6 +266,7 @@ plt.title("Toxic Release Inventory Facilities in Detroit, MI", fontsize=16)
 plt.tight_layout()
 plt.show()
 ```
+
 ```{python}
 # places asthma url
 "https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=MI&measure=Current%20asthma%20among%20adults%20aged%20%3E=18%20years"
@@ -336,8 +397,8 @@ ax.axis('off')
 plt.tight_layout()
 plt.show()
 ```
-### Deployment
 
+### Deployment
 
 Congratulations! .... Now you should be able to:
 
