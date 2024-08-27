@@ -41,7 +41,9 @@ The NIMBY phenomenon can sometimes conflict with environmental justice goals. Wh
 
 Community-Driven Science:
 
-In response to these challenges, community-driven science initiatives have emerged. These efforts involve local residents in collecting data on air quality and other environmental factors, often using low-cost sensors and mobile monitoring techniques. This approach helps fill gaps in official monitoring networks and empowers communities to advocate for themselves. Detroit and Chicago Examples:
+In response to these challenges, community-driven science initiatives have emerged. These efforts involve local residents in collecting data on air quality and other environmental factors, often using low-cost sensors and mobile monitoring techniques. This approach helps fill gaps in official monitoring networks and empowers communities to advocate for themselves.
+
+Detroit and Chicago Examples:
 
 Detroit: The city has a history of industrial pollution and is working to address air quality issues in areas like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic.
 
@@ -103,7 +105,23 @@ EGLE and Environmental Justice in Detroit
 
 These examples demonstrate the ongoing collaboration between community groups, local government, and EGLE to address environmental justice concerns in Detroit. However, as with many environmental justice efforts, challenges remain and work is ongoing.
 
+::: {.callout-tip style="color: #5a7a2b;"}
+## Data Science Review
+
+This lesson uses the [`pandas`](https://pandas.pydata.org/), [`geopandas`](https://geopandas.org/), [`matplotlib`](https://matplotlib.org/), [`numpy`](https://numpy.org/), [`requests`](https://docs.python-requests.org/en/latest/), [`contextily`](https://contextily.readthedocs.io/en/latest/), [`pygris`](https://pygris.readthedocs.io/en/latest/), [`rasterio`](https://rasterio.readthedocs.io/en/latest/), and [`xarray`](https://xarray.pydata.org/) modules. If you'd like to learn more about the functions used in this lesson, you can refer to the documentation on their respective websites.
+
+The `pandas` module is essential for data manipulation and analysis, while `geopandas` extends its functionality to handle geospatial data. `matplotlib` is used for creating static, animated, and interactive visualizations. `numpy` provides support for large, multi-dimensional arrays and matrices, along with a collection of mathematical functions to operate on these arrays.
+
+The `requests` module allows you to send HTTP requests and interact with APIs easily. `contextily` adds basemaps to your plots, enhancing the visual context of your geospatial data. `pygris` simplifies the process of working with US Census Bureau TIGER/Line shapefiles.
+
+`rasterio` and `xarray` are used for working with geospatial raster data. `rasterio` reads and writes geospatial raster datasets, while `xarray` introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
+
+Make sure these modules are installed before you begin working with the code in this document. You can install them using pip:
+:::
+
 ## Load the Data
+
+## SVI and Detroit Metro
 
 SVI has a primary overall SVI score, but also provides sublayers. These include minority, socioeconomic, housing, and household data.
 
@@ -116,12 +134,17 @@ import matplotlib.pyplot as plt
 import pygris
 import numpy as np
 
-# Fetch Detroit boundary using pygris
-detroit = pygris.places(state="MI", year=2022)
-detroit = detroit[detroit['NAME'] == 'Detroit']
+# Fetch Detroit metro area counties using pygris
+metro_counties = pygris.counties(state="MI", year=2022)
+detroit_metro = metro_counties[metro_counties['NAME'].isin([
+    'Wayne', 'Oakland', 'Macomb', 'Livingston', 'St. Clair', 'Lapeer'
+])]
 
-# Convert to GeoDataFrame (it already is, but let's ensure it)
-detroit = gpd.GeoDataFrame(detroit, geometry='geometry', crs='EPSG:4269')
+# Dissolve the counties into a single polygon
+detroit_metro = detroit_metro.dissolve(by='STATEFP')
+
+# Convert to GeoDataFrame
+detroit_metro = gpd.GeoDataFrame(detroit_metro, geometry='geometry', crs='EPSG:4269')
 
 # Specify the TIF files
 tif_files = [
@@ -135,14 +158,14 @@ tif_files = [
 # Create an empty list to store the individual DataArrays
 data_arrays = []
 
-# Read each TIF file, clip it to Detroit's extent, and append it to the list
+# Read each TIF file, clip it to Detroit metro's extent, and append it to the list
 for file in tif_files:
     with rasterio.open(file) as src:
-        # Reproject Detroit boundary to match the raster CRS
-        detroit_reprojected = detroit.to_crs(src.crs)
+        # Reproject Detroit metro boundary to match the raster CRS
+        metro_reprojected = detroit_metro.to_crs(src.crs)
         
-        # Clip the raster to Detroit's geometry
-        out_image, out_transform = rasterio.mask.mask(src, detroit_reprojected.geometry, crop=True)
+        # Clip the raster to Detroit metro's geometry
+        out_image, out_transform = rasterio.mask.mask(src, metro_reprojected.geometry, crop=True)
         out_meta = src.meta.copy()
         
         # Update the metadata
@@ -190,82 +213,336 @@ axes = axes.flatten()
 # Plot each layer
 for i, layer in enumerate(ds.layer.values):
     # Plot with custom color limits
-    im = ds.sel(layer=layer).plot(ax=axes[i], add_colorbar=False, vmin=vmin, vmax=vmax)
+    im = ds.sel(layer=layer).plot(ax=axes[i], add_colorbar=False, vmin=vmin, vmax=vmax, cmap='viridis')
     axes[i].set_title(layer)
     
-    # Plot Detroit boundary
-    detroit_reprojected.boundary.plot(ax=axes[i], color='red', linewidth=1)
+    # Plot Detroit metro boundary
+    metro_reprojected.boundary.plot(ax=axes[i], color='red', linewidth=1)
 
 # Remove the extra subplot
 fig.delaxes(axes[5])
 
-# Add a single colorbar with a custom range
+# Add a single colorbar
 cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
 cbar = fig.colorbar(im, cax=cbar_ax, label='SVI Score')
 
-# Set the colorbar limits
-cbar.set_clim(vmin, vmax)
-
 plt.tight_layout()
 plt.show()
 ```
+
+## TRI API Column Definitions
+
+| Column Name                      | Description                                                             |
+|------------------------------------|------------------------------------|
+| `FACILITY_NAME`                  | The name of the facility reporting to TRI                               |
+| `TRI_FACILITY_ID`                | A unique identifier for the facility in the TRI database                |
+| `STREET_ADDRESS`                 | The street address of the facility                                      |
+| `CITY_NAME`                      | The city where the facility is located                                  |
+| `COUNTY_NAME`                    | The county where the facility is located                                |
+| `STATE_ABBR`                     | The two-letter abbreviation for the state where the facility is located |
+| `ZIP_CODE`                       | The ZIP code of the facility's location                                 |
+| `PREF_LATITUDE`                  | The preferred latitude coordinate of the facility                       |
+| `PREF_LONGITUDE`                 | The preferred longitude coordinate of the facility                      |
+| `PARENT_CO_NAME`                 | The name of the parent company, if applicable                           |
+| `INDUSTRY_SECTOR_CODE`           | A code representing the industry sector of the facility                 |
+| `INDUSTRY_SECTOR`                | A description of the industry 
+
+**Note**: The availability and exact names of these columns may vary depending on the specific TRI API endpoint and query parameters used. Always refer to the official EPA TRI documentation for the most up-to-date and comprehensive information.
+
+### Important Considerations
+
+1.  Not all columns may be present in every API response.
+2.  Column names may have slight variations (e.g., with or without underscores).
+3.  The EPA occasionally updates their API and data structure.
+4.  Some columns related to chemical releases and waste management may have additional variations or breakdowns.
+5.  Numeric values (like release amounts) are typically reported in pounds, but always verify the units.
+6.  For coordinates (`PREF_LATITUDE` and `PREF_LONGITUDE`), be aware that these are the preferred coordinates, which may have been adjusted for accuracy or privacy reasons.
+
+## ENVIROFACTS TRI Facilities w/ API
 
 ```{python}
+import xarray as xr
+import rasterio
+import rasterio.mask
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import contextily as ctx
+import pygris
+import numpy as np
+from shapely.geometry import box
+import pandas as pd
 import requests
-from shapely.geometry import Point
+import contextily as ctx
 
-# Step 1: Define the area of interest (Detroit, MI)
-detroit_bounds = [-83.287, 42.255, -82.910, 42.450]  # [min_lon, min_lat, max_lon, max_lat]
+# Fetch Detroit metro area counties using pygris
+metro_counties = pygris.counties(state="MI", year=2022)
+detroit_metro = metro_counties[metro_counties['NAME'].isin([
+    'Wayne', 'Oakland', 'Macomb', 'Livingston', 'St. Clair', 'Lapeer'
+])]
 
-# Step 2: Fetch TRI facility data from EPA API
-api_url = "https://data.epa.gov/efservice/tri_facility/state_abbr/MI/city_name/DETROIT/JSON"
-response = requests.get(api_url)
-tri_data = response.json()
+# Dissolve the counties into a single polygon
+detroit_metro = detroit_metro.dissolve(by='STATEFP')
 
-print(f"Number of facilities fetched: {len(tri_data)}")
+# Get the bounding box
+bbox = detroit_metro.total_bounds
 
-# Step 3: Create a GeoDataFrame from the TRI facility data
-valid_facilities = []
-geometry = []
+# Print the bounding box coordinates
+print("Bounding Box:")
+print(f"Minimum X (Longitude): {bbox[0]}")
+print(f"Minimum Y (Latitude): {bbox[1]}")
+print(f"Maximum X (Longitude): {bbox[2]}")
+print(f"Maximum Y (Latitude): {bbox[3]}")
 
-for facility in tri_data:
-    if facility['pref_latitude'] is not None and facility['pref_longitude'] is not None:
-        valid_facilities.append(facility)
-        lon, lat = -float(facility['pref_longitude']), float(facility['pref_latitude'])  # Note the negative sign for longitude
-        geometry.append(Point(lon, lat))
-        print(f"Facility coordinates: {lon}, {lat}")  # Debug print
+# Create the bounding box as a polygon
+bbox_polygon = gpd.GeoDataFrame(
+    geometry=[box(*bbox)],
+    crs=detroit_metro.crs
+)
 
-print(f"Number of valid facilities: {len(valid_facilities)}")
+# Fetch TRI facility data from EPA API for each county
+counties = ['Wayne', 'Oakland', 'Macomb', 'Livingston', 'St. Clair', 'Lapeer']
+tri_data = []
 
-gdf = gpd.GeoDataFrame(valid_facilities, geometry=geometry, crs="EPSG:4326")
+for county in counties:
+    api_url = f"https://data.epa.gov/efservice/tri_facility/state_abbr/MI/county_name/{county}/JSON"
+    response = requests.get(api_url)
+    if response.status_code == 200:
+        county_data = response.json()
+        tri_data.extend(county_data)
+    else:
+        print(f"Failed to fetch data for {county} County. Status code: {response.status_code}")
 
-print(f"GeoDataFrame shape: {gdf.shape}")
-print(gdf.head())
+# Convert TRI data to a DataFrame
+tri_df = pd.DataFrame(tri_data)
 
-# Step 4: Create the map
-fig, ax = plt.subplots(figsize=(12, 8))
+print(f"Number of facilities fetched: {len(tri_df)}")
 
-# Step 5: Plot the data
-gdf.plot(ax=ax, color='purple', markersize=50, alpha=0.7)
+# Create a copy of the dataframe to avoid SettingWithCopyWarning
+tri_df_clean = tri_df.copy()
 
-# Step 6: Set the extent
-ax.set_xlim(detroit_bounds[0], detroit_bounds[2])
-ax.set_ylim(detroit_bounds[1], detroit_bounds[3])
+# Remove facilities with empty latitude or longitude values
+tri_df_clean = tri_df_clean.dropna(subset=['pref_latitude', 'pref_longitude'])
 
-# Step 7: Add the basemap
-ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.OpenStreetMap.Mapnik)
+print(f"Number of facilities after removing empty coordinates: {len(tri_df_clean)}")
 
-# Step 8: Customize the map
+# Convert latitude and longitude to numeric type
+tri_df_clean['pref_latitude'] = pd.to_numeric(tri_df_clean['pref_latitude'], errors='coerce')
+tri_df_clean['pref_longitude'] = pd.to_numeric(tri_df_clean['pref_longitude'], errors='coerce')
+
+# Function to correct longitude
+def correct_longitude(lon):
+    if lon > 0:
+        return -lon
+    return lon
+
+# Apply longitude correction
+tri_df_clean['pref_longitude'] = tri_df_clean['pref_longitude'].apply(correct_longitude)
+
+# Calculate IQR for longitude
+Q1 = tri_df_clean['pref_longitude'].quantile(0.25)
+Q3 = tri_df_clean['pref_longitude'].quantile(0.75)
+IQR = Q3 - Q1
+
+# Define bounds for outliers
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+# Remove outliers
+tri_df_clean = tri_df_clean[(tri_df_clean['pref_longitude'] >= lower_bound) & 
+                            (tri_df_clean['pref_longitude'] <= upper_bound)]
+
+print(f"Number of facilities after removing longitude outliers: {len(tri_df_clean)}")
+
+# Create a GeoDataFrame from the cleaned TRI data
+detroit_tri = gpd.GeoDataFrame(
+    tri_df_clean, 
+    geometry=gpd.points_from_xy(tri_df_clean.pref_longitude, tri_df_clean.pref_latitude),
+    crs="EPSG:4326"
+)
+
+# Reproject data to Web Mercator for contextily
+detroit_metro = detroit_metro.to_crs(epsg=3857)
+bbox_polygon = bbox_polygon.to_crs(epsg=3857)
+detroit_tri = detroit_tri.to_crs(epsg=3857)
+
+# Create the plot
+fig, ax = plt.subplots(figsize=(15, 15))
+
+# Plot the metro area and bounding box
+detroit_metro.plot(ax=ax, color='lightblue', edgecolor='black', alpha=0.5)
+bbox_polygon.boundary.plot(ax=ax, color='red', linewidth=2)
+
+# Plot TRI facilities
+detroit_tri.plot(ax=ax, color='red', markersize=50, alpha=0.7)
+
+# Add the basemap
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the extent of the map to the bounding box
+ax.set_xlim(bbox_polygon.total_bounds[0], bbox_polygon.total_bounds[2])
+ax.set_ylim(bbox_polygon.total_bounds[1], bbox_polygon.total_bounds[3])
+
+# Remove axes
 ax.set_axis_off()
-plt.title("Toxic Release Inventory Facilities in Detroit, MI", fontsize=16)
 
-# Step 9: Show the map
+plt.title("Detroit Metro Area TRI Facilities", fontsize=16)
 plt.tight_layout()
 plt.show()
+
+print(f"Final number of TRI facilities in the Detroit metro area: {len(detroit_tri)}")
 ```
+
+## Regulated Facilities w/ ICIS-AIR
+
+```{python}
+import pandas as pd
+import requests
+import time
+
+# Base URL for ECHO ICIS-AIR API
+base_url = "https://echodata.epa.gov/echo/air_rest_services"
+
+# Parameters for the initial API call
+params = {
+    "output": "JSON",
+    "p_st": "MI"
+}
+
+def get_facilities():
+    response = requests.get(f"{base_url}.get_facilities", params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if 'Results' in data:
+            qid = data['Results']['QueryID']
+            print(f"Query ID: {qid}")
+            print(f"Total Facilities: {data['Results']['QueryRows']}")
+            return qid
+    print("Failed to get facilities and QID")
+    return None
+
+def get_facility_data(qid):
+    all_facilities = []
+    page = 1
+    while True:
+        params = {"qid": qid, "pageno": page, "output": "JSON"}
+        response = requests.get(f"{base_url}.get_qid", params=params)
+        if response.status_code == 200:
+            data = response.json()
+            if 'Results' in data and 'Facilities' in data['Results']:
+                facilities = data['Results']['Facilities']
+                if not facilities:  # No more facilities to retrieve
+                    break
+                all_facilities.extend(facilities)
+                print(f"Retrieved page {page}")
+                page += 1
+            else:
+                break
+        else:
+            print(f"Failed to retrieve page {page}")
+            break
+    return all_facilities
+
+# Step 1: Get the Query ID
+qid = get_facilities()
+
+if qid:
+    # Step 2: Use get_qid to retrieve all facility data
+    print("Retrieving facility data...")
+    facilities = get_facility_data(qid)
+    
+    # Convert to DataFrame
+    df_icis_air = pd.DataFrame(facilities)
+    
+    print(f"\nSuccessfully retrieved {len(df_icis_air)} ICIS-AIR facilities for Michigan")
+    print("\nColumns in the dataset:")
+    print(df_icis_air.columns)
+    
+    # Display the first few rows
+    print("\nFirst few rows of the data:")
+    print(df_icis_air.head())
+    
+    # Save to CSV
+else:
+    print("Failed to retrieve facility data")
+
+    import pandas as pd
+
+# List of Detroit metro counties
+metro_counties = ['Wayne', 'Oakland', 'Macomb', 'Livingston', 'St. Clair', 'Lapeer']
+
+# Subset the dataframe to include only the Detroit metro counties
+df_detroit_metro = df_icis_air[df_icis_air['AIRCounty'].isin(metro_counties)]
+
+# Print information about the subset
+print(f"Total ICIS-AIR facilities in Michigan: {len(df_icis_air)}")
+print(f"ICIS-AIR facilities in Detroit metro area: {len(df_detroit_metro)}")
+
+# Display the count of facilities in each metro county
+print("\nFacilities per county:")
+print(df_detroit_metro['AIRCounty'].value_counts())
+
+# Display the first few rows of the subset
+print("\nFirst few rows of the Detroit metro ICIS-AIR facilities:")
+print(df_detroit_metro.head())
+
+# Additional information: unique values in AIRCounty
+print("\nUnique values in AIRCounty column:")
+print(df_icis_air['AIRCounty'].unique())
+```
+
+Create geopandas and plot.
+
+```{python}
+# Count records with missing coordinate values
+missing_coords = df_detroit_metro[(df_detroit_metro['FacLat'].isnull()) | (df_detroit_metro['FacLong'].isnull())]
+print(f"Number of ICIS-AIR records with missing coordinates: {len(missing_coords)}")
+
+# Remove records with missing coordinates
+df_detroit_metro = df_detroit_metro.dropna(subset=['FacLat', 'FacLong'])
+
+# Create a GeoDataFrame for ICIS-AIR facilities
+gdf_icis_air = gpd.GeoDataFrame(
+    df_detroit_metro, 
+    geometry=gpd.points_from_xy(df_detroit_metro.FacLong, df_detroit_metro.FacLat),
+    crs="EPSG:4326"
+)
+
+# Reproject ICIS-AIR data to Web Mercator
+gdf_icis_air = gdf_icis_air.to_crs(epsg=3857)
+
+# Create the plot
+fig, ax = plt.subplots(figsize=(15, 15))
+
+# Plot the metro area and bounding box (reusing objects from earlier)
+detroit_metro.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
+bbox_polygon.boundary.plot(ax=ax, color='red', linewidth=2)
+
+# Plot TRI facilities (reusing the detroit_tri object from earlier)
+detroit_tri.plot(ax=ax, color='red', markersize=50, alpha=0.7, label='TRI Facilities')
+
+# Plot ICIS-AIR facilities
+gdf_icis_air.plot(ax=ax, color='green', markersize=50, alpha=0.7, label='ICIS-AIR Facilities')
+
+# Add the basemap
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the extent of the map to the bounding box
+ax.set_xlim(bbox_polygon.total_bounds[0], bbox_polygon.total_bounds[2])
+ax.set_ylim(bbox_polygon.total_bounds[1], bbox_polygon.total_bounds[3])
+
+# Remove axes
+ax.set_axis_off()
+
+# Add legend
+ax.legend()
+
+plt.title("Detroit Metro Area TRI and ICIS-AIR Facilities", fontsize=16)
+plt.tight_layout()
+plt.show()
+
+print(f"Number of TRI facilities plotted: {len(detroit_tri)}")
+print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
+```
+## CDC PLACES
 
 ```{python}
 # places asthma url
@@ -397,6 +674,51 @@ ax.axis('off')
 plt.tight_layout()
 plt.show()
 ```
+
+::: {.callout-tip style="color: #5a7a2b;"}
+## Data  Review
+The Toxics Release Inventory (TRI) and the Integrated Compliance Information System for Air (ICIS-AIR) are two important but distinct environmental reporting systems maintained by the U.S. Environmental Protection Agency (EPA). They have several key differences:
+
+- **Regulatory Basis**
+  - TRI: Established under the Emergency Planning and Community Right-to-Know Act (EPCRA) of 1986
+  - ICIS-AIR: Part of the Clean Air Act (CAA) compliance and enforcement program
+
+- **Focus**
+  - TRI: Tracks the management of certain toxic chemicals that may pose a threat to human health and the environment
+  - ICIS-AIR: Focuses specifically on air quality and emissions from facilities regulated under the Clean Air Act
+
+- **Reported Information**
+  - TRI: Facilities report on releases, waste management, and pollution prevention activities for specific toxic chemicals
+  - ICIS-AIR: Tracks emissions data, compliance status, and enforcement actions related to air quality regulations
+
+- **Facility Coverage**
+  - TRI: Covers facilities in specific industries that manufacture, process, or use TRI-listed chemicals above certain thresholds
+  - ICIS-AIR: Includes a broader range of facilities that emit air pollutants, regardless of the specific chemicals involved
+
+- **Reporting Thresholds**
+  - TRI: Has specific chemical thresholds that trigger reporting requirements
+  - ICIS-AIR: Generally doesn't have chemical-specific thresholds; requirements are based on overall emissions and facility type
+
+- **Public Accessibility**
+  - TRI: Designed with a strong focus on public right-to-know, with data easily accessible to the public
+  - ICIS-AIR: While public, it's primarily designed for regulatory and enforcement purposes
+
+- **Data Frequency**
+  - TRI: Annual reporting is required for covered facilities
+  - ICIS-AIR: May involve more frequent reporting, depending on permit requirements and compliance status
+
+- **Scope of Pollutants**
+  - TRI: Focuses on a specific list of toxic chemicals and chemical categories
+  - ICIS-AIR: Covers a wider range of air pollutants, including criteria air pollutants and hazardous air pollutants
+
+- **Use in Environmental Management**
+  - TRI: Often used for assessing long-term trends in toxic chemical releases and waste management practices
+  - ICIS-AIR: More commonly used for day-to-day air quality management and enforcement activities
+
+- **Geographic Coverage**
+  - TRI: Nationwide program with consistent reporting across states
+  - ICIS-AIR: While national, implementation can vary more by state or local air quality management district
+:::
 
 ### Deployment
 
