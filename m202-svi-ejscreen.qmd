@@ -516,11 +516,11 @@ fig, ax = plt.subplots(figsize=(15, 15))
 detroit_metro.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
 bbox_polygon.boundary.plot(ax=ax, color='red', linewidth=2)
 
-# Plot TRI facilities (reusing the detroit_tri object from earlier)
-detroit_tri.plot(ax=ax, color='red', markersize=50, alpha=0.7, label='TRI Facilities')
-
 # Plot ICIS-AIR facilities
-gdf_icis_air.plot(ax=ax, color='green', markersize=50, alpha=0.7, label='ICIS-AIR Facilities')
+gdf_icis_air.plot(ax=ax, color='cyan', markersize=50, alpha=0.7, label='ICIS-AIR Facilities')
+
+# Plot TRI facilities (reusing the detroit_tri object from earlier)
+detroit_tri.plot(ax=ax, color='purple', markersize=50, alpha=0.7, label='TRI Facilities')
 
 # Add the basemap
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
@@ -542,141 +542,529 @@ plt.show()
 print(f"Number of TRI facilities plotted: {len(detroit_tri)}")
 print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
 ```
-## CDC PLACES
+
+## Custom TRI Form A Search
 
 ```{python}
-# places asthma url
-"https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=MI&measure=Current%20asthma%20among%20adults%20aged%20%3E=18%20years"
-```
+# URL of the CSV file
+url = "https://dmap-epa-enviro-prod-export.s3.amazonaws.com/338211710.CSV"
 
-```{python}
-import requests
-import json
-import pandas as pd
-import plotly.express as px
-import zipfile
-import io
+# Read the CSV file directly with pandas
+df_tri_custom = pd.read_csv(url)
+print(f"Successfully read CSV. Number of records: {len(df_tri_custom)}")
 
-# Base URL for CDC PLACES GIS Tract Data
-base_url = "https://chronicdata.cdc.gov/resource/yjkw-uj5s.geojson"
+# Display information about the dataset
+print("\nColumns in the dataset:")
+print(df_tri_custom.columns)
 
-# Parameters for Michigan census tracts, including asthma data
-params = {
-    "stateabbr": "MI",
-    "$limit": 5000  # Adjust this if there are more tracts
-}
+# Assuming the latitude and longitude columns are named 'LATITUDE' and 'LONGITUDE'
+# Adjust these names if they're different in your CSV
+lat_col = 'LATITUDE'
+lon_col = 'LONGITUDE'
+release_col = 'AIR_TOTAL_RELEASE'  # Adjust this to the actual column name for air releases
 
-# Make the API request
-response = requests.get(base_url, params=params)
-response
+# Remove records with missing coordinates or air release data
+df_tri_clean = df_tri_custom.dropna(subset=[lat_col, lon_col, release_col])
 
-data = response.json()
-    
-    # Convert to DataFrame
-    gdf = gpd.GeoDataFrame.from_features(data['features'])
+print(f"\nNumber of records after removing missing data: {len(df_tri_clean)}")
 
-census_tracts = pygris.tracts(state = "MI")
-
-    # Define the URL for the shapefile zip file from the Census Bureau
-url = 'https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_tract_20m.zip'
-
-# Fetch the zip file from the URL
-response = requests.get(url)
-with zipfile.ZipFile(io.BytesIO(response.content)) as z:
-    # Extract the shapefile from the zip file
-    z.extractall('cb_2023_us_tract_20m.zip')
-
-# Load the shapefile into a GeoDataFrame
-census_tracts = gpd.read_file('cb_2023_us_tract_20m/cb_2023_us_tract_20m.shp')
-
-    # Assuming 'gdf' is your GeoDataFrame and it has a column named 'value' for the choropleth colors
-fig = px.choropleth(
-    gdf,
-    geojson=gdf.geometry,
-    locations=gdf.index,
-    color='casthma_crudeprev',
-    hover_name=gdf.index,  # or any column you want to show on hover
-    projection="mercator"
+# Create a GeoDataFrame
+gdf_tri_custom = gpd.GeoDataFrame(
+    df_tri_clean, 
+    geometry=gpd.points_from_xy(df_tri_clean[lon_col], df_tri_clean[lat_col]),
+    crs="EPSG:4326"
 )
 
-fig.update_geos(fitbounds="locations", visible=False)
-fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+# Reproject to Web Mercator
+gdf_tri_custom = gdf_tri_custom.to_crs(epsg=3857)
 
-fig.show()
+# Create the plot
+fig, ax = plt.subplots(figsize=(15, 15))
 
-    # Create the choropleth map
-    fig = px.choropleth(
-        df,
-        geojson="https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json",
-        locations="tractfips",
-        color="asthma_crude_prev",
-        scope="usa",
-        labels={"asthma_crude_prev": "Asthma Prevalence (%)"},
-        title="Asthma Prevalence in Michigan Census Tracts",
-        hover_data=["tractfips", "asthma_crude_prev"]
-    )
-    
-    # Update the map layout to zoom in on Michigan
-    fig.update_geos(
-        visible=False,
-        scope="usa",
-        center={"lat": 44.3148, "lon": -85.6024},
-        projection_scale=5,
-    )
-    
-    # Show the map
-    fig.show()
-    
-    print(f"Choropleth map created with {len(df)} census tracts.")
-else:
-    print(f"Error: Unable to fetch data. Status code: {response.status_code}")
-    print(response.text)
+# Plot the metro area and bounding box (reusing objects from earlier)
+detroit_metro.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
+bbox_polygon.boundary.plot(ax=ax, color='orangered', linewidth=2)
+
+# Plot TRI facilities with graduated symbols based on air releases
+scatter = ax.scatter(gdf_tri_custom.geometry.x, gdf_tri_custom.geometry.y, 
+                     # s=gdf_tri_custom[release_col]/100,  # Adjust the scaling factor as needed
+                     c='orangered',  # Static fill color
+                     edgecolor='yellow',  # Outline color
+                     linewidth=1,  # Adjust the outline width as needed
+                     alpha=0.7)
+
+# Add the basemap
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the extent of the map to the bounding box
+ax.set_xlim(bbox_polygon.total_bounds[0], bbox_polygon.total_bounds[2])
+ax.set_ylim(bbox_polygon.total_bounds[1], bbox_polygon.total_bounds[3])
+
+# Remove axes
+ax.set_axis_off()
+
+# Add a legend for symbol sizes
+legend_sizes = [1000, 10000, 100000]  # Example sizes, adjust based on your data
+legend_elements = [plt.scatter([], [], s=size/100, c='orangered', edgecolor='yellow', 
+                               linewidth=1, alpha=1, label=f'{size:,}') 
+                   for size in legend_sizes]
+ax.legend(handles=legend_elements, title='Total Air Releases (lbs)', 
+          loc='lower right', title_fontsize=12, fontsize=10)
+
+plt.title("Detroit Metro Area TRI Facilities - Total Air Releases (Custom Data)", fontsize=16)
+plt.tight_layout()
+plt.show()
+
+print(f"\nNumber of TRI facilities plotted: {len(gdf_tri_custom)}")
+print(f"Total air releases: {gdf_tri_custom[release_col].sum():,.2f} lbs")
+print(f"Average air release per facility: {gdf_tri_custom[release_col].mean():,.2f} lbs")
 ```
+
+### Rasterizing Pollution Sums
+
+```{python}
+import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import rasterio
+from rasterio import features
+from rasterio.transform import from_origin
+from matplotlib.colors import BoundaryNorm, ListedColormap
+import xarray as xr
+import rioxarray  # This imports rioxarray and adds the .rio accessor to xarray objects
+
+# Ensure gdf_tri_custom and detroit_metro are in the correct CRS (should be EPSG:3857 for Web Mercator)
+gdf_tri_custom = gdf_tri_custom.to_crs(epsg=3857)
+detroit_metro = detroit_metro.to_crs(epsg=3857)
+
+# Get the bounds of the Detroit metro area
+minx, miny, maxx, maxy = detroit_metro.total_bounds
+
+# Define the resolution (100m)
+resolution = 5000
+
+# Calculate the number of cells
+nx = int((maxx - minx) / resolution)
+ny = int((maxy - miny) / resolution)
+
+# Create the transform for the raster
+transform = from_origin(minx, maxy, resolution, resolution)
+
+# Prepare geometries and values for rasterization
+shapes = ((geom, value) for geom, value in zip(gdf_tri_custom.geometry, gdf_tri_custom.AIR_TOTAL_RELEASE))
+
+# Rasterize the point data
+raster = features.rasterize(shapes=shapes, 
+                            out_shape=(ny, nx), 
+                            transform=transform, 
+                            fill=0, 
+                            all_touched=True, 
+                            merge_alg=rasterio.enums.MergeAlg.add)
+
+# Convert the raster to an xarray DataArray
+# Note: We use ny and nx here to ensure the coordinates match the raster shape
+raster_da = xr.DataArray(raster, 
+                         coords={'y': np.linspace(maxy, miny, ny),
+                                 'x': np.linspace(minx, maxx, nx)},
+                         dims=['y', 'x'])
+raster_da.rio.write_crs(detroit_metro.crs, inplace=True)
+
+# Clip the raster with the Detroit metro boundary
+clipped_raster = raster_da.rio.clip(detroit_metro.geometry.values, detroit_metro.crs, drop=False, all_touched=True)
+
+# Define the breaks for the discrete scale
+breaks = [0, 1, 10, 100, 1000, 10000, 100000, 250000, 500000]
+
+# Create a custom colormap
+colors = ['#FFFFFF', '#FFFFCC', '#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#B10026']
+cmap = ListedColormap(colors)
+
+# Create a normalization based on the breaks
+norm = BoundaryNorm(breaks, cmap.N)
+
+# Create the plot
+fig, ax = plt.subplots(figsize=(15, 15))
+
+# Plot the clipped raster with the custom colormap and norm
+im = ax.imshow(clipped_raster, extent=[minx, maxx, miny, maxy], origin='upper', 
+               cmap=cmap, norm=norm)
+
+# Add colorbar with discrete labels
+cbar = plt.colorbar(im, ax=ax, extend='max', 
+                    label='Total Air Releases (pounds)', 
+                    ticks=breaks)
+cbar.ax.set_yticklabels([f'{b:,}' for b in breaks])
+
+# Plot the TRI facility points
+gdf_tri_custom.plot(ax=ax, color='blue', markersize=20, alpha=0.7)
+
+# Plot the Detroit metro boundary
+detroit_metro.boundary.plot(ax=ax, color='black', linewidth=2)
+
+# Set the extent to match the Detroit metro area
+ax.set_xlim(minx, maxx)
+ax.set_ylim(miny, maxy)
+
+# Add title and labels
+ax.set_title('TRI Air Total Release (100m resolution sum) with Facility Locations', fontsize=16)
+ax.set_xlabel('X Coordinate')
+ax.set_ylabel('Y Coordinate')
+
+plt.tight_layout()
+plt.show()
+
+print(f"Number of TRI facilities plotted: {len(gdf_tri_custom)}")
+print(f"Total air releases: {gdf_tri_custom['AIR_TOTAL_RELEASE'].sum():,.2f}")
+print(f"Maximum cell value in raster: {clipped_raster.max().values:,.2f}")
+```
+
+## Air Release Vulnerability Index
+
+```{python}
+import numpy as np
+import xarray as xr
+import rioxarray
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from rasterio.enums import Resampling
+from scipy import stats
+
+# Select the 'Overall' layer
+svi_overall = ds.sel(layer='Overall')
+
+# Convert to rioxarray for geospatial operations
+svi_overall = svi_overall.rio.write_crs("EPSG:4326")
+
+# Reproject SVI to match the CRS of the air release raster
+svi_reprojected = svi_overall.rio.reproject_match(clipped_raster)
+
+# Clip SVI raster to the Detroit metro boundary
+svi_clipped = svi_reprojected.rio.clip(detroit_metro.geometry.values, detroit_metro.crs, drop=True, all_touched=True)
+
+# Disaggregate the air release data to match the resolution of the SVI data
+air_release_disaggregated = clipped_raster.rio.reproject_match(
+    svi_clipped,
+    resampling=Resampling.bilinear
+)
+
+# Calculate raster correlation between SVI overall and air release within Detroit metro boundary
+svi_flat = svi_clipped.values.flatten()
+air_flat = air_release_disaggregated.values.flatten()
+
+# Remove NaN values
+mask = ~np.isnan(svi_flat) & ~np.isnan(air_flat)
+svi_flat = svi_flat[mask]
+air_flat = air_flat[mask]
+
+correlation, p_value = stats.pearsonr(svi_flat, air_flat)
+
+print(f"Raster Correlation between SVI Overall and Air Release within Detroit metro: {correlation:.4f}")
+print(f"P-value: {p_value:.4f}")
+
+# New correlation analysis
+# Ensure gdf_tri_custom is in the same CRS as svi_clipped
+gdf_tri_custom = gdf_tri_custom.to_crs(svi_clipped.rio.crs)
+
+# Extract SVI values at TRI facility locations
+svi_values = []
+for point in gdf_tri_custom.geometry:
+    svi_value = svi_clipped.sel(x=point.x, y=point.y, method="nearest").values
+    svi_values.append(svi_value)
+
+# Add SVI values to gdf_tri_custom
+gdf_tri_custom['SVI_OVERALL'] = svi_values
+
+# Perform correlation analysis
+correlation_points, p_value_points = stats.pearsonr(gdf_tri_custom['AIR_TOTAL_RELEASE'], gdf_tri_custom['SVI_OVERALL'])
+
+print(f"Point-based Correlation between SVI Overall and AIR_TOTAL_RELEASE: {correlation_points:.4f}")
+print(f"P-value: {p_value_points:.4f}")
+
+# Log1p transform the air release data and scale to 0-1
+air_release_log = np.log1p(air_release_disaggregated)
+air_release_scaled = (air_release_log - air_release_log.min()) / (air_release_log.max() - air_release_log.min())
+
+# Multiply scaled air release data with SVI data
+vulnerability_indicator = air_release_scaled * svi_clipped
+
+# Create the plots
+fig, axs = plt.subplots(3, 1, figsize=(15, 45))
+
+# Plot SVI Overall
+im1 = svi_clipped.plot(ax=axs[0], cmap='viridis', vmin=0, vmax=1, add_colorbar=False)
+plt.colorbar(im1, ax=axs[0], label='SVI Overall')
+axs[0].set_title('Social Vulnerability Index (Overall)', fontsize=16)
+detroit_metro.boundary.plot(ax=axs[0], color='black', linewidth=2)
+
+# Plot Original Air Release (log-transformed for better visualization)
+im2 = np.log1p(air_release_disaggregated).plot(ax=axs[1], cmap='YlOrRd', add_colorbar=False)
+plt.colorbar(im2, ax=axs[1], label='Log(Air Release + 1)')
+axs[1].set_title('Air Release (Log-transformed)', fontsize=16)
+detroit_metro.boundary.plot(ax=axs[1], color='black', linewidth=2)
+
+# Plot Air Release Vulnerability Indicator
+im3 = vulnerability_indicator.plot(ax=axs[2], cmap='YlOrRd', vmin=0, vmax=1, add_colorbar=False)
+plt.colorbar(im3, ax=axs[2], label='Air Release Vulnerability Indicator')
+axs[2].set_title('Air Release Vulnerability Indicator\n(Scaled Air Release * SVI)', fontsize=16)
+detroit_metro.boundary.plot(ax=axs[2], color='black', linewidth=2)
+
+for ax in axs:
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.set_xlim(svi_clipped.x.min(), svi_clipped.x.max())
+    ax.set_ylim(svi_clipped.y.min(), svi_clipped.y.max())
+
+plt.tight_layout()
+plt.show()
+
+# Print some statistics
+print(f"Minimum vulnerability indicator: {vulnerability_indicator.min().values:.4f}")
+print(f"Maximum vulnerability indicator: {vulnerability_indicator.max().values:.4f}")
+print(f"Mean vulnerability indicator: {vulnerability_indicator.mean().values:.4f}")
+```
+
+```{python}
+# Convert the vulnerability indicator to a pandas DataFrame
+vulnerability_df = vulnerability_indicator.to_dataframe(name='index').reset_index()
+
+# Sort by index value and get the top 10
+top_10 = vulnerability_df.sort_values('index', ascending=False).head(10)
+
+# Create points from the coordinates
+top_10['geometry'] = gpd.points_from_xy(top_10.x, top_10.y)
+top_10_gdf = gpd.GeoDataFrame(top_10, geometry='geometry', crs=vulnerability_indicator.rio.crs)
+
+# Create the final map
+fig, ax = plt.subplots(figsize=(15, 15))
+
+# Plot the Detroit metro boundary
+detroit_metro.boundary.plot(ax=ax, color='black', linewidth=2)
+
+# Plot the top 10 points
+top_10_gdf.plot(ax=ax, color='blue', markersize=100, alpha=0.7)
+
+# Add labels to the points
+for idx, row in top_10_gdf.iterrows():
+    ax.annotate(f"#{idx+1}", (row.geometry.x, row.geometry.y), 
+                xytext=(3, 3), textcoords="offset points", 
+                color='white', fontweight='bold')
+
+# Add a basemap
+ctx.add_basemap(ax, crs=vulnerability_indicator.rio.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the extent to match the Detroit metro area
+ax.set_xlim(vulnerability_indicator.x.min(), vulnerability_indicator.x.max())
+ax.set_ylim(vulnerability_indicator.y.min(), vulnerability_indicator.y.max())
+
+ax.set_title('Top 10 Areas with Highest Air Release Vulnerability Index', fontsize=16)
+ax.set_axis_off()
+
+plt.tight_layout()
+plt.show()
+
+# Print the coordinates of the top 10 points
+print("Coordinates of the top 10 points:")
+for idx, row in top_10_gdf.iterrows():
+    print(f"#{idx+1}: ({row.geometry.x}, {row.geometry.y})")
+```
+## PLACES
+
+The CDC PLACES (Population Level Analysis and Community Estimates) dataset is a collaboration between the Centers for Disease Control and Prevention (CDC), the Robert Wood Johnson Foundation, and the CDC Foundation. It provides model-based population-level analysis and community estimates of health indicators for all counties, places (incorporated and census designated places), census tracts, and ZIP Code Tabulation Areas (ZCTAs) across the United States.
+
+### Key Points
+
+1. **Geographic Coverage:** Entire United States, including all 50 states, the District of Columbia, and Puerto Rico.
+2. **Geographic Granularity:** Multiple levels including counties, cities/towns, census tracts, and ZIP codes.
+3. **Health Indicators:** Wide range of chronic disease measures related to health outcomes, prevention, and health risk behaviors.
+4. **Data Sources:** 
+   - Behavioral Risk Factor Surveillance System (BRFSS)
+   - U.S. Census Bureau's American Community Survey (ACS)
+5. **Methodology:** Uses small area estimation methods for small geographic areas.
+6. **Health Measures Include:**
+   - Chronic diseases: e.g., asthma, COPD, heart disease, diabetes
+   - Health risk behaviors: e.g., smoking, physical inactivity, binge drinking
+   - Prevention practices: e.g., health insurance coverage, dental visits, cholesterol screening
+7. **Socioeconomic Data:** Includes some socioeconomic and demographic variables.
+8. **Annual Updates:** Providing recent estimates for local areas.
+
+This dataset is particularly valuable for:
+- Public health researchers
+- Policymakers
+- Community organizations
+
+It provides a standardized way to compare health indicators across different geographic areas and can be used to inform targeted interventions and policy decisions, especially in addressing health disparities at a local level.
+
+### Processing
 
 ```{python}
 import geopandas as gpd
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-import io
+import contextily as ctx
 
-# Step 1: Install required libraries (if not already installed)
-# !pip install geopandas pandas matplotlib requests
+# Define the GeoJSON API endpoint
+url = "https://data.cdc.gov/resource/cwsq-ngmh.geojson"
 
-# Step 2: Download CDC Places data for Detroit
-url = "https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=MI&measure=Current%20asthma%20among%20adults%20aged%20%3E=18%20years"
-detroit_data = pd.read_json(url)
+# Define the Detroit metro area counties
+detroit_counties = ['Wayne', 'Oakland', 'Macomb', 'Livingston', 'St. Clair', 'Lapeer']
 
-# Filter for Detroit and the asthma measure
-detroit_asthma = detroit_data[(detroit_data['PlaceName'] == 'Detroit') & 
-                              (detroit_data['MeasureId'] == 'CASTHMA')]
+# Create the county filter string
+county_filter = " OR ".join([f"countyname = '{county}'" for county in detroit_counties])
 
-# Step 3: Download GeoJSON for Detroit
-detroit_geojson_url = "https://opendata.arcgis.com/datasets/0d44a906548244378396dd9e89560d9a_0.geojson"
-response = requests.get(detroit_geojson_url)
-detroit_gdf = gpd.read_file(io.BytesIO(response.content))
+# Define the query parameters
+params = {
+    "$where": f"stateabbr = 'MI' AND ({county_filter})",
+    "$limit": 50000  # Adjust if necessary
+}
 
-# Merge the asthma data with the GeoJSON
-merged_gdf = detroit_gdf.merge(detroit_asthma, left_on='zip', right_on='LocationName')
+# Make the API request
+response = requests.get(url, params=params)
 
-# Step 4: Create the choropleth map
-fig, ax = plt.subplots(1, 1, figsize=(15, 10))
-merged_gdf.plot(column='Data_Value', 
+if response.status_code == 200:
+    data = response.json()
+    print(f"Successfully retrieved data")
+else:
+    print(f"Failed to retrieve data. Status code: {response.status_code}")
+    print(response.text)
+
+# Convert to GeoDataFrame
+gdf = gpd.read_file(response.text)
+
+# Print available health measures
+print("\nAvailable health measures:")
+print(gdf['measure'].unique())
+
+# Print the first few rows to see the structure of the data
+print("\nFirst few rows of the GeoDataFrame:")
+print(gdf.head())
+
+# Print basic information about the GeoDataFrame
+print("\nGeoDataFrame Info:")
+print(gdf.info())
+
+# Create a sample map for one health measure (e.g., Current asthma)
+fig, ax = plt.subplots(figsize=(15, 15))
+
+# Filter for the specific measure and ensure data_value is numeric
+gdf_asthma = gdf[gdf['measure'] == 'Current asthma among adults'].copy()
+gdf_asthma['data_value'] = pd.to_numeric(gdf_asthma['data_value'], errors='coerce')
+
+# Plot the asthma data
+gdf_asthma.plot(column='data_value', 
                 ax=ax, 
                 legend=True, 
                 legend_kwds={'label': 'Asthma Prevalence (%)', 'orientation': 'horizontal'},
                 cmap='YlOrRd',
                 missing_kwds={'color': 'lightgrey'})
 
-ax.set_title('Adult Asthma Prevalence in Detroit, MI')
+# Add county boundaries
+#gdf_asthma.dissolve(by='countyname').boundary.plot(ax=ax, color='black', linewidth=0.5)
+
+# Add basemap
+ctx.add_basemap(ax, crs=gdf_asthma.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the extent to match the Detroit metro area
+ax.set_xlim(gdf_asthma.total_bounds[0], gdf_asthma.total_bounds[2])
+ax.set_ylim(gdf_asthma.total_bounds[1], gdf_asthma.total_bounds[3])
+
+plt.title('Asthma Prevalence in Detroit Metro Area', fontsize=16)
 ax.axis('off')
 
 plt.tight_layout()
 plt.show()
+
+# Print some statistics for the asthma data
+print("\nAsthma Statistics:")
+print(f"Average asthma prevalence: {gdf_asthma['data_value'].mean():.2f}%")
+print(f"Minimum asthma prevalence: {gdf_asthma['data_value'].min():.2f}%")
+print(f"Maximum asthma prevalence: {gdf_asthma['data_value'].max():.2f}%")
+
+# Print the number of census tracts per county
+print("\nNumber of census tracts per county:")
+print(gdf_asthma['countyname'].value_counts())
 ```
 
+```{python}
+import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import contextily as ctx
+from scipy.interpolate import griddata
+import rasterio
+from rasterio.transform import from_origin
+
+# Assuming gdf_asthma is already created and contains the asthma data
+
+# Ensure gdf_asthma is in EPSG:4326
+gdf_asthma = gdf_asthma.to_crs(epsg=4326)
+
+# Extract coordinates and values
+X = gdf_asthma.geometry.x.values
+Y = gdf_asthma.geometry.y.values
+Z = gdf_asthma['data_value'].values
+
+# Remove any NaN values
+mask = ~np.isnan(Z)
+X, Y, Z = X[mask], Y[mask], Z[mask]
+
+# Create a grid to interpolate over
+grid_resolution = 0.025  # in degrees
+x_min, y_min, x_max, y_max = gdf_asthma.total_bounds
+grid_x = np.arange(x_min, x_max, grid_resolution)
+grid_y = np.arange(y_min, y_max, grid_resolution)
+grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
+
+# Perform IDW interpolation
+points = np.column_stack((X, Y))
+grid_z = griddata(points, Z, (grid_xx, grid_yy), method='linear')
+
+# Create the plot
+fig, ax = plt.subplots(figsize=(15, 15))
+
+# Plot the interpolated data
+im = ax.imshow(grid_z, extent=[x_min, x_max, y_min, y_max], 
+               origin='lower', cmap='YlOrRd', alpha=0.7)
+
+# Add colorbar
+cbar = plt.colorbar(im, ax=ax, label='Asthma Prevalence')
+
+# Add basemap
+ctx.add_basemap(ax, crs=gdf_asthma.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the extent to match the Detroit metro area
+ax.set_xlim(x_min, x_max)
+ax.set_ylim(y_min, y_max)
+
+plt.title('IDW Interpolated Asthma Prevalence in Detroit Metro Area', fontsize=16)
+ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+# Save the interpolated raster
+transform = from_origin(x_min, y_max, grid_resolution, grid_resolution)
+with rasterio.open('idw_asthma.tif', 'w', 
+                   driver='GTiff', 
+                   height=grid_z.shape[0], 
+                   width=grid_z.shape[1], 
+                   count=1, 
+                   dtype=grid_z.dtype, 
+                   crs='EPSG:4326',  # Explicitly set the CRS
+                   transform=transform) as dst:
+    dst.write(grid_z, 1)
+
+# Print some statistics about the interpolated data
+print(f"Minimum interpolated value: {np.nanmin(grid_z):.2f}")
+print(f"Maximum interpolated value: {np.nanmax(grid_z):.2f}")
+print(f"Mean interpolated value: {np.nanmean(grid_z):.2f}")
+```
+
+
 ::: {.callout-tip style="color: #5a7a2b;"}
+
 ## Data  Review
+
 The Toxics Release Inventory (TRI) and the Integrated Compliance Information System for Air (ICIS-AIR) are two important but distinct environmental reporting systems maintained by the U.S. Environmental Protection Agency (EPA). They have several key differences:
 
 - **Regulatory Basis**
