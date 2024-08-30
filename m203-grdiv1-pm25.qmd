@@ -1,5 +1,6 @@
 ---
-title: "EJSCREEN tool"
+title: "Particulate Matter Across Socioeconomic Strata of Countries"
+author: "Juan F. Martinez"
 format: html
 bibliography: references.bib
 ---
