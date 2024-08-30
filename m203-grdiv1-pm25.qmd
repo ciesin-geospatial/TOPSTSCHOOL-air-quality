@@ -299,8 +299,8 @@ Plot the map again choosing a column to plot:
 
 ```{python}
 column_chosen = 'GRDI_Max' #GRDI_Max, GRDI_Min, GRDI_Median
-stats_results.plot()
-plt.show()
+stats_results.plot(column=column_chosen, legend=True)
+plt.show() 
 ```
 ## Creating a Table with Results
 
@@ -458,6 +458,8 @@ fig.update_layout(
 # Show plot
 fig.show()
 ```
+Use the plotly controls to take a closer look at the results. 
+
 With this shapely plot, We can examine differences between countires and PM2.5 values. The plot displays the coutnries on the Y axis and log values of the average PM2.5 value on the X axis. Each country displays PM2.5 values averaged within the quartile areas based on GRDI values of each country. A higher quartile (Q) implies a higher degree of deprivation, 1 being the lowest and 5 the highest.  
 
 Congratulations! .... Now you should be able to:
