@@ -1,22 +1,32 @@
 ---
-title: "EJSCREEN tool"
+title: "Particulate Matter Across Socioeconomic Strata of Countries"
+author: "Juan F. Martinez"
 format: html
 bibliography: references.bib
 ---
 
 ## Overview
 
-In this lesson, you will use....
+In this lesson, you will use NASA socioeconomic and environmental Earthdata available at NASA SEDAC to compare relationships between levels of socioeconomic deprivation agaisnts air quality data of particulate matter (PM) in different international administrative areas.  
+
+This lesson walks through the process of calculating and visualizing zonal statistics for a set of countries using raster data, focusing on GRDI country quintiles and PM2.5 concentration levels within these quintile areas. It begins by subsetting data by country and iterating over each country to extract relevant zonal statistics like mean, median, and various percentiles for each quintile. These statistics are stored in a GeoDataFrame, which is later used to create a choropleth map that visualizes specific GRDI metrics across countries. The lesson includes a detailed analysis of PM2.5 concentrations within different GRDI quartiles for selected countries. This involves clipping the raster data to each country's geometry, filtering the data based on the GRDI quartiles, and calculating the mean PM2.5 levels for each quartile. The results are then visualized using customized plots to highlight the relationship between air quality and GRDI metrics across the selected countries.
+
 
 ## Learning Objectives
 
 After completing this lesson, you should be able to:
 
--   Gain a general understanding of what particulate matter (PM) in the air means and
+-   Gain a general understanding of what is particulate matter (PM) in the air and how it impacts human health.
+-   Learn about global socioeconomic dimensions of deprivation and how they are spatially represented. 
+-   Find statistical thresholds in socioeconomic data. 
+-   Perform zonal statistics to summarize spatial data
+-   Resample spatial data to harmoniza and compare socioeconomic data against environmental data.
+-   Display data on a maps to get a general understanding of the spatial distribution of data.
+-   Summarize spatial data into table plots to compare how air quality differs in different socioeconomic conditions of international administrative areas.
 
 ## Introduction
 
-In recent years, researchers have explored the intersection between environmental factors and public health, particularly concerning diseases like COVID-19 and non-small cell lung cancer (NSCLC). Studies have highlighted the impact of air pollution on disease susceptibility and outcomes, emphasizing the need for rigorous analysis and understanding of these relationships. This overview focuses on several key studies that utilize data science principles to investigate how environmental justice, air pollution, and demographic factors intersect, providing insights that contribute to open science principles and the data science life cycle.
+
 
 ## Data Collection and Integration
 
@@ -26,24 +36,9 @@ The **Global Gridded Relative Deprivation Index (GRDI), v1 (2010 – 2020)**
 
 Gather comprehensive datasets from reliable sources such as the US EPA's EJSCREEN tool and other public health databases like John Hopkins and County Health Rankings. Integrate relevant environmental data (e.g., air pollutant concentrations, pollution source proximity) with health outcomes data (e.g., COVID-19 prevalence, NSCLC incidence). Ensure data compatibility and quality through data cleaning and validation procedures.
 
-### Exploratory Data Analysis (EDA)
+### Preparing Environment and Variables
 
-```{python}
-
-# import pycountry
-
-# import rasterio
-# import rasterio.mask
-# from rasterio.warp import calculate_default_transform, reproject, Resampling
-# import rasterstats
-# import matplotlib.pyplot as plt
-# import numpy as np
-
-    
-```
-
-
-
+Importing python packages required:
 ```{python}
 import xarray as xr
 import rioxarray
@@ -58,46 +53,30 @@ import pygadm
 import plotly.graph_objects as go 
 
 ```
+
+Load the GRDIv1 and PM2.5 data from local sources:
 ```{python}
 # Load rasters
 grdi_path = r"Z:\Sedac\GRDI\data\povmap-grdi-v1-geotiff\final data\povmap-grdi-v1.tif"
 pm25_path = r"F:\TOPSSCHOOL\git\TOPSTSCHOOL-air-quality\data\sdei-global-annual-gwr-pm2-5-modis-misr-seawifs-aod-v4-gl-03-2019-geotiff\sdei-global-annual-gwr-pm2-5-modis-misr-seawifs-aod-v4-gl-03-2019.tif"
 
-# grdi_raster = rasterio.open(grdi_path, masked=True)
-# pm25_raster = rasterio.open(pm25_path, masked=True)
-
 ```
-
+Using the package rasterio to load the data into memory. This allows us to read the data and use it for processing. 
 ```{python}
 # Open the input and reference rasters
 grdi_raster = rioxarray.open_rasterio(grdi_path, mask_and_scale=True)
 pm25_raster = rioxarray.open_rasterio(pm25_path, mask_and_scale=True)
 ```
+### Matching Data Points using Bilinear Resample 
 
+The GRDI raster and PM2.5 rasters are incompatible in resolution. One method of harmonizing data is by using the `Resampling` bethod with a *bilinear* method. In this case, we reduce, or coarsen, the resolution of the GRDI raster to match the PM2.5 raster. 
 ```{python}
 # Resample the input raster to match the reference raster
 grdi_raster = grdi_raster.rio.reproject_match(pm25_raster,resampling=Resampling.bilinear)
 
 ```
 
-```{python}
-# grdi_raster.rio.nodata
-```
-```{python}
-
-# # grdi_arr = grdi_raster.read(1)
-# grdi_data[grdi_data == grdi_raster.rio.nodata] = np.nan
-# # grdi_transform = grdi_raster.transform
-
-# # pm25_arr = pm25_raster.read(1)
-# pm25_data[pm25_data == pm25_raster.rio.nodata] = np.nan
-# # pm25_transform = pm25_raster.transform
-```
-
-```{python}
-
-```
-
+## Previewing Spatial Data in a Plot
 ```{python}
 # Plotting the rasters
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 20))
@@ -117,28 +96,37 @@ fig.colorbar(im2, ax=ax2, orientation='horizontal', label='PM2.5 Values')
 plt.tight_layout()
 plt.show()
 ```
+## Working with administrative Data
 
+`pygadm` is a package that has international administrative units from levels 0 to 2. We can search the available countries by listing the Names.
 ```{python}
 country_table = gpd.GeoDataFrame(pygadm.Names())
 len(country_table)
 ```
 
-
+Some available areas with a unique `GID_0` code share Names; therefore we drop the rows that contain digits. 
 ```{python}
 country_table = country_table[~country_table['GID_0'].str.contains('\d', na=False)]
 len(country_table)
 ```
 
+### Subset Data From a Table
+Doing Zonal statistics for more than 200 countries may take a while, therefore, we can subset the data randomly with the `.sample()` method.
+
+```{python}
+country_sample = country_table.sample(n=15)
+country_sample
+```
+## Zonal Statistics for Each Administrative Area 
+`rasterstats` has a funcion `zonal_stats()` which allows you to use vectors to summarize raster data. We summarize GRDIv1 data to calculate the following statistics: count, minimum, mean, max, median, standard deviation, range, and percentiles 20, 40, 60, and 80. 
+
+
 
 ```{python}
 
-# Slice the first two rows
-# country_table = country_table.iloc[:10]
-
-
 stats_results = gpd.GeoDataFrame()
 
-for index, row in country_table.iloc[:15].iterrows():
+for index, row in country_sample.iloc[:].iterrows():
     country = row['NAME_0']
     country_GID = row['GID_0']
     try:
@@ -182,18 +170,100 @@ for index, row in country_table.iloc[:15].iterrows():
     # stats_results.append(country_stats_gdf)
     stats_results = pd.concat([stats_results, country_stats_gdf], ignore_index=True)
 
-
-    
-    
-# stats_results_gdf = gpd.GeoDataFrame(stats_results)
     
 ```
+Let's use the `.head()` method from Pandas to check the top of our table
+```{python}
+stats_results.head()
+```
+
+## Defining a Funtion
+
+We can create a custom function that can allow us to use the zonal statistics process multiple times. A custom function can be created using the `def FUNCTION_NAME(PARAMETER1, PARAMETER2):` fuction to define what the fucntion will do.
 
 ```{python}
-stats_results
+def calculate_country_stats(country_sample, grdi_raster, pm25_raster=None):
+    """
+    Calculate statistics for each country in the sample.
+
+    Parameters:
+    - country_sample: A pandas DataFrame containing country information with 'NAME_0' and 'GID_0' columns, in this case the country_table.
+    - grdi_raster: A raster object with which to perform the zonal statistics.
+    - pm25_raster: (Optional) A raster object for PM2.5 data. If provided, statistics will also be calculated for this raster.
+
+    Returns:
+    - stats_results: A GeoDataFrame containing the statistics for each country.
+    """
+    stats_results = gpd.GeoDataFrame()
+
+    for index, row in country_sample.iloc[:].iterrows():
+        country = row['NAME_0']
+        country_GID = row['GID_0']
+        try:
+            country_poly = pygadm.Items(admin=country_GID, content_level=0)
+        except Exception as e:
+            print(country, "skipped due to error:", e)
+            continue
+
+        # Create a mask for the polygons and perform zonal statistics on GRDI raster
+        grdi_country_zs = rasterstats.zonal_stats(
+            country_poly, grdi_raster.values[0], 
+            affine=grdi_raster.rio.transform(), 
+            stats="count min mean max median std range percentile_20 percentile_40 percentile_60 percentile_80"
+        )
+
+        # Uncomment and update the following lines if you want to include PM2.5 statistics
+        # if pm25_raster is not None:
+        #     pm25_country_zs = rasterstats.zonal_stats(
+        #         country_poly, pm25_raster.values[0], 
+        #         affine=pm25_raster.rio.transform(), 
+        #         stats="count min mean max median std range percentile_20 percentile_40 percentile_60 percentile_80", 
+        #         nodata=pm25_raster.nodata
+        #     )
+
+        # Extract statistics into a dictionary
+        country_stats = {
+            'Country_Name': country,
+            'Country_GID' : country_GID,
+            'GRDI_Count': grdi_country_zs[0]['count'],
+            'GRDI_Min': grdi_country_zs[0]['min'],
+            'GRDI_Mean': grdi_country_zs[0]['mean'],
+            'GRDI_Max': grdi_country_zs[0]['max'],
+            'GRDI_Median': grdi_country_zs[0]['median'],
+            'GRDI_Std': grdi_country_zs[0]['std'],
+            'GRDI_Range': grdi_country_zs[0]['range'],
+            'GRDI_P20': grdi_country_zs[0]['percentile_20'],
+            'GRDI_P40': grdi_country_zs[0]['percentile_40'],
+            'GRDI_P60': grdi_country_zs[0]['percentile_60'],
+            'GRDI_P80': grdi_country_zs[0]['percentile_80'],
+            'geometry' : country_poly['geometry'].iloc[0]
+        }
+
+        # If PM2.5 statistics are calculated, add them to the dictionary
+        # if pm25_raster is not None:
+        #     country_stats.update({
+        #         'PM25_Count': pm25_country_zs[0]['count'],
+        #         'PM25_Min': pm25_country_zs[0]['min'],
+        #         'PM25_Mean': pm25_country_zs[0]['mean'],
+        #         'PM25_Max': pm25_country_zs[0]['max'],
+        #         'PM25_Median': pm25_country_zs[0]['median'],
+        #         'PM25_Std': pm25_country_zs[0]['std'],
+        #         'PM25_Range': pm25_country_zs[0]['range'],
+        #         'PM25_P20': pm25_country_zs[0]['percentile_20'],
+        #         'PM25_P40': pm25_country_zs[0]['percentile_40'],
+        #         'PM25_P60': pm25_country_zs[0]['percentile_60'],
+        #         'PM25_P80': pm25_country_zs[0]['percentile_80'],
+        #     })
+
+        country_stats_gdf = gpd.GeoDataFrame([country_stats], geometry='geometry')
+        stats_results = pd.concat([stats_results, country_stats_gdf], ignore_index=True)
+
+    return stats_results
+
+
 ```
 
-
+From the table above, we can choose an attribute, or column, to display it in a map plot. In this case, I'm choosing the GRDI Max 
 ```{python}
 column_chosen = 'GRDI_Max' #GRDI_Max, GRDI_Min, GRDI_Median
 # Plotting
@@ -205,21 +275,44 @@ ax.set_title('Choropleth Map Showing GRDI Mean per country')
 ax.set_axis_off()  # Turn off the axis numbers and ticks
 plt.show()
 ```
+### Selecting Data by Column
+Start my creating a list of countries that you are interested in to Subset data from the DataFrame that match the values in the `NAME_0` column. The `.isin()` mehthod checks each element in the DataFrame's column for the item present in the list and returns matching rows.
 
 ```{python}
 # selected_countries = ["Algeria", "Somalia", "Colombia", "Timor Leste", "Finland", "Nicaragua", "United Kingdom", "Mali"]
-selected_countries = ["Anguilla", "Armenia", "Angola", "Argentina", "Albania", "United Arab Emirates", "American Samoa", "Australia" ]
-selected_countries = stats_results[stats_results['Country_Name'].isin(selected_countries)]
+# selected_countries = ["Anguilla", "Armenia", "Angola", "Argentina", "Albania", "United Arab Emirates", "American Samoa", "Australia" ]
+selected_countries = ["Algeria", "Somalia", "Colombia", "Timor Leste", "Finland", "Nicaragua", "United Kingdom", "Mali", "Armenia", "Argentina",  "Albania", "United Arab Emirates", "Indonesia", "Qatar"]
+
+#use the list above to subset the country_table DataFrame by the column NAME_0 
+selected_countries = country_table[country_table['NAME_0'].isin(selected_countries)]
 ```
+### Using a Defined Custom Function
+Recalling the defined fucntion `calculate_country_stats`, we can use our `selected_countries` list, and the GRDI and PM2.5 rasters, to create a new table of zonal statistics. 
+```{python}
+stats_results = calculate_country_stats(selected_countries, grdi_raster)
+```
+Show the head of the table again:
 
 ```{python}
+stats_results.head()
+```
+Plot the map again choosing a column to plot:
 
+```{python}
+column_chosen = 'GRDI_Max' #GRDI_Max, GRDI_Min, GRDI_Median
+stats_results.plot(column=column_chosen, legend=True)
+plt.show() 
+```
+## Creating a Table with Results
+
+We can create a list of **tuples** that we can use to refer to the GRDI statistical values, and the name, color, and symbol we want to assign.
+In this case, we are using the GRDI zonal statistics of each country we selected that include the Mean, Minimum, Maximum, and interquartiles.  
+```{python}
 
 # List of GRDI values and their corresponding properties
 #column, value name, color, symbol
 grdi_data = [
     ('GRDI_Mean', 'Mean', 'orange', 'diamond'),
-    ('GRDI_Median', 'Median', 'black', '142'),
     ('GRDI_Min', 'Min', 'gray', '152'),
     ('GRDI_Max', 'Max', 'gray', '151'),
     ('GRDI_P20', 'Q20', 'blue', '142'),
@@ -227,15 +320,17 @@ grdi_data = [
     ('GRDI_P60', 'Q60', 'green', '142'),
     ('GRDI_P80', 'Q80', 'red', '142')
 ]
-
+```
+We can create a figure to display the data based on the names colors and symbols we selected.
+```{python}
 # Create a figure
 fig = go.Figure()
 
-# Add traces
+# Add traces to the figure based on the data
 for col, name, color, symbol in grdi_data:
     fig.add_trace(go.Scatter(
-        x=selected_countries[col],
-        y=selected_countries['Country_Name'],
+        x=stats_results[col],
+        y=stats_results['Country_Name'],
         mode='markers',
         name=name,
         marker=dict(color=color, size=10, symbol=symbol)
@@ -255,26 +350,30 @@ fig.update_layout(
 # Show plot
 fig.show()
 ```
+## Summarizing PM2.5 Values by Socioeconomic Deprivation
+Considering the GRDI quartile values as a level of socieoeconomic deprivation within each country, we can use the `stats_results` GeoDataFrame, the GRDI raster, and the PM2.5 raster to calculate the Mean PM.25 value within each of those areas in each country. This can describe how the air quality for different socioeconomic strata compare within the country, as well as against other countries. 
 
+The results will be added to the `stats_results` with the corresponting columns. 
 ```{python}
-for index, row in selected_countries.iterrows():
+# iterate through the stats_results table rows
+for index, row in stats_results.iloc[:].iterrows():
+    #isolate each country's respective row
     row_df = gpd.GeoDataFrame([row], geometry='geometry').reset_index(drop=True)
     print(row_df.loc[0,'Country_GID'])
-
-    # Extract the geometry and mask the reprojected data
-    # country_geometry = [row['geometry']]
     try:
+        #use rioxarray to clip the GRDI and PM2.5 rasters by the geometry of the respective country.
         grdi_country = grdi_raster.rio.clip(row_df.geometry, grdi_raster.rio.crs)
-        pm25_country = pm25_raster.rio.clip(row_df.geometry, pm25_raster.rio.crs)
+        pm25_country = pm25_raster.rio.clip(row_df.geometry, grdi_raster.rio.crs)
     except:
+        print('Error in clip')
         continue
 
-    
+    #Applying squeeze() to this array removes the singleton dimension, reducing it to a 2D array with dimensions (rows, columns)
     grdi_country= grdi_country.squeeze()
     pm25_country= pm25_country.squeeze()
 
 
-    # Subset the raster where values fall between quintiles
+    # Subset the GRDI raster where values fall between each GRDI quintiles
     grdi_countryQ1 = grdi_country.where((grdi_country >= row_df.loc[0, 'GRDI_Min']) & (grdi_country <= row_df.loc[0, 'GRDI_P20']))
     grdi_countryQ2 = grdi_country.where((grdi_country >= row_df.loc[0, 'GRDI_P20']) & (grdi_country <= row_df.loc[0, 'GRDI_P40']))
     grdi_countryQ3 = grdi_country.where((grdi_country >= row_df.loc[0, 'GRDI_P40']) & (grdi_country <= row_df.loc[0, 'GRDI_P60']))
@@ -282,26 +381,33 @@ for index, row in selected_countries.iterrows():
     grdi_countryQ5 = grdi_country.where((grdi_country >= row_df.loc[0, 'GRDI_P80']) & (grdi_country <= row_df.loc[0, 'GRDI_Max']))
 
 
-    # Mask raster1 using raster2, keeping only the cells that intersect raster2
+    # Mask the PM2.5 raster using the above GRDI quartile rasters, keeping only the cells that intersect
     pm25_countryQ1 = pm25_country.where(grdi_countryQ1.notnull())
     pm25_countryQ2 = pm25_country.where(grdi_countryQ2.notnull())
     pm25_countryQ3 = pm25_country.where(grdi_countryQ3.notnull())
     pm25_countryQ4 = pm25_country.where(grdi_countryQ4.notnull())
     pm25_countryQ5 = pm25_country.where(grdi_countryQ5.notnull())
 
+    #Find the mean value of of the intersected PM2.5 rasters in each quartile
     pm25_countryQ1v = pm25_countryQ1.mean().item()
     pm25_countryQ2v = pm25_countryQ2.mean().item()
     pm25_countryQ3v = pm25_countryQ3.mean().item()
     pm25_countryQ4v = pm25_countryQ4.mean().item()
     pm25_countryQ5v = pm25_countryQ5.mean().item()
 
-    selected_countries.at[index, 'PM25_Q1'] = pm25_countryQ1v
-    selected_countries.at[index, 'PM25_Q2'] = pm25_countryQ2v
-    selected_countries.at[index, 'PM25_Q3'] = pm25_countryQ3v
-    selected_countries.at[index, 'PM25_Q4'] = pm25_countryQ4v
-    selected_countries.at[index, 'PM25_Q5'] = pm25_countryQ5v
+    #add the resuts to the stats_results table in the respective column
+    stats_results.at[index, 'PM25_Q1'] = pm25_countryQ1v
+    stats_results.at[index, 'PM25_Q2'] = pm25_countryQ2v
+    stats_results.at[index, 'PM25_Q3'] = pm25_countryQ3v
+    stats_results.at[index, 'PM25_Q4'] = pm25_countryQ4v
+    stats_results.at[index, 'PM25_Q5'] = pm25_countryQ5v
 ```
 
+```{python}
+stats_results.head()
+```
+## Plot Results of Mean PM2.5 in Socieceonomic Deprivation Quartiles per country
+Similarly, we create a list of tuples of how we want to display the data, and create a figure based on the tuples. This plot would show each country in the y axis and the Log of Mean PM2.5 values in each country's GRDI quarties.
 ```{python}
 
 # List of GRDI values and their corresponding properties
@@ -317,14 +423,14 @@ plot_data =[
 # Create a figure
 fig = go.Figure()
 
-# Add traces
+# Add traces to the figure.
 for col, name, color, symbol in plot_data:
-    xlog  = np.log(selected_countries[col])
+    xlog  = np.log(stats_results[col])
     fig.add_trace(go.Scatter(
         x=xlog,
-        y=selected_countries['Country_Name'],
+        y=stats_results['Country_Name'],
         mode='markers+text',  # Add 'text' to mode
-        text=[f'<b>{name}</b>' for _ in selected_countries[col]],  # Repeat name for each point
+        text=[f'<b>{name}</b>' for _ in stats_results[col]],  # Repeat name for each point
         name=name,
         textfont=dict(color=color, size=12),
         textposition='top center',  # Position the text above the symbol
@@ -340,7 +446,7 @@ fig.update_traces(textposition='top center')
     # Customize layout
 fig.update_layout(
     title='Mean PM2.5 in each GRDI Quartile by Country',
-    xaxis_title='PM2.5 Mean Values',
+    xaxis_title='Log of PM2.5 Mean Values',
     yaxis_title='Country Name',
     yaxis=dict(tickmode='linear'),
     legend_title='Statistics',
@@ -353,40 +459,9 @@ fig.update_layout(
 # Show plot
 fig.show()
 ```
-### Model Development and Analysis
+Use the plotly controls to take a closer look at the results. 
 
-```{python}
-selected_countries
-```
-Apply statistical models (e.g., regression analyses, machine learning algorithms) to quantify the relationships between environmental exposures and health outcomes. Adjust for confounders such as demographic characteristics (e.g., age, race/ethnicity) and socioeconomic factors (e.g., income, education). Validate models using cross-validation techniques to ensure robustness and generalizability of findings.
-
-### Interpretation and Communication of Results
-
-Interpret findings in the context of environmental justice principles, highlighting disparities and vulnerabilities observed in different populations. Discuss implications for public health policy and environmental regulations based on study outcomes. Communicate results transparently using accessible language and visual aids to engage stakeholders and the broader community.
-
-## The Data Science Life Cycle
-
-The data science life cycle guides the systematic approach to handling data from collection to interpretation:
-
-### Data Acquisition
-
-Obtain relevant datasets from sources like EJSCREEN, County Health Rankings, and specific studies' databases. \### Data Preparation Clean and preprocess data to ensure accuracy and consistency, handling missing values and outliers appropriately.
-
-### Exploratory Data Analysis
-
-Explore data distributions, correlations, and initial insights to guide further analysis.
-
-### Modeling
-
-Develop statistical models to test hypotheses and predict outcomes, considering factors like pollution exposure and demographic variables.
-
-### Evaluation
-
-Assess model performance and validity through metrics and cross-validation techniques.
-
-### Deployment
-
-Communicate findings through reports, presentatio
+With this shapely plot, We can examine differences between countires and PM2.5 values. The plot displays the coutnries on the Y axis and log values of the average PM2.5 value on the X axis. Each country displays PM2.5 values averaged within the quartile areas based on GRDI values of each country. A higher quartile (Q) implies a higher degree of deprivation, 1 being the lowest and 5 the highest.  
 
 Congratulations! .... Now you should be able to:
 
