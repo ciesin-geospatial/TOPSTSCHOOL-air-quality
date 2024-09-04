@@ -1,6 +1,7 @@
 ---
 title: "Exploring SVI, TRI, and Health Outcomes"
-autor: "Joshua Brinks"
+author: "Joshua Brinks"
+dat: "September 4, 2024"
 format: 
     html
 ---
@@ -12,7 +13,8 @@ In this lesson, we will introduce you to 3 public health and air quality dataset
 ::: {.callout-tip style="color: #5a7a2b;"}
 ## Programming Review
 
-This is the Python version of this lesson. If you would like to work through the R version please visit [WSIM-GLDAS: Acquisition, Exploration, and Integration](https://ciesin-geospatial.github.io/TOPSTSCHOOL-water/m101-wsim-gldas.html)
+This lesson uses the Python programming environment.
+
 :::
 
 ## Learning Objectives
@@ -114,6 +116,7 @@ import pandas as pd
 import requests
 import contextily as ctx
 import time
+import rioxarray
 ```
 
 ##### Defining Our Study Area
@@ -879,28 +882,36 @@ for file in tif_files:
         metro_reprojected = detroit_metro.to_crs(src.crs)
         
         # Clip the raster to Detroit metro's geometry
-        out_image, out_transform = mask(src, metro_reprojected.geometry, crop=True)
+        out_image, out_transform = rasterio.mask.mask(src, metro_reprojected.geometry, crop=True)
+        out_meta = src.meta.copy()
         
-        # Get dimensions of the output image
-        height, width = out_image.shape[1], out_image.shape[2]
+        # Update the metadata
+        out_meta.update({"driver": "GTiff",
+                         "height": out_image.shape[1],
+                         "width": out_image.shape[2],
+                         "transform": out_transform})
         
-        # Create coordinate grids
+        # Create coordinates
+        height = out_meta['height']
+        width = out_meta['width']
         cols, rows = np.meshgrid(np.arange(width), np.arange(height))
         xs, ys = rasterio.transform.xy(out_transform, rows, cols)
         
-        # Convert coordinate lists to numpy arrays
+        # Convert lists to numpy arrays
         xs = np.array(xs)
         ys = np.array(ys)
         
-        # Create a DataArray from the clipped data
-        da = xr.DataArray(
-            out_image[0],  # Use the first band
-            coords={'y': ys[:, 0], 'x': xs[0, :]},
-            dims=['y', 'x']
-        )
-        da.attrs['crs'] = str(src.crs)
-        da.attrs['transform'] = out_transform
+        # Reshape coordinates to match dimensions of the raster
+        xs = xs.reshape(height, width)
+        ys = ys.reshape(height, width)
         
+        # Create a DataArray from the clipped data
+        da = xr.DataArray(out_image[0],  # Use the first band
+                          coords={'y': ('y', ys[:, 0]),
+                                  'x': ('x', xs[0, :])},
+                          dims=['y', 'x'])
+        da.attrs['crs'] = str(src.crs)  # Convert CRS to string
+        da.attrs['transform'] = out_transform
         data_arrays.append(da)
 ```
 
@@ -977,6 +988,8 @@ transform = from_origin(minx, maxy, resolution, resolution)
 Now we have to prepare the point values and rasterize them. A key thing to note here is the `merge_alg=rasterio.enums.MergeAlg.add` argument passed to the rasterize function. This makes sure that cells with more than 1 point will add the values together (the default is to simply replace).
 
 ```{python}
+from rasterio import features
+
 # Prepare geometries and values for rasterization
 shapes = ((geom, value) for geom, value in zip(gdf_tri_form_r_bm.geometry, gdf_tri_form_r_bm.AIR_TOTAL_RELEASE))
 
@@ -989,7 +1002,7 @@ air_release_raster = features.rasterize(shapes=shapes,
                             merge_alg=rasterio.enums.MergeAlg.add)
 ```
 
-We rasterized with the **rasterio**, but we need to convert this to an **xarray** object to continue.
+We rasterized with **rasterio**, but we need to convert this to an **xarray** object to continue.
 
 ```{python}
 # Convert the raster to an xarray DataArray
@@ -1005,7 +1018,10 @@ The spaces between county borders can create odd values because there are no poi
 
 ```{python}
 # Clip the raster with the Detroit metro boundary
-air_release_raster_da = air_release_raster_da.rio.clip(detroit_metro_bm.geometry.values, detroit_metro_bm.crs, drop=False, all_touched=True)
+air_release_raster_da = air_release_raster_da.rio.clip(
+    detroit_metro_bm.geometry.values, 
+    detroit_metro_bm.crs, 
+    drop=False, all_touched=True)
 ```
 
 Now we can see how our rasterized air release values look.
@@ -1055,7 +1071,7 @@ plt.show()
 
 print(f"Number of TRI facilities plotted: {len(gdf_tri_form_r_bm)}")
 print(f"Total air releases: {gdf_tri_form_r_bm['AIR_TOTAL_RELEASE'].sum():,.2f}")
-print(f"Maximum cell value in raster: {clipped_raster.max().values:,.2f}")
+print(f"Maximum cell value in raster: {air_release_raster_da.max().values:,.2f}")
 ```
 
 The raster looks as expected with the highest values in locations where our previous map had the largest circles. We overlayed the points to see the sources of the values. The cell resolution is set to 5000m. This was selected so we can evaluate the map and the process we used to create the raster, but any value could be set depending on the intended use. 
@@ -1067,8 +1083,9 @@ High concentrations of air releases in our map do appear to coincide with areas 
 We can extract the values from the 
 
 ```{python}
+#| eval: false
 # Calculate raster correlation between SVI overall and air release within Detroit metro boundary
-svi_flat = svi_clipped.values.flatten()
+svi_flat = svi_reprojected.values.flatten()
 air_flat = air_release_disaggregated.values.flatten()
 
 # Remove NaN values
@@ -1115,6 +1132,7 @@ plt.show()
 Run a Pearson's correlation.
 
 ```{python}
+#| eval: false
 # Perform correlation analysis
 svi_air_correlation, p_value_points = stats.pearsonr(svi_filtered, air_filtered_log)
 
@@ -1139,8 +1157,8 @@ svi_overall = svi_overall.rio.write_crs("EPSG:4326")
 svi_reprojected = svi_overall.rio.reproject_match(air_release_raster_da)
 
 # Disaggregate the air release data to match the resolution of the SVI data
-air_release_disaggregated = clipped_raster.rio.reproject_match(
-    svi_clipped,
+air_release_disaggregated = svi_reprojected.rio.reproject_match(
+    svi_reprojected,
     resampling=Resampling.bilinear
 )
 ```
@@ -1156,7 +1174,7 @@ air_release_log = np.log1p(air_release_disaggregated)
 air_release_scaled = (air_release_log - air_release_log.min()) / (air_release_log.max() - air_release_log.min())
 
 # Multiply scaled air release data with SVI data
-vulnerability_indicator = air_release_scaled * svi_clipped
+vulnerability_indicator = air_release_scaled * svi_reprojected
 ```
 
 Now let's visualize our index along with the inputs.
@@ -1166,7 +1184,7 @@ Now let's visualize our index along with the inputs.
 fig, axs = plt.subplots(3, 1, figsize=(8, 20))
 
 # Plot SVI Overall
-im1 = svi_clipped.plot(ax=axs[0], cmap='viridis', vmin=0, vmax=1, add_colorbar=False)
+im1 = svi_reprojected.plot(ax=axs[0], cmap='viridis', vmin=0, vmax=1, add_colorbar=False)
 plt.colorbar(im1, ax=axs[0], label='SVI Overall', 
                     fraction=0.047, pad=0.04, aspect=20)
 axs[0].set_title('Social Vulnerability Index (Overall)', fontsize=16)
@@ -1189,8 +1207,8 @@ detroit_metro.boundary.plot(ax=axs[2], color='black', linewidth=2)
 for ax in axs:
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
-    ax.set_xlim(svi_clipped.x.min(), svi_clipped.x.max())
-    ax.set_ylim(svi_clipped.y.min(), svi_clipped.y.max())
+    ax.set_xlim(svi_reprojected.x.min(), svi_reprojected.x.max())
+    ax.set_ylim(svi_reprojected.y.min(), svi_reprojected.y.max())
 
 plt.tight_layout()
 plt.show()
@@ -1254,6 +1272,7 @@ for i, (idx, row) in enumerate(top_10_gdf.iterrows(), 1):
     print(f"Row index = {idx}, Index value = {round(row['index'], 2)}")
 ```
 
+As you would expect looking at the input layers, the most vulnerable and polluted areas are along the river coridor in Loncoln Park, Melvindale, Mexicantown, and River Rouge. There are multiple locations with indexes greater than 0.70. Information like this can be valuable for targeted relief or mitigation programs.
 
 ### CDC PLACES
 
@@ -1277,7 +1296,7 @@ This dataset is particularly valuable for public health researchers, policymaker
 
 As with ICIS-AIR and TRI, PLACES is available through a web search interface and a programmatic API. We will focus on the API in this example. 
 
-### Processing
+#### Processing
 
 ```{python}
 # Define the GeoJSON API endpoint
