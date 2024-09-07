@@ -86,7 +86,24 @@ We'll begin with the ICIS-AIR dataset, then move on to the TRI Facility dataset,
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### Data Science Review
 
-This lesson uses the [`pandas`](https://pandas.pydata.org/), [`geopandas`](https://geopandas.org/), [`matplotlib`](https://matplotlib.org/), [`numpy`](https://numpy.org/), [`requests`](https://docs.python-requests.org/en/latest/), [`contextily`](https://contextily.readthedocs.io/en/latest/), [`pygris`](https://pygris.readthedocs.io/en/latest/), [`rasterio`](https://rasterio.readthedocs.io/en/latest/), and [`xarray`](https://xarray.pydata.org/) modules. If you'd like to learn more about the functions used in this lesson, you can refer to the documentation on their respective websites.
+This lesson uses the following Python modules:
+
+- [`pandas`](https://pandas.pydata.org/): Essential for data manipulation and analysis.
+- [`geopandas`](https://geopandas.org/): Extends pandas functionality to handle geospatial data.
+- [`matplotlib`](https://matplotlib.org/): Used for creating static, animated, and interactive visualizations.
+- [`numpy`](https://numpy.org/): Provides support for large, multi-dimensional arrays and matrices, along with mathematical functions to operate on these arrays.
+- [`requests`](https://docs.python-requests.org/en/latest/): Allows you to send HTTP requests and interact with APIs easily.
+- [`contextily`](https://contextily.readthedocs.io/en/latest/): Adds basemaps to your plots, enhancing the visual context of your geospatial data.
+- [`pygris`](https://pygris.readthedocs.io/en/latest/): Simplifies the process of working with US Census Bureau TIGER/Line shapefiles.
+- [`rasterio`](https://rasterio.readthedocs.io/en/latest/): Reads and writes geospatial raster datasets.
+- [`xarray`](https://xarray.pydata.org/): Introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
+- [`shapely`](https://shapely.readthedocs.io/en/latest/): Manipulation and analysis of geometric objects in the Cartesian plane.
+- [`scipy`](https://www.scipy.org/): Used for scientific and technical computing, particularly the `stats` and `interpolate` submodules.
+- [`rioxarray`](https://corteva.github.io/rioxarray/stable/): Extends xarray to make it easier to handle geospatial raster data.
+- [`time`](https://docs.python.org/3/library/time.html): Provides various time-related functions (part of Python's standard library).
+- [`tabulate`](https://pypi.org/project/tabulate/): Used for creating nicely formatted tables in various output formats.
+
+If you'd like to learn more about the functions used in this lesson, you can refer to the documentation on their respective websites.
 
 The `pandas` module is essential for data manipulation and analysis, while `geopandas` extends its functionality to handle geospatial data. `matplotlib` is used for creating static, animated, and interactive visualizations. `numpy` provides support for large, multi-dimensional arrays and matrices, along with a collection of mathematical functions to operate on these arrays.
 
@@ -94,7 +111,9 @@ The `requests` module allows you to send HTTP requests and interact with APIs ea
 
 `rasterio` and `xarray` are used for working with geospatial raster data. `rasterio` reads and writes geospatial raster datasets, while `xarray` introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
 
-Make sure these modules are installed before you begin working with the code in this document. You can install them using pip:
+`shapely` is used for manipulation and analysis of geometric objects. `scipy` provides additional tools for scientific computing, including statistical functions and interpolation methods. `rioxarray` combines the functionality of rasterio and xarray for easier handling of geospatial raster data.
+
+Make sure these modules are installed before you begin working with the code in this document.
 :::
 
 ### ICIS Air
@@ -475,6 +494,16 @@ table
 ICIS-AIR is a powerfule tool for communites and policy-makers to identify regulated facilities and their compliance status, but the dataset does have limitations. Next, we'll take a look at facilities required to report to the Toxic Release Inventory (TRI).
 
 ::: {.callout-tip style="color: #5a7a2b;"}
+#### Knowledge Check
+Which of the following best describes the ICIS-AIR database?
+
+a) A database of air quality measurements from monitoring stations
+b) A comprehensive database of air quality compliance and enforcement data
+c) A public health database tracking respiratory illnesses
+d) A database of weather patterns affecting air quality
+:::
+
+::: {.callout-tip style="color: #5a7a2b;"}
 #### Environmental Justice In the News
 
 [The Michigan Department of Environment, Great Lakes and Energy (EGLE) has settled a civil rights complaint regarding a hazardous waste facility in Detroit](https://www.detroitnews.com/story/news/local/michigan/2024/08/29/egle-settles-civil-rights-complaint-about-detroit-hazardous-waste-approval-us-ecology-north/75001763007/). The complaint, filed in 2020 by environmental groups and local residents, challenged the renewal and expansion of U.S. Ecology North's license, arguing it was unjust to increase hazardous waste storage in a predominantly low-income and minority neighborhood. As part of the settlement, EGLE will now consider environmental justice concerns in future licensing decisions for hazardous waste facilities.
@@ -485,6 +514,43 @@ The agreement, described as "groundbreaking" by the Sierra Club, introduces seve
 ### Toxic Release Inventory
 
 The Toxic Release Inventory (TRI) is a crucial resource in understanding and addressing air quality issues in the United States. Established under the Emergency Planning and Community Right-to-Know Act of 1986, the TRI is a publicly accessible database maintained by the Environmental Protection Agency (EPA). It requires certain industrial facilities to report annually on their releases of toxic chemicals into the environment, including air emissions. The TRI provides valuable data on over 770 chemicals and chemical categories, offering insights into the types and quantities of pollutants released into the air by various industries. This information is vital to researchers, policymakers, and community advocates in assessing local air quality, identifying potential health risks, and developing targeted strategies to reduce toxic air emissions. By making this data publicly available, the TRI plays an important role in promoting transparency and supporting environmental justice initiatives focused on improving air quality in communities across the nation.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+## Data Review
+
+The Toxics Release Inventory (TRI) and the Integrated Compliance Information System for Air (ICIS-AIR) are two important but distinct environmental reporting systems maintained by the U.S. Environmental Protection Agency (EPA). They have several key differences:
+
+-   **Regulatory Basis**
+    -   TRI: Established under the Emergency Planning and Community Right-to-Know Act (EPCRA) of 1986
+    -   ICIS-AIR: Part of the Clean Air Act (CAA) compliance and enforcement program
+-   **Focus**
+    -   TRI: Tracks the management of certain toxic chemicals that may pose a threat to human health and the environment
+    -   ICIS-AIR: Focuses specifically on air quality and emissions from facilities regulated under the Clean Air Act
+-   **Reported Information**
+    -   TRI: Facilities report on releases, waste management, and pollution prevention activities for specific toxic chemicals
+    -   ICIS-AIR: Tracks emissions data, compliance status, and enforcement actions related to air quality regulations
+-   **Facility Coverage**
+    -   TRI: Covers facilities in specific industries that manufacture, process, or use TRI-listed chemicals above certain thresholds
+    -   ICIS-AIR: Includes a broader range of facilities that emit air pollutants, regardless of the specific chemicals involved
+-   **Reporting Thresholds**
+    -   TRI: Has specific chemical thresholds that trigger reporting requirements
+    -   ICIS-AIR: Generally doesn't have chemical-specific thresholds; requirements are based on overall emissions and facility type
+-   **Public Accessibility**
+    -   TRI: Designed with a strong focus on public right-to-know, with data easily accessible to the public
+    -   ICIS-AIR: While public, it's primarily designed for regulatory and enforcement purposes
+-   **Data Frequency**
+    -   TRI: Annual reporting is required for covered facilities
+    -   ICIS-AIR: May involve more frequent reporting, depending on permit requirements and compliance status
+-   **Scope of Pollutants**
+    -   TRI: Focuses on a specific list of toxic chemicals and chemical categories
+    -   ICIS-AIR: Covers a wider range of air pollutants, including criteria air pollutants and hazardous air pollutants
+-   **Use in Environmental Management**
+    -   TRI: Often used for assessing long-term trends in toxic chemical releases and waste management practices
+    -   ICIS-AIR: More commonly used for day-to-day air quality management and enforcement activities
+-   **Geographic Coverage**
+    -   TRI: Nationwide program with consistent reporting across states
+    -   ICIS-AIR: While national, implementation can vary more by state or local air quality management district
+:::
 
 #### Envirofacts API
 
@@ -661,6 +727,16 @@ TRI is made up of numerous tables containing a wealth of information regarding t
 Navigating the TRI Envirofacts interface can be overwhelming at times. Multiple tables can be queried with a single URL, however, for a proper join to be carried out both tables must contain at least 1 column. In most cases this can be accomplished using TRI_FACILITY_ID. That said, air pollution release data (column name [AIR_TOTAL_RELEASE](https://enviro.epa.gov/enviro/ef_metadata_html.tri_page?p_column_name=air_total_release)) is only found in the [TRI_FORM_R](https://enviro.epa.gov/enviro/ef_metadata_html.ef_metadata_table?p_table_name=TRI_FORM_R&p_topic=TRI) table, which does not contain the FACILITY_ID column.
 
 You can querry the V_TRI_FORM_R_EZ using the API even though it's not a documented table listed in the API website. This form contains facility information and AIR_TOTAL_RELEASE reporting, but it only goes until 2021. To get the most recent data (2023) you would have to manually download the individual tables with separate calls perform the joins, or use the [custom form search web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). We'll demonstrate a quick API call for the V_TRI_FORM_R_EZ, but move forward with the most recent data available in the custom form search web portal.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Knowledge Check
+What is the primary purpose of the Toxic Release Inventory (TRI)?
+
+a) To track emissions of greenhouse gases
+b) To monitor compliance with the Clean Air Act
+c) To provide data on toxic chemical releases from industrial facilities
+d) To record air quality index values for major cities
+:::
 
 ### Toxic Release Inventory: Form R
 
@@ -844,6 +920,17 @@ print(f"Average air release per facility: {gdf_tri_form_r[release_col].mean():,.
 
 The point source air release data provides a good snapshot of the locations and relative amounts of chemical releases. With some basic understanding of the demographic dynamics of Detroit one might theorize who is being subjected to high levels of pollution, however, we'll need additional data to develop any type of systematic analysis.
 
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Knowledge Check
+
+What key information does Form R of the Toxic Release Inventory provide?
+
+a) Facility names and locations only
+b) Chemical storage capacities of facilities
+c) Detailed data on chemical releases, including air releases
+d) Employee health records related to chemical exposure
+:::
+
 ### Social Vulnerability Index
 
 NASA's Social Vulnerability Index (SVI) raster dataset, available through the Socioeconomic Data and Applications Center (SEDAC), is a high-resolution geospatial resource that quantifies social vulnerability across the United States. This dataset is based on the CDC's Social Vulnerability Index but is presented in a raster format, providing continuous coverage at a 250-meter resolution. The SVI incorporates various socioeconomic and demographic factors such as poverty, lack of vehicle access, crowded housing, and minority status to assess communities' capacity to prepare for, respond to, and recover from hazards, including environmental threats like poor air quality.
@@ -968,6 +1055,17 @@ plt.show()
 ```
 
 This provides an excellent look at demographic trends in the Detroit metro area. Overall vulnerability is highest in the inner city. The most striking drivers are the concentration of minorities and socioeconomic vulnerability in the downtown area. The housing and household components are slightly more varied throughout the region.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Knowledge Check
+
+What does the Social Vulnerability Index (SVI) primarily measure?
+
+a) Air pollution levels in different communities
+b) Economic growth rates of different regions
+c) Communities' capacity to prepare for and respond to hazards
+d) Population density in urban areas
+:::
 
 ### Integrating TRI and SVI
 
@@ -1281,6 +1379,17 @@ for i, (idx, row) in enumerate(top_10_gdf.iterrows(), 1):
 
 As you would expect looking at the input layers, the most vulnerable and polluted areas are along the river coridor in Loncoln Park, Melvindale, Mexicantown, and River Rouge. There are multiple locations with indexes greater than 0.70. Information like this can be valuable for targeted relief or mitigation programs.
 
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Knowledge Check
+
+What was the main purpose of combining the TRI and SVI data in this analysis?
+
+a) To calculate total pollution levels for each county
+b) To identify areas with both high air releases and high social vulnerability
+c) To determine the most populous areas in Detroit
+d) To predict future industrial development zones
+:::
+
 ### CDC PLACES
 
 The CDC PLACES (Population Level Analysis and Community Estimates) dataset is a collaboration between the Centers for Disease Control and Prevention (CDC), the Robert Wood Johnson Foundation, and the CDC Foundation. It provides model-based population-level analysis and community estimates of health indicators for all counties, places (incorporated and census designated places), census tracts, and ZIP Code Tabulation Areas (ZCTAs) across the United States. Some key points to consider when working with CDC PLACES:
@@ -1299,11 +1408,13 @@ The CDC PLACES (Population Level Analysis and Community Estimates) dataset is a 
 7.  **Socioeconomic Data:** Includes some socioeconomic and demographic variables.
 8.  **Annual Updates:** Providing recent estimates for local areas.
 
-This dataset is particularly valuable for public health researchers, policymakers, and community organizations. It provides a standardized way to compare health indicators across different geographic areas and can be used to inform targeted interventions and policy decisions, especially in addressing health disparities at a local level.
+This dataset is valuable for public health researchers, policymakers, and community organizations. It provides a standardized way to compare health indicators across different geographic areas and can be used to inform targeted interventions and policy decisions, especially in addressing health disparities at a local level.
 
 As with ICIS-AIR and TRI, PLACES is available through a web search interface and a programmatic API. We will focus on the API in this example.
 
 #### Processing
+
+We'll start by accessing the CDC PLACES data through their API and processing it for our analysis. First we set up our API request. We specify the endpoint URL, define our target counties, and create a filter to select data only for these counties in Michigan.
 
 ```{python}
 # Define the GeoJSON API endpoint
@@ -1320,7 +1431,11 @@ params = {
     "$where": f"stateabbr = 'MI' AND ({county_filter})",
     "$limit": 50000  # Adjust if necessary
 }
+```
 
+Next, let's make the API request and process the response:
+
+```{python}
 # Make the API request
 response = requests.get(url, params=params)
 
@@ -1333,7 +1448,11 @@ else:
 
 # Convert to GeoDataFrame
 gdf = gpd.read_file(response.text)
+```
 
+You can inspect the `gdf` return object on your own; it's too large to print here. Let's just take a look at the available health measures in CDC PLACES.
+
+```{python}
 # Print available health measures
 print("\nAvailable health measures:")
 print(gdf['measure'].unique())
@@ -1345,7 +1464,13 @@ print(gdf.head())
 # Print basic information about the GeoDataFrame
 print("\nGeoDataFrame Info:")
 print(gdf.info())
+```
 
+There's a lot of great data here considering the rarity of health outcomes data; especially at this resolution (census tracts). Because we're dealing with air quality in this lesson we'll use "Current asthma among adults."
+
+Let's make a quick map to see how it looks.
+
+```{python}
 # Create a sample map for one health measure (e.g., Current asthma)
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 
@@ -1361,9 +1486,6 @@ gdf_asthma.plot(column='data_value',
                 cmap='YlOrRd',
                 missing_kwds={'color': 'lightgrey'})
 
-# Add county boundaries
-#gdf_asthma.dissolve(by='countyname').boundary.plot(ax=ax, color='black', linewidth=0.5)
-
 # Add basemap
 ctx.add_basemap(ax, crs=gdf_asthma.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
 
@@ -1376,7 +1498,15 @@ ax.axis('off')
 
 plt.tight_layout()
 plt.show()
+```
 
+If you hadn't already noticed while inspecting the object we returned from the API, the census tract data are actually centroid points--not census tract boundaries. 
+
+We created a choropleth map showing asthma prevalence across the Detroit metro area. With the `YlOrRd` colormap darker red indicates higher asthma prevalence.
+
+Finally, let's print some statistics about the asthma data:
+
+```{python}
 # Print some statistics for the asthma data
 print("\nAsthma Statistics:")
 print(f"Average asthma prevalence: {gdf_asthma['data_value'].mean():.2f}%")
@@ -1388,14 +1518,20 @@ print("\nNumber of census tracts per county:")
 print(gdf_asthma['countyname'].value_counts())
 ```
 
+Wow. Some census tracts along the river front and central downtown area have adult asthma prevalance of nearly 20%! I'm not an epidimeologist, but that seems extremely high; especially when you compare to the outer suburbs and more affluent areas in the Royal Oak-Ferndale area. However, in light of our exploration of TRI and ICIS-AIR data it might not be surprising to see elevated asthma rates in these areas. 
+
+Given that we've mostly been working with and creating raster data in the previous sections, it might be easier to draw systematic comparisons between pollution and health outcomes if the CDC data is also in a raster format. 
+
 #### Interpolate a Surface w/ IDW
+
+While the choropleth map provides a good overview, it can be affected by the varying sizes of census tracts. To get a smoother representation of the data that resembles our air quality data, we can use Inverse Distance Weighting (IDW) interpolation to create a continuous surface.
+
+First, let's prepare our data for interpolation by reprojecting, extracting the coordinates and the asthma value, and masking the data for any asthma values that may be NA.
 
 ```{python}
 from scipy.interpolate import griddata
 from rasterio.transform import from_origin
 from rasterio.warp import transform_bounds
-
-# Assuming gdf_asthma is already created and contains the asthma data
 
 # Ensure gdf_asthma is in EPSG:4326
 gdf_asthma = gdf_asthma.to_crs(epsg=4326)
@@ -1408,18 +1544,42 @@ Z = gdf_asthma['data_value'].values
 # Remove any NaN values
 mask = ~np.isnan(Z)
 X, Y, Z = X[mask], Y[mask], Z[mask]
+```
 
+:::
+::: {.callout-tip style="color: #5a7a2b;"}
+Inverse Distance Weighting (IDW) is a spatial interpolation method used to estimate values at unknown locations based on known values at nearby points. The fundamental principle of IDW is that points closer to the location being estimated have more influence than those farther away. In practice, IDW calculates the estimated value as a weighted average of nearby known values, with weights inversely proportional to the distance between the known point and the estimation location. The typical IDW formula involves summing the product of weights and known values, divided by the sum of the weights. These weights are usually calculated as the inverse of the distance raised to a power (often 2). IDW is popular in geographic information systems (GIS) and environmental sciences due to its simplicity and effectiveness in creating continuous surfaces from point data, such as elevation, temperature, or pollution levels. While IDW has advantages like preserving local variation and working well with evenly distributed points, it also has limitations. These include potential "bull's-eye" patterns around data points, inability to account for spatial trends or barriers, and sensitivity to outliers and clustering of input points.
+:::
+:::
+
+Now we create the structure of the raster we'll create. This is based on our desired resolution and the extent of our data.
+
+```{python}
 # Create a grid to interpolate over
-grid_resolution = 0.025  # in degrees (smaller for better resolution)
+# Resolution (degrees)
+grid_resolution = 0.025
+# Extent
 x_min, y_min, x_max, y_max = gdf_asthma.total_bounds
+# Arrange the locations of the x and y dimensions
 grid_x = np.arange(x_min, x_max, grid_resolution)
 grid_y = np.arange(y_min, y_max, grid_resolution)
+# Mesh them to a grid
 grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
+```
 
+Now we're ready to interpolate the surface. 
+
+```{python}
 # Perform IDW interpolation
 points = np.column_stack((X, Y))
 grid_z = griddata(points, Z, (grid_xx, grid_yy), method='linear')
+```
 
+This created a regular grid over our study area and then used the `griddata` function to perform linear interpolation (which is a form of IDW) on our asthma prevalence data.
+
+Now, let's convert our interpolated data into an xarray Dataset so it's easier to manipulate.
+
+```{python}
 # Create an xarray Dataset from the interpolated data
 ds = xr.Dataset({
     'asthma': (['y', 'x'], grid_z),
@@ -1429,24 +1589,23 @@ ds = xr.Dataset({
 
 # Set the correct CRS
 ds.rio.write_crs("EPSG:4326", inplace=True)
+```
 
-# Fetch Detroit metro area counties using pygris
-metro_counties = pygris.counties(state="MI", year=2022)
-detroit_metro = metro_counties[metro_counties['NAME'].isin([
-    'Wayne', 'Oakland', 'Macomb'])]
+This step allows us to work with our interpolated data using **xarray**, which provides powerful tools for working with multi-dimensional arrays.
 
-# Dissolve the counties into a single polygon
-detroit_metro = detroit_metro.dissolve(by='STATEFP')
+Next, we'll clip our interpolated surface to the Detroit metro area. This ensures our data matches our other rasters. Then we'll project it to match basemaps so we can create a map of the data.
 
-# Ensure detroit_metro is in EPSG:4326
-detroit_metro = detroit_metro.to_crs(epsg=4326)
-
+```{python}
 # Clip the dataset using the detroit_metro polygon
 ds_clipped = ds.rio.clip(detroit_metro.geometry, drop=False)
 
 # Reproject to Web Mercator (EPSG:3857)
 ds_3857 = ds_clipped.rio.reproject("EPSG:3857")
+```
 
+Finally, let's create a map of our interpolated asthma prevalence:
+
+```{python}
 # Create the plot
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 
@@ -1475,48 +1634,38 @@ plt.tight_layout()
 plt.show()
 ```
 
+This code creates a map of the interpolated asthma prevalence, providing a smooth surface that shows the spatial variation in asthma rates across the Detroit metro area. The use of IDW interpolation helps to create a continuous surface from our discrete census tract data, potentially revealing patterns that might be less apparent in the choropleth map.
+
+By comparing this interpolated surface with our earlier maps of air pollution and social vulnerability, we can start to explore potential relationships between environmental factors, social conditions, and health outcomes in the Detroit metro area.
+
 ::: {.callout-tip style="color: #5a7a2b;"}
-## Data Review
+#### Knowledge Check
+What type of data does the CDC PLACES dataset provide?
 
-The Toxics Release Inventory (TRI) and the Integrated Compliance Information System for Air (ICIS-AIR) are two important but distinct environmental reporting systems maintained by the U.S. Environmental Protection Agency (EPA). They have several key differences:
-
--   **Regulatory Basis**
-    -   TRI: Established under the Emergency Planning and Community Right-to-Know Act (EPCRA) of 1986
-    -   ICIS-AIR: Part of the Clean Air Act (CAA) compliance and enforcement program
--   **Focus**
-    -   TRI: Tracks the management of certain toxic chemicals that may pose a threat to human health and the environment
-    -   ICIS-AIR: Focuses specifically on air quality and emissions from facilities regulated under the Clean Air Act
--   **Reported Information**
-    -   TRI: Facilities report on releases, waste management, and pollution prevention activities for specific toxic chemicals
-    -   ICIS-AIR: Tracks emissions data, compliance status, and enforcement actions related to air quality regulations
--   **Facility Coverage**
-    -   TRI: Covers facilities in specific industries that manufacture, process, or use TRI-listed chemicals above certain thresholds
-    -   ICIS-AIR: Includes a broader range of facilities that emit air pollutants, regardless of the specific chemicals involved
--   **Reporting Thresholds**
-    -   TRI: Has specific chemical thresholds that trigger reporting requirements
-    -   ICIS-AIR: Generally doesn't have chemical-specific thresholds; requirements are based on overall emissions and facility type
--   **Public Accessibility**
-    -   TRI: Designed with a strong focus on public right-to-know, with data easily accessible to the public
-    -   ICIS-AIR: While public, it's primarily designed for regulatory and enforcement purposes
--   **Data Frequency**
-    -   TRI: Annual reporting is required for covered facilities
-    -   ICIS-AIR: May involve more frequent reporting, depending on permit requirements and compliance status
--   **Scope of Pollutants**
-    -   TRI: Focuses on a specific list of toxic chemicals and chemical categories
-    -   ICIS-AIR: Covers a wider range of air pollutants, including criteria air pollutants and hazardous air pollutants
--   **Use in Environmental Management**
-    -   TRI: Often used for assessing long-term trends in toxic chemical releases and waste management practices
-    -   ICIS-AIR: More commonly used for day-to-day air quality management and enforcement activities
--   **Geographic Coverage**
-    -   TRI: Nationwide program with consistent reporting across states
-    -   ICIS-AIR: While national, implementation can vary more by state or local air quality management district
+a) Real-time air quality measurements
+b) Estimates of various health indicators at local levels
+c) Hospital admission rates for air pollution-related illnesses
+d) Locations of healthcare facilities in each county
 :::
 
-### Deployment
+## Conclusion
 
-Congratulations! .... Now you should be able to:
+This lesson provided a comprehensive exploration of various environmental and public health datasets, focusing on the Detroit metropolitan area. By analyzing data from ICIS-AIR, the Toxic Release Inventory (TRI), the Social Vulnerability Index (SVI), and CDC PLACES, we gained insights into the complex relationships between industrial air pollution, social vulnerability, and health outcomes. The integration of these datasets, combined with geospatial analysis techniques, allowed us to identify areas where environmental hazards and social vulnerabilities intersect, highlighting potential environmental justice concerns. This approach demonstrates the power of combining diverse datasets and utilizing geospatial tools to inform policy decisions and target interventions in areas of greatest need.
 
--   Test test...
+## Key Learning Points
+
+Congratulations! In this lesson you:
+
+- Accessed and processed data from multiple EPA and CDC APIs, including ICIS-AIR, TRI, and PLACES datasets
+- Created and manipulated geospatial objects using libraries such as **GeoPandas** and **rasterio**
+- Visualized point data on maps using **Matplotlib** and **Contextily**
+- Performed data cleaning and preprocessing, including handling missing coordinates and outliers
+- Created choropleth maps to visualize health outcomes data at the census tract level
+- Utilized Inverse Distance Weighting (IDW) interpolation to create continuous surfaces from point data
+- Integrated multiple datasets to create a composite index (Air Release Vulnerability Index)
+- Analyzed spatial patterns of air pollution, social vulnerability, and health outcomes
+- Applied raster math and resampling techniques to align and compare different spatial datasets
+- Interpreted results in the context of environmental justice and public health concerns
 
 ## Lesson 3
 
