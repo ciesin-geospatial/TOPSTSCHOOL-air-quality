@@ -7,26 +7,23 @@ bibliography: references.bib
 
 ## Overview
 
-In this lesson, you will use NASA socioeconomic and environmental Earthdata available at NASA SEDAC to compare relationships between levels of socioeconomic deprivation agaisnts air quality data of particulate matter (PM) in different international administrative areas.  
+In this lesson, you will use NASA socioeconomic and environmental Earthdata available at NASA SEDAC to compare relationships between levels of socioeconomic deprivation agaisnts air quality data of particulate matter (PM) in different international administrative areas.
 
 This lesson walks through the process of calculating and visualizing zonal statistics for a set of countries using raster data, focusing on GRDI country quintiles and PM2.5 concentration levels within these quintile areas. It begins by subsetting data by country and iterating over each country to extract relevant zonal statistics like mean, median, and various percentiles for each quintile. These statistics are stored in a GeoDataFrame, which is later used to create a choropleth map that visualizes specific GRDI metrics across countries. The lesson includes a detailed analysis of PM2.5 concentrations within different GRDI quartiles for selected countries. This involves clipping the raster data to each country's geometry, filtering the data based on the GRDI quartiles, and calculating the mean PM2.5 levels for each quartile. The results are then visualized using customized plots to highlight the relationship between air quality and GRDI metrics across the selected countries.
-
 
 ## Learning Objectives
 
 After completing this lesson, you should be able to:
 
 -   Gain a general understanding of what is particulate matter (PM) in the air and how it impacts human health.
--   Learn about global socioeconomic dimensions of deprivation and how they are spatially represented. 
--   Find statistical thresholds in socioeconomic data. 
+-   Learn about global socioeconomic dimensions of deprivation and how they are spatially represented.
+-   Find statistical thresholds in socioeconomic data.
 -   Perform zonal statistics to summarize spatial data
 -   Resample spatial data to harmoniza and compare socioeconomic data against environmental data.
 -   Display data on a maps to get a general understanding of the spatial distribution of data.
 -   Summarize spatial data into table plots to compare how air quality differs in different socioeconomic conditions of international administrative areas.
 
 ## Introduction
-
-
 
 ## Data Collection and Integration
 
@@ -39,6 +36,7 @@ Gather comprehensive datasets from reliable sources such as the US EPA's EJSCREE
 ### Preparing Environment and Variables
 
 Importing python packages required:
+
 ```{python}
 import xarray as xr
 import rioxarray
@@ -55,21 +53,26 @@ import plotly.graph_objects as go
 ```
 
 Load the GRDIv1 and PM2.5 data from local sources:
+
 ```{python}
 # Load rasters
 grdi_path = r"Z:\Sedac\GRDI\data\povmap-grdi-v1-geotiff\final data\povmap-grdi-v1.tif"
 pm25_path = r"F:\TOPSSCHOOL\git\TOPSTSCHOOL-air-quality\data\sdei-global-annual-gwr-pm2-5-modis-misr-seawifs-aod-v4-gl-03-2019-geotiff\sdei-global-annual-gwr-pm2-5-modis-misr-seawifs-aod-v4-gl-03-2019.tif"
 
 ```
-Using the package rasterio to load the data into memory. This allows us to read the data and use it for processing. 
+
+Using the package rasterio to load the data into memory. This allows us to read the data and use it for processing.
+
 ```{python}
 # Open the input and reference rasters
 grdi_raster = rioxarray.open_rasterio(grdi_path, mask_and_scale=True)
 pm25_raster = rioxarray.open_rasterio(pm25_path, mask_and_scale=True)
 ```
-### Matching Data Points using Bilinear Resample 
 
-The GRDI raster and PM2.5 rasters are incompatible in resolution. One method of harmonizing data is by using the `Resampling` bethod with a *bilinear* method. In this case, we reduce, or coarsen, the resolution of the GRDI raster to match the PM2.5 raster. 
+### Matching Data Points using Bilinear Resample
+
+The GRDI raster and PM2.5 rasters are incompatible in resolution. One method of harmonizing data is by using the `Resampling` bethod with a *bilinear* method. In this case, we reduce, or coarsen, the resolution of the GRDI raster to match the PM2.5 raster.
+
 ```{python}
 # Resample the input raster to match the reference raster
 grdi_raster = grdi_raster.rio.reproject_match(pm25_raster,resampling=Resampling.bilinear)
@@ -77,6 +80,7 @@ grdi_raster = grdi_raster.rio.reproject_match(pm25_raster,resampling=Resampling.
 ```
 
 ## Previewing Spatial Data in a Plot
+
 ```{python}
 # Plotting the rasters
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 20))
@@ -96,31 +100,35 @@ fig.colorbar(im2, ax=ax2, orientation='horizontal', label='PM2.5 Values')
 plt.tight_layout()
 plt.show()
 ```
+
 ## Working with administrative Data
 
 `pygadm` is a package that has international administrative units from levels 0 to 2. We can search the available countries by listing the Names.
+
 ```{python}
 country_table = gpd.GeoDataFrame(pygadm.Names())
 len(country_table)
 ```
 
-Some available areas with a unique `GID_0` code share Names; therefore we drop the rows that contain digits. 
+Some available areas with a unique `GID_0` code share Names; therefore we drop the rows that contain digits.
+
 ```{python}
 country_table = country_table[~country_table['GID_0'].str.contains('\d', na=False)]
 len(country_table)
 ```
 
 ### Subset Data From a Table
+
 Doing Zonal statistics for more than 200 countries may take a while, therefore, we can subset the data randomly with the `.sample()` method.
 
 ```{python}
 country_sample = country_table.sample(n=15)
 country_sample
 ```
-## Zonal Statistics for Each Administrative Area 
-`rasterstats` has a funcion `zonal_stats()` which allows you to use vectors to summarize raster data. We summarize GRDIv1 data to calculate the following statistics: count, minimum, mean, max, median, standard deviation, range, and percentiles 20, 40, 60, and 80. 
 
+## Zonal Statistics for Each Administrative Area
 
+`rasterstats` has a funcion `zonal_stats()` which allows you to use vectors to summarize raster data. We summarize GRDIv1 data to calculate the following statistics: count, minimum, mean, max, median, standard deviation, range, and percentiles 20, 40, 60, and 80.
 
 ```{python}
 
@@ -172,7 +180,9 @@ for index, row in country_sample.iloc[:].iterrows():
 
     
 ```
+
 Let's use the `.head()` method from Pandas to check the top of our table
+
 ```{python}
 stats_results.head()
 ```
@@ -263,7 +273,8 @@ def calculate_country_stats(country_sample, grdi_raster, pm25_raster=None):
 
 ```
 
-From the table above, we can choose an attribute, or column, to display it in a map plot. In this case, I'm choosing the GRDI Max 
+From the table above, we can choose an attribute, or column, to display it in a map plot. In this case, I'm choosing the GRDI Max
+
 ```{python}
 column_chosen = 'GRDI_Max' #GRDI_Max, GRDI_Min, GRDI_Median
 # Plotting
@@ -275,7 +286,9 @@ ax.set_title('Choropleth Map Showing GRDI Mean per country')
 ax.set_axis_off()  # Turn off the axis numbers and ticks
 plt.show()
 ```
+
 ### Selecting Data by Column
+
 Start my creating a list of countries that you are interested in to Subset data from the DataFrame that match the values in the `NAME_0` column. The `.isin()` mehthod checks each element in the DataFrame's column for the item present in the list and returns matching rows.
 
 ```{python}
@@ -286,16 +299,21 @@ selected_countries = ["Algeria", "Somalia", "Colombia", "Timor Leste", "Finland"
 #use the list above to subset the country_table DataFrame by the column NAME_0 
 selected_countries = country_table[country_table['NAME_0'].isin(selected_countries)]
 ```
+
 ### Using a Defined Custom Function
-Recalling the defined fucntion `calculate_country_stats`, we can use our `selected_countries` list, and the GRDI and PM2.5 rasters, to create a new table of zonal statistics. 
+
+Recalling the defined fucntion `calculate_country_stats`, we can use our `selected_countries` list, and the GRDI and PM2.5 rasters, to create a new table of zonal statistics.
+
 ```{python}
 stats_results = calculate_country_stats(selected_countries, grdi_raster)
 ```
+
 Show the head of the table again:
 
 ```{python}
 stats_results.head()
 ```
+
 Plot the map again choosing a column to plot:
 
 ```{python}
@@ -303,10 +321,11 @@ column_chosen = 'GRDI_Max' #GRDI_Max, GRDI_Min, GRDI_Median
 stats_results.plot(column=column_chosen, legend=True)
 plt.show() 
 ```
+
 ## Creating a Table with Results
 
-We can create a list of **tuples** that we can use to refer to the GRDI statistical values, and the name, color, and symbol we want to assign.
-In this case, we are using the GRDI zonal statistics of each country we selected that include the Mean, Minimum, Maximum, and interquartiles.  
+We can create a list of **tuples** that we can use to refer to the GRDI statistical values, and the name, color, and symbol we want to assign. In this case, we are using the GRDI zonal statistics of each country we selected that include the Mean, Minimum, Maximum, and interquartiles.
+
 ```{python}
 
 # List of GRDI values and their corresponding properties
@@ -321,7 +340,9 @@ grdi_data = [
     ('GRDI_P80', 'Q80', 'red', '142')
 ]
 ```
+
 We can create a figure to display the data based on the names colors and symbols we selected.
+
 ```{python}
 # Create a figure
 fig = go.Figure()
@@ -350,10 +371,13 @@ fig.update_layout(
 # Show plot
 fig.show()
 ```
-## Summarizing PM2.5 Values by Socioeconomic Deprivation
-Considering the GRDI quartile values as a level of socieoeconomic deprivation within each country, we can use the `stats_results` GeoDataFrame, the GRDI raster, and the PM2.5 raster to calculate the Mean PM.25 value within each of those areas in each country. This can describe how the air quality for different socioeconomic strata compare within the country, as well as against other countries. 
 
-The results will be added to the `stats_results` with the corresponting columns. 
+## Summarizing PM2.5 Values by Socioeconomic Deprivation
+
+Considering the GRDI quartile values as a level of socieoeconomic deprivation within each country, we can use the `stats_results` GeoDataFrame, the GRDI raster, and the PM2.5 raster to calculate the Mean PM.25 value within each of those areas in each country. This can describe how the air quality for different socioeconomic strata compare within the country, as well as against other countries.
+
+The results will be added to the `stats_results` with the corresponting columns.
+
 ```{python}
 # iterate through the stats_results table rows
 for index, row in stats_results.iloc[:].iterrows():
@@ -406,8 +430,11 @@ for index, row in stats_results.iloc[:].iterrows():
 ```{python}
 stats_results.head()
 ```
+
 ## Plot Results of Mean PM2.5 in Socieceonomic Deprivation Quartiles per country
+
 Similarly, we create a list of tuples of how we want to display the data, and create a figure based on the tuples. This plot would show each country in the y axis and the Log of Mean PM2.5 values in each country's GRDI quarties.
+
 ```{python}
 
 # List of GRDI values and their corresponding properties
@@ -459,9 +486,10 @@ fig.update_layout(
 # Show plot
 fig.show()
 ```
-Use the plotly controls to take a closer look at the results. 
 
-With this shapely plot, We can examine differences between countires and PM2.5 values. The plot displays the coutnries on the Y axis and log values of the average PM2.5 value on the X axis. Each country displays PM2.5 values averaged within the quartile areas based on GRDI values of each country. A higher quartile (Q) implies a higher degree of deprivation, 1 being the lowest and 5 the highest.  
+Use the plotly controls to take a closer look at the results.
+
+With this shapely plot, We can examine differences between countires and PM2.5 values. The plot displays the coutnries on the Y axis and log values of the average PM2.5 value on the X axis. Each country displays PM2.5 values averaged within the quartile areas based on GRDI values of each country. A higher quartile (Q) implies a higher degree of deprivation, 1 being the lowest and 5 the highest.
 
 Congratulations! .... Now you should be able to:
 
