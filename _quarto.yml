@@ -11,6 +11,9 @@ format:
     toc-title: Contents
     toc-location: left
     code-overflow: wrap
+code-block-bg: true
+code-block-border-left: "#315c86"
+keep-ipynb: true
 lightbox: true
 execute: 
   warning: false
