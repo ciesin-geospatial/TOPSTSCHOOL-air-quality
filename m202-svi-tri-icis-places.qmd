@@ -1,9 +1,13 @@
 ---
 title: "Exploring SVI, TRI, and Health Outcomes"
 author: "Joshua Brinks"
-dat: "September 4, 2024"
+date: "September 4, 2024"
+df-print: paged
+code-block-bg: true
+code-block-border-left: "#315c86"
 format: 
     html
+keep-ipynb: true
 ---
 
 ## Overview
@@ -11,7 +15,7 @@ format:
 In this lesson, we will introduce you to 3 public health and air quality datasets. These include the EPA's Toxic Release Inventory (TRI), the EPA's Integrated Compliance Information System for Air (ICIS-AIR), and the CDC's PLACES health outcomes dataset. You will learn how to form queries and retrieve each dataset from their respective API, process the returned object into a useable format, create visualizations and perform simple analysis. You will also use NASA's Social Vulnerability Index (SVI) to examine socioeconomic patterns in the greater Detroit metropolitan area and explore relationships with public health.
 
 ::: {.callout-tip style="color: #5a7a2b;"}
-## Programming Review
+## Programming Reminder
 
 This lesson uses the Python programming environment.
 :::
@@ -28,6 +32,18 @@ After completing this lesson, you should be able to:
 -   Interpolate a raster surface from point spatial data.
 -   Perform raster math to create specialized indexes.
 -   Perform spatial correlation analysis.
+
+::: {.callout-warning}
+## Preface: A Note on Data Interpretation and Ethical Considerations
+
+This lesson is designed to introduce you to various environmental, public health, and socioeconomic datasets, and to provide you with the tools to analyze and visualize this information. However, it's crucial to approach this material with an understanding of its sensitive nature and potential implications.
+
+The topics of environmental justice, institutional racism, socioeconomic conditions, and pollution are complex and multifaceted. The data and analyses presented in this lesson are not intended to draw definitive conclusions or suggest scientific evidence of cause and effect relationships. Rather, they are meant to equip you with the skills to investigate data and perform analyses that could be applied to your local communities.
+
+As you work through this lesson, remember that correlation does not imply causation. The patterns you may observe in the data could be influenced by numerous factors not captured in these datasets. It's essential to approach your findings with caution and to consider the broader historical, social, and economic contexts that shape environmental and health outcomes in different communities.
+
+This lesson aims to empower you with data literacy and analytical skills. We encourage you to use these tools responsibly, always considering the ethical implications of your analyses and the potential impact on the communities represented in the data. When drawing insights or making decisions based on such analyses, it's crucial to involve community stakeholders, consider multiple perspectives, and seek additional expertise when necessary.
+:::
 
 ## Introduction
 
@@ -179,7 +195,7 @@ Let's verify this by overlaying it on a basemap.
 
 ```{python}
 # Create the plot
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Reproject data to Web Mercator to match the basemap
 detroit_metro_bm = detroit_metro.to_crs(epsg=3857)
@@ -300,11 +316,6 @@ if qid:
     print("\nColumns in the dataset:")
     print(df_icis_air.columns)
     
-    # Display the first few rows
-    print("\nFirst few rows of the data:")
-    print(df_icis_air.head())
-    
-    # Save to CSV
 else:
     print("Failed to retrieve facility data")
 ```
@@ -377,11 +388,11 @@ gdf_icis_air = gpd.GeoDataFrame(
 gdf_icis_air_bm = gdf_icis_air.to_crs(epsg=3857)
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Plot the metro area and bounding box (reusing objects from earlier)
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
-bbox_polygon_bm.boundary.plot(ax=ax, color='red', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
 # Plot ICIS-AIR facilities
 gdf_icis_air_bm.plot(ax=ax, color='cyan', markersize=50, alpha=0.5, label='ICIS-AIR Facilities', edgecolor = "grey")
@@ -419,11 +430,11 @@ gdf_icis_air_bm['AIRQtrsWithViol'] = pd.to_numeric(gdf_icis_air_bm['AIRQtrsWithV
 gdf_icis_air_violators = gdf_icis_air_bm = gdf_icis_air_bm[gdf_icis_air_bm['AIRQtrsWithViol'] > 0]
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Plot the metro area and bounding box (reusing objects from earlier)
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
-bbox_polygon_bm.boundary.plot(ax=ax, color='red', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
 # Plot TRI facilities with graduated symbols based on air releases
 scatter = ax.scatter(gdf_icis_air_violators.geometry.x,
@@ -493,7 +504,7 @@ table
 
 ICIS-AIR is a powerfule tool for communites and policy-makers to identify regulated facilities and their compliance status, but the dataset does have limitations. Next, we'll take a look at facilities required to report to the Toxic Release Inventory (TRI).
 
-::: {.callout-tip style="color: #5a7a2b;"}
+::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
 Which of the following best describes the ICIS-AIR database?
 
@@ -503,20 +514,12 @@ c) A public health database tracking respiratory illnesses
 d) A database of weather patterns affecting air quality
 :::
 
-::: {.callout-tip style="color: #5a7a2b;"}
-#### Environmental Justice In the News
-
-[The Michigan Department of Environment, Great Lakes and Energy (EGLE) has settled a civil rights complaint regarding a hazardous waste facility in Detroit](https://www.detroitnews.com/story/news/local/michigan/2024/08/29/egle-settles-civil-rights-complaint-about-detroit-hazardous-waste-approval-us-ecology-north/75001763007/). The complaint, filed in 2020 by environmental groups and local residents, challenged the renewal and expansion of U.S. Ecology North's license, arguing it was unjust to increase hazardous waste storage in a predominantly low-income and minority neighborhood. As part of the settlement, EGLE will now consider environmental justice concerns in future licensing decisions for hazardous waste facilities.
-
-The agreement, described as "groundbreaking" by the Sierra Club, introduces several new measures. EGLE will conduct environmental justice and cumulative impact analyses for future licensing decisions, potentially denying licenses that would have an unlawful impact on human health and the environment. The settlement also includes provisions for improved community engagement, such as better translation services, public input processes, and the installation of air monitors around U.S. Ecology North. Additionally, the state will work with local residents to conduct a community health assessment. While some details remain to be clarified, environmental advocates view this as a significant step towards advancing environmental justice in Michigan.
-:::
-
 ### Toxic Release Inventory
 
 The Toxic Release Inventory (TRI) is a crucial resource in understanding and addressing air quality issues in the United States. Established under the Emergency Planning and Community Right-to-Know Act of 1986, the TRI is a publicly accessible database maintained by the Environmental Protection Agency (EPA). It requires certain industrial facilities to report annually on their releases of toxic chemicals into the environment, including air emissions. The TRI provides valuable data on over 770 chemicals and chemical categories, offering insights into the types and quantities of pollutants released into the air by various industries. This information is vital to researchers, policymakers, and community advocates in assessing local air quality, identifying potential health risks, and developing targeted strategies to reduce toxic air emissions. By making this data publicly available, the TRI plays an important role in promoting transparency and supporting environmental justice initiatives focused on improving air quality in communities across the nation.
 
 ::: {.callout-tip style="color: #5a7a2b;"}
-## Data Review
+#### Data Review
 
 The Toxics Release Inventory (TRI) and the Integrated Compliance Information System for Air (ICIS-AIR) are two important but distinct environmental reporting systems maintained by the U.S. Environmental Protection Agency (EPA). They have several key differences:
 
@@ -557,6 +560,14 @@ The Toxics Release Inventory (TRI) and the Integrated Compliance Information Sys
 EnviroFacts is a comprehensive online database and information system maintained by the U.S. Environmental Protection Agency (EPA). It serves as a centralized hub for accessing a wide range of environmental data collected by the EPA and other federal agencies. EnviroFacts integrates information from multiple EPA databases, covering various aspects of environmental health, including air quality, water quality, hazardous waste, and toxic releases. One of the key components of EnviroFacts is the Toxic Release Inventory (TRI) data. Through EnviroFacts, users can easily access and query TRI information, allowing them to investigate toxic chemical releases and waste management activities in their local areas. The integration of TRI data within the broader EnviroFacts system enables researchers, policymakers, and community members to contextualize toxic release information alongside other environmental indicators.
 
 Envirofacts is available as a [web based search and data platform](https://enviro.epa.gov/) and also as a [programmatic API](https://www.epa.gov/enviro/envirofacts-data-service-api). The web platform is a great way to familiarize yourself with the available datasets and create simple downloads, however, for analytical purposes we recommend learning to navigate their API so you can create repeatable and reliable analysis.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Environmental Justice In the News
+
+[The Michigan Department of Environment, Great Lakes and Energy (EGLE) has settled a civil rights complaint regarding a hazardous waste facility in Detroit](https://www.detroitnews.com/story/news/local/michigan/2024/08/29/egle-settles-civil-rights-complaint-about-detroit-hazardous-waste-approval-us-ecology-north/75001763007/). The complaint, filed in 2020 by environmental groups and local residents, challenged the renewal and expansion of U.S. Ecology North's license, arguing it was unjust to increase hazardous waste storage in a predominantly low-income and minority neighborhood. As part of the settlement, EGLE will now consider environmental justice concerns in future licensing decisions for hazardous waste facilities.
+
+The agreement, described as "groundbreaking" by the Sierra Club, introduces several new measures. EGLE will conduct environmental justice and cumulative impact analyses for future licensing decisions, potentially denying licenses that would have an unlawful impact on human health and the environment. The settlement also includes provisions for improved community engagement, such as better translation services, public input processes, and the installation of air monitors around U.S. Ecology North. Additionally, the state will work with local residents to conduct a community health assessment. While some details remain to be clarified, environmental advocates view this as a significant step towards advancing environmental justice in Michigan.
+:::
 
 #### Querying the API
 
@@ -607,10 +618,11 @@ tri_df = pd.DataFrame(tri_data)
 
 print(f"Number of facilities fetched: {len(tri_df)}")
 
-tri_df.head
+# Check the first few rows (too large to print in this document)
+# tri_df.head
 ```
 
-Checking the first few rows everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have latitude and longitude values.
+Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have latitude and longitude values.
 
 We'll check and remove those without.
 
@@ -686,11 +698,11 @@ detroit_tri = gpd.GeoDataFrame(
 detroit_tri = detroit_tri.to_crs(epsg=3857)
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Plot the metro area and bounding box (reusing objects from earlier)
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
-bbox_polygon_bm.boundary.plot(ax=ax, color='red', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
 # Plot TRI facilities (reusing the detroit_tri object from earlier)
 detroit_tri.plot(ax=ax, color='purple', edgecolor='grey', markersize=50, alpha=0.5, label='TRI Facilities')
@@ -728,7 +740,7 @@ Navigating the TRI Envirofacts interface can be overwhelming at times. Multiple 
 
 You can querry the V_TRI_FORM_R_EZ using the API even though it's not a documented table listed in the API website. This form contains facility information and AIR_TOTAL_RELEASE reporting, but it only goes until 2021. To get the most recent data (2023) you would have to manually download the individual tables with separate calls perform the joins, or use the [custom form search web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). We'll demonstrate a quick API call for the V_TRI_FORM_R_EZ, but move forward with the most recent data available in the custom form search web portal.
 
-::: {.callout-tip style="color: #5a7a2b;"}
+::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
 What is the primary purpose of the Toxic Release Inventory (TRI)?
 
@@ -789,8 +801,8 @@ print(tri_form_r.columns)
 This is a bit more manageable, but we have multiple records per facility because each chemical release has a separate record. This allows the user to investigate specific chemicals, but for the purposes of this exercise we will aggregate `AIR_TOTAL_RELEASE` for each facility.
 
 ```{python}
-# Check how it looks
-tri_form_r.head
+# Check how it looks (too large to print on the web)
+# tri_form_r.head
 ```
 
 Let's aggregate it.
@@ -877,11 +889,11 @@ Now we can visualize the data, by overlaying the points on a basemap of Detroit 
 gdf_tri_form_r_bm = gdf_tri_form_r.to_crs(epsg=3857)
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Plot the metro area and bounding box (reusing objects from earlier)
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
-bbox_polygon_bm.boundary.plot(ax=ax, color='orangered', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=2)
 
 # Plot TRI facilities with graduated symbols based on air releases
 scatter = ax.scatter(gdf_tri_form_r_bm.geometry.x, gdf_tri_form_r_bm.geometry.y, 
@@ -920,7 +932,7 @@ print(f"Average air release per facility: {gdf_tri_form_r[release_col].mean():,.
 
 The point source air release data provides a good snapshot of the locations and relative amounts of chemical releases. With some basic understanding of the demographic dynamics of Detroit one might theorize who is being subjected to high levels of pollution, however, we'll need additional data to develop any type of systematic analysis.
 
-::: {.callout-tip style="color: #5a7a2b;"}
+::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
 
 What key information does Form R of the Toxic Release Inventory provide?
@@ -1056,7 +1068,7 @@ plt.show()
 
 This provides an excellent look at demographic trends in the Detroit metro area. Overall vulnerability is highest in the inner city. The most striking drivers are the concentration of minorities and socioeconomic vulnerability in the downtown area. The housing and household components are slightly more varied throughout the region.
 
-::: {.callout-tip style="color: #5a7a2b;"}
+::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
 
 What does the Social Vulnerability Index (SVI) primarily measure?
@@ -1143,7 +1155,7 @@ cmap = ListedColormap(colors)
 norm = BoundaryNorm(breaks, cmap.N)
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Plot the TRI facility points
 gdf_tri_form_r_bm.plot(ax=ax, color='blue', markersize=10, alpha=0.7)
@@ -1180,70 +1192,6 @@ print(f"Maximum cell value in raster: {air_release_raster_da.max().values:,.2f}"
 ```
 
 The raster looks as expected with the highest values in locations where our previous map had the largest circles. We overlayed the points to see the sources of the values. The cell resolution is set to 5000m. This was selected so we can evaluate the map and the process we used to create the raster, but any value could be set depending on the intended use.
-
-##### Correlation Structure
-
-High concentrations of air releases in our map do appear to coincide with areas of high social vulnerability, but it might not be as systematic or widespread as it appears looking at the 2 maps.
-
-We can extract the values from the
-
-```{python}
-#| eval: false
-# Calculate raster correlation between SVI overall and air release within Detroit metro boundary
-svi_flat = svi_reprojected.values.flatten()
-air_flat = air_release_disaggregated.values.flatten()
-
-# Remove NaN values
-mask = ~np.isnan(svi_flat) & ~np.isnan(air_flat)
-svi_flat = svi_flat[mask]
-air_flat = air_flat[mask]
-
-# Filter air data to include only releases greater than 50K
-mask = (air_flat >= 1000)
-svi_filtered = svi_flat[mask]
-air_filtered = air_flat[mask]
-
-# Apply log1p transformation to air release data
-air_filtered_log = np.log1p(air_filtered)
-
-# Filter data to include only SVI scores between 0 and 1
-mask = (svi_filtered >= 0) & (svi_filtered <= 1)
-svi_filtered = svi_filtered[mask]
-air_filtered_log = air_filtered_log[mask]
-
-# Create the scatter plot
-plt.figure(figsize=(8, 8))
-plt.scatter(svi_filtered, air_filtered_log, alpha=0.75, s=10)
-
-# Set labels and title
-plt.xlabel('Social Vulnerability Index (SVI)')
-plt.ylabel('Log(Air Release + 1)')
-plt.title('SVI vs Log(Air Release + 1) Scatter Plot')
-
-# Add a grid for better readability
-plt.grid(True, linestyle='--', alpha=0.7)
-
-# Set x-axis limits explicitly to 0-1
-plt.xlim(0, 1)
-
-# Set y-axis limits to min and max of transformed air release data
-plt.ylim(np.min(air_filtered_log), np.max(air_filtered_log))
-
-# Adjust layout and display the plot
-plt.tight_layout()
-plt.show()
-```
-
-Run a Pearson's correlation.
-
-```{python}
-#| eval: false
-# Perform correlation analysis
-svi_air_correlation, p_value_points = stats.pearsonr(svi_filtered, air_filtered_log)
-
-print(f"Raster Correlation between SVI and Air Rleases: {svi_air_correlation:.4f}")
-print(f"P-value: {p_value_points:.4f}")
-```
 
 #### Air Release Vulnerability Index
 
@@ -1361,6 +1309,9 @@ for idx, row in top_10_gdf.iterrows():
 # Add a basemap
 ctx.add_basemap(ax, crs=vulnerability_indicator.rio.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
 
+# Add a border to the map
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
+
 # Set the extent to match the Detroit metro area
 ax.set_xlim(vulnerability_indicator.x.min(), vulnerability_indicator.x.max())
 ax.set_ylim(vulnerability_indicator.y.min(), vulnerability_indicator.y.max())
@@ -1379,7 +1330,7 @@ for i, (idx, row) in enumerate(top_10_gdf.iterrows(), 1):
 
 As you would expect looking at the input layers, the most vulnerable and polluted areas are along the river coridor in Loncoln Park, Melvindale, Mexicantown, and River Rouge. There are multiple locations with indexes greater than 0.70. Information like this can be valuable for targeted relief or mitigation programs.
 
-::: {.callout-tip style="color: #5a7a2b;"}
+::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
 
 What was the main purpose of combining the TRI and SVI data in this analysis?
@@ -1457,10 +1408,6 @@ You can inspect the `gdf` return object on your own; it's too large to print her
 print("\nAvailable health measures:")
 print(gdf['measure'].unique())
 
-# Print the first few rows to see the structure of the data
-print("\nFirst few rows of the GeoDataFrame:")
-print(gdf.head())
-
 # Print basic information about the GeoDataFrame
 print("\nGeoDataFrame Info:")
 print(gdf.info())
@@ -1472,7 +1419,7 @@ Let's make a quick map to see how it looks.
 
 ```{python}
 # Create a sample map for one health measure (e.g., Current asthma)
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Filter for the specific measure and ensure data_value is numeric
 gdf_asthma = gdf[gdf['measure'] == 'Current asthma among adults'].copy()
@@ -1488,6 +1435,9 @@ gdf_asthma.plot(column='data_value',
 
 # Add basemap
 ctx.add_basemap(ax, crs=gdf_asthma.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Add a border to the map
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
 # Set the extent to match the Detroit metro area
 ax.set_xlim(gdf_asthma.total_bounds[0], gdf_asthma.total_bounds[2])
@@ -1546,9 +1496,10 @@ mask = ~np.isnan(Z)
 X, Y, Z = X[mask], Y[mask], Z[mask]
 ```
 
-:::
+::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
-Inverse Distance Weighting (IDW) is a spatial interpolation method used to estimate values at unknown locations based on known values at nearby points. The fundamental principle of IDW is that points closer to the location being estimated have more influence than those farther away. In practice, IDW calculates the estimated value as a weighted average of nearby known values, with weights inversely proportional to the distance between the known point and the estimation location. The typical IDW formula involves summing the product of weights and known values, divided by the sum of the weights. These weights are usually calculated as the inverse of the distance raised to a power (often 2). IDW is popular in geographic information systems (GIS) and environmental sciences due to its simplicity and effectiveness in creating continuous surfaces from point data, such as elevation, temperature, or pollution levels. While IDW has advantages like preserving local variation and working well with evenly distributed points, it also has limitations. These include potential "bull's-eye" patterns around data points, inability to account for spatial trends or barriers, and sensitivity to outliers and clustering of input points.
+#### Data Science Review
+Inverse Distance Weighting (IDW) is a spatial interpolation method used to estimate values at unknown locations based on known values at nearby points. The fundamental principle of IDW is that points closer to the location being estimated have more influence than those farther away. IDW calculates the estimated value as a weighted average of nearby known values, with weights inversely proportional to the distance between the known point and the estimation location. IDW is popular in geographic information systems (GIS) and environmental sciences due to its simplicity and effectiveness in creating continuous surfaces from point data, such as elevation, temperature, or pollution levels. While IDW has advantages like preserving local variation and working well with evenly distributed points, it also has limitations; including potential "bull's-eye" patterns around data points, inability to account for spatial trends or barriers, and sensitivity to outliers and clustering of input points.
 :::
 :::
 
@@ -1607,7 +1558,7 @@ Finally, let's create a map of our interpolated asthma prevalence:
 
 ```{python}
 # Create the plot
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+fig, ax = plt.subplots(figsize=(7, 7))
 
 # Plot the interpolated and clipped data
 im = ds_3857.asthma.plot(ax=ax, cmap='YlOrRd', 
@@ -1620,6 +1571,9 @@ cbar = plt.colorbar(im, ax=ax, label='Asthma Prevalence',
 # Add basemap
 ctx.add_basemap(ax, crs=ds_3857.rio.crs, 
                 source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Add a border to the map
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
 # Set the extent to match the Detroit metro area
 bounds_3857 = transform_bounds("EPSG:4326", "EPSG:3857", 
@@ -1638,7 +1592,187 @@ This code creates a map of the interpolated asthma prevalence, providing a smoot
 
 By comparing this interpolated surface with our earlier maps of air pollution and social vulnerability, we can start to explore potential relationships between environmental factors, social conditions, and health outcomes in the Detroit metro area.
 
+We can start with a simple correlation analysis and then visualize it with a scatterplot. The simpleist way to perform the analysis is the extract the raw value pairs and calculate the Pearson correlation.
+
+```{python}
+from scipy import stats
+
+# Ensure both rasters have the same shape and are aligned
+air_release_aligned = air_release_raster_da.rio.reproject_match(ds_clipped)
+
+# Flatten the arrays and remove NaN values
+air_release_flat = air_release_aligned.values.flatten()
+# Take the log of the release values to account for extreme outliers
+air_release_flat = np.log1p(air_release_flat)
+asthma_flat = ds_clipped.asthma.values.flatten()
+mask = ~np.isnan(air_release_flat) & ~np.isnan(asthma_flat)
+
+correlation, p_value = stats.pearsonr(air_release_flat[mask], asthma_flat[mask])
+print(f"Correlation coefficient: {correlation}")
+print(f"P-value: {p_value}")
+```
+
+Creating a scatterplot of the paired values can provide a better look at what's going on.
+
+```{python}
+# Create the empty map
+plt.figure(figsize=(7, 7))
+# Create the scatter plot of the values
+plt.scatter(air_release_flat[mask], asthma_flat[mask], alpha=0.5)
+# Create Axis Labels
+plt.xlabel('TRI Air Releases')
+plt.ylabel('Asthma Prevalence')
+# Title
+plt.title('TRI Air Releases vs Asthma Prevalence')
+# Let's see it
+plt.show()
+```
+
+This paints a clearer picture. Although there is a modest positive correlation, there are numerous cells with 0 TRI Air Release and a wide variety of Asthma prevelance values, which negates any correlation we might be seeing at higher release levels. This is a simple pixel by pixel comparison of matching values. We can perform a more robust analysis accounting for the spatial strucuture using a global autocorrelation analysis and Moran's I.
+
+Pearson's correlation and Moran's I are both measures of association, but they serve different purposes and account for different aspects of data. Pearson's correlation measures the linear relationship between two variables without considering their spatial context. It simply looks at how two variables change together, regardless of where the data points are located in space. In contrast, Moran's I is specifically designed for spatial data and measures spatial autocorrelation – the degree to which a variable is correlated with itself across geographic space. Moran's I takes into account both the values of observations and their spatial relationships, typically using a spatial weights matrix. While Pearson's correlation can tell you if two variables are related overall, Moran's I can reveal whether high or low values of a variable tend to cluster together in space, or if they're randomly distributed. This makes Moran's I particularly useful for analyzing geographical patterns and spatial dependencies, which are crucial in fields like environmental science, epidemiology, and urban planning.
+
+We can perform this analysis in Python use **pysal**. We already know our data is spatially aligned from the previous code chunks. We can create a spatial data frame and continue on.
+
+```{python}
+from pysal.explore import esda
+from pysal.lib import weights
+import shapely
+
+# Convert rasters to a GeoDataFrame
+df = gpd.GeoDataFrame(
+    {
+        'air_release': air_release_aligned.values.flatten(),
+        'asthma': ds_clipped.asthma.values.flatten(),
+        'geometry': [
+            shapely.geometry.Point(x, y) 
+            for x, y in zip(
+                np.repeat(air_release_aligned.x.values, len(air_release_aligned.y)),
+                np.tile(air_release_aligned.y.values, len(air_release_aligned.x))
+            )
+        ]
+    }
+)
+```
+
+::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
+#### Statistics Review
+A p-value, or probability value, is a statistical concept used to determine the significance of results in hypothesis testing. It represents the probability of obtaining results at least as extreme as the observed results, assuming that the null hypothesis is true. In simpler terms, it measures the strength of evidence against the null hypothesis. P-values range from 0 to 1, with lower values indicating stronger evidence against the null hypothesis. Typically, a p-value below a predetermined threshold (often 0.05) is considered statistically significant, suggesting that the observed results are unlikely to have occurred by chance alone. However, it's important to note that while p-values can indicate the strength of evidence against the null hypothesis, they do not prove or disprove hypotheses, nor do they measure the size or importance of an effect. They should be interpreted in conjunction with other factors such as effect size, sample size, and practical significance.
+:::
+:::
+
+Check for missing values and create the spatial weights matrix that determines how wide of a net we want to cast as we search for a local dependence structure (you could change these values and see how it impacts the results). You can read more about settings for spatial autocorrelation and Moran's I analysis [here](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-statistics/spatial-autocorrelation.htm).
+
+```{python}
+# Remove any rows with NaN values
+df = df.dropna()
+
+# Create a spatial weights matrix
+w = weights.distance.KNN.from_dataframe(df, k=8)  # Using 8 nearest neighbors
+w.transform = 'r'  # Row-standardize the weights
+```
+
+Now we'll cycle through the Moran function for air release, current asthma among adults, and the 2 combined (bivariate). First air releases.
+
+```{python}
+# Create a Moran scatter plot for air release
+from splot.esda import moran_scatterplot
+
+# Calculate Moran's I for air release
+moran_air = esda.Moran(df['air_release'], w)
+
+print("Moran's I for Air Release:")
+print(f"I: {moran_air.I}")
+print(f"p-value: {moran_air.p_sim}")
+
+fig, ax = plt.subplots(figsize=(7, 7))
+moran_scatterplot(moran_air, ax=ax)
+# Get the current limits
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+# Find the min and max of both axes
+vmin = min(xlim[0], ylim[0])
+vmax = max(xlim[1], ylim[1])
+# Set both axes to the same limits
+ax.set_xlim(vmin, vmax)
+ax.set_ylim(vmin, vmax)
+# Ensure the aspect ratio is 1:1
+ax.set_aspect('equal', adjustable='box')
+ax.set_title("Moran Scatter Plot: Air Release")
+plt.show()
+```
+
+When evaluating Moran's I for single variables we are assessing how clustered like values are; i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is lower and we can the same feature as before in that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution. 
+
+```{python}
+# Calculate Moran's I for asthma prevalence
+moran_asthma = esda.Moran(df['asthma'], w)
+
+print("\nMoran's I for Asthma Prevalence:")
+print(f"I: {moran_asthma.I}")
+print(f"p-value: {moran_asthma.p_sim}")
+
+# Create a Moran scatter plot for asthma prevalence
+fig, ax = plt.subplots(figsize=(7, 7))
+moran_scatterplot(moran_asthma, ax=ax)
+# Get the current limits
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+# Find the min and max of both axes
+vmin = min(xlim[0], ylim[0])
+vmax = max(xlim[1], ylim[1])
+# Set both axes to the same limits
+ax.set_xlim(vmin, vmax)
+ax.set_ylim(vmin, vmax)
+# Ensure the aspect ratio is 1:1
+ax.set_aspect('equal', adjustable='box')
+ax.set_title("Moran Scatter Plot: Asthma Prevalence")
+plt.show()
+```
+
+Asthma prevelance has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.  
+
+```{python}
+# Calculate bivariate Moran's I
+moran_bv = esda.Moran_BV(df['air_release'], df['asthma'], w)
+
+print("\nBivariate Moran's I (Air Release vs Asthma):")
+print(f"I: {moran_bv.I}")
+print(f"p-value: {moran_bv.p_sim}")
+
+# Create a bivariate Moran scatter plot
+fig, ax = plt.subplots(figsize=(7, 7))
+# make the plot
+moran_scatterplot(moran_bv, ax=ax)
+# Get the current limits
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+# Find the min and max of both axes
+vmin = min(xlim[0], ylim[0])
+vmax = max(xlim[1], ylim[1])
+# Set both axes to the same limits
+ax.set_xlim(vmin, vmax)
+ax.set_ylim(vmin, vmax)
+# Ensure the aspect ratio is 1:1
+ax.set_aspect('equal', adjustable='box')
+# Set the title
+ax.set_title("Bivariate Moran Scatter Plot: Air Release vs Asthma")
+plt.show()
+```
+
+Similar to the pearson analysis, when we analyze their combined spatial dependence the relatipnship is not as strong; largely in part to the high levels of 0 air release values. That said the relationship is positive and it is statistically significant (p-value 0.001). 
+
+This could be due to several factors that went unaccounted for in our simple analysis. 
+
+- Our choice of size/resolution when creating our summed air release raster. 
+- The impacts of TRI air releases could be much more widespread than the 5km resolution we specified.
+- We only analyze TRI regulated facilities and their emissions. 
+- We did not account for traffic density or other sources of particulate matter emissions.
+- We did not control for socioeconomic status, prevantative healthcare access, and a whole host of other confounding variables.
+- There is no underlying relationship. Unlikely based on large amounts of peer reviewed literature, but a possibility none the less.
+
+::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
 What type of data does the CDC PLACES dataset provide?
 
@@ -1666,6 +1800,7 @@ Congratulations! In this lesson you:
 - Analyzed spatial patterns of air pollution, social vulnerability, and health outcomes
 - Applied raster math and resampling techniques to align and compare different spatial datasets
 - Interpreted results in the context of environmental justice and public health concerns
+- Perform a Pearson and Moran's I correlation analysis
 
 ## Lesson 3
 
