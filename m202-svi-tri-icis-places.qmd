@@ -118,6 +118,8 @@ This lesson uses the following Python modules:
 - [`rioxarray`](https://corteva.github.io/rioxarray/stable/): Extends xarray to make it easier to handle geospatial raster data.
 - [`time`](https://docs.python.org/3/library/time.html): Provides various time-related functions (part of Python's standard library).
 - [`tabulate`](https://pypi.org/project/tabulate/): Used for creating nicely formatted tables in various output formats.
+- [`pysal`](https://pysal.org/): A library of spatial analysis functions.
+- [`splot`](https://splot.readthedocs.io/en/latest/): Provides statistical plots for spatial analysis.
 
 If you'd like to learn more about the functions used in this lesson, you can refer to the documentation on their respective websites.
 
@@ -128,6 +130,8 @@ The `requests` module allows you to send HTTP requests and interact with APIs ea
 `rasterio` and `xarray` are used for working with geospatial raster data. `rasterio` reads and writes geospatial raster datasets, while `xarray` introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
 
 `shapely` is used for manipulation and analysis of geometric objects. `scipy` provides additional tools for scientific computing, including statistical functions and interpolation methods. `rioxarray` combines the functionality of rasterio and xarray for easier handling of geospatial raster data.
+
+`pysal` is a library for spatial analysis, providing tools for exploratory spatial data analysis. `splot` is a visualization module that works with pysal to create statistical plots for spatial analysis.
 
 Make sure these modules are installed before you begin working with the code in this document.
 :::
@@ -140,28 +144,6 @@ Where TRI focuses on the quantities of specific toxic chemicals released into th
 
 #### Data Processing
 
-Begin by importing the required Python modules.
-
-```{python}
-import xarray as xr
-import rasterio
-import rasterio.mask
-from rasterio.enums import Resampling
-from scipy import stats
-from rasterio.transform import from_origin
-from matplotlib.colors import BoundaryNorm, ListedColormap
-import geopandas as gpd
-import matplotlib.pyplot as plt
-import pygris
-import numpy as np
-from shapely.geometry import box
-import pandas as pd
-import requests
-import contextily as ctx
-import time
-import rioxarray
-```
-
 ##### Defining Our Study Area
 
 Next we'll query the API for ICIS-AIR regulated facilities in the greater Detroit area, but first we need to create a spatial object that defines our study area that we can use throughout this analysis. The U.S. Census Bureau defines the Detroit, MI Metropolitan Statistical Area (MSA) as including 6 counties (Wayne, Macomb, Oakland, Lapeer, Livingston, and St. Clair), but for this lesson we will focus on the core 3 counties (Wayne, Macomb, and Oakland); both population and air emissions related facilities are much more sparse in the outer counties.
@@ -169,6 +151,12 @@ Next we'll query the API for ICIS-AIR regulated facilities in the greater Detroi
 We can us **pygris** to get vector boundaries for the counties and dissolve them into a single boundary we can you for cropping data and restricting API searches.
 
 ```{python}
+import geopandas as gpd
+import pandas as pd
+import pygris
+from shapely.geometry import box
+
+
 counties = ['Wayne', 'Oakland', 'Macomb']
 
 # Fetch Detroit metro area counties using pygris
@@ -194,6 +182,9 @@ bbox_polygon = gpd.GeoDataFrame(
 Let's verify this by overlaying it on a basemap.
 
 ```{python}
+import matplotlib.pyplot as plt
+import contextily as ctx
+
 # Create the plot
 fig, ax = plt.subplots(figsize=(7, 7))
 
@@ -261,6 +252,8 @@ An Application Programming Interface (API) is a set of protocols, tools, and def
 Now we define 2 functions that will carry out the first 2 steps; 1) identifying the facilities in our search and 2) retrieve the facility data.
 
 ```{python}
+import requests
+
 # Define the function to query the API for the facilities of interest
 def get_facilities():
     response = requests.get(f"{base_url}.get_facilities", params=params)
@@ -422,7 +415,6 @@ These are distributed along business and industrial sectors as expected, but we 
 Which regulated facilities have been in violation status? We can plot all the facilities with at least one violation during a reporting quarter and use graduated symbols that reflect the total number of quarters with violations. This information is in the `AIRQtrsWithViol` column.
 
 ```{python}
-
 # Convert to numeric, replacing non-numeric values with NaN
 gdf_icis_air_bm['AIRQtrsWithViol'] = pd.to_numeric(gdf_icis_air_bm['AIRQtrsWithViol'], errors='coerce')
 
@@ -864,6 +856,8 @@ plt.show()
 Looks like there are outliers around 100,000 lbs and 400,000 lbs. Before we map the data, it would be a good idea to perform a log transformation of `AIR_TOTAL_RELEASE` to smooth out the visuals. You can't take the log of negative or zero values, so we'll use the `log1p` function, which adds 1 to every value before taking the log.
 
 ```{python}
+import numpy as np
+
 # Assuming 'result' is your DataFrame from earlier
 gdf_tri_form_r['LOG_AIR_RELEASE'] = np.log1p(gdf_tri_form_r['AIR_TOTAL_RELEASE'])
 
@@ -969,6 +963,10 @@ Once you've downloaded the dataset to your working directory, you can proceed wi
 The different layers of SVI are provided as individual files, but sometimes it's easier to work with a multilayer object. We can create one using **xarray**. To begin, we'll read in each file individually, clip it to our border of Detroit metro, and create an individual data array.
 
 ```{python}
+import xarray as xr
+import rasterio
+import rasterio.mask
+
 # Specify the TIF files
 tif_files = [
     "data/svi/svi_2020_tract_overall_wgs84.tif",
@@ -1088,6 +1086,8 @@ To begin we need to rasterize the air release point data. We will create an empt
 Start by getting the bounds from our boundary object, specify the desired resolution, and set up the transform.
 
 ```{python}
+from rasterio.transform import from_origin
+
 # Get the bounds of the Detroit metro area
 minx, miny, maxx, maxy = detroit_metro_bm.total_bounds
 
@@ -1119,9 +1119,11 @@ air_release_raster = features.rasterize(shapes=shapes,
                             merge_alg=rasterio.enums.MergeAlg.add)
 ```
 
-We rasterized with **rasterio**, but we need to convert this to an **xarray** object to continue.
+We rasterized with **rasterio**, but we need to convert this to an **xarray** object to continue and we need **rioxarray** to write the crs information for the **xarray** object.
 
 ```{python}
+import rioxarray
+
 # Convert the raster to an xarray DataArray
 # Note: We use ny and nx here to ensure the coordinates match the raster shape
 air_release_raster_da = xr.DataArray(air_release_raster, 
@@ -1144,6 +1146,8 @@ air_release_raster_da = air_release_raster_da.rio.clip(
 Now we can see how our rasterized air release values look.
 
 ```{python}
+from matplotlib.colors import BoundaryNorm, ListedColormap
+
 # Define the breaks for the discrete scale
 breaks = [0, 1, 10, 100, 1000, 10000, 100000, 250000, 500000]
 
@@ -1200,6 +1204,8 @@ Now that we've created our air release raster layer we can combine it with the S
 Start by selecting just the SVI Overall layer and converting it to a **rioxarray** object so we can perform raster calculations. We'll also ensure the 2 raster layers "line up" by reprojecting into the same coordinate reference system and matching their resolutions.
 
 ```{python}
+from rasterio.enums import Resampling
+
 # Select the 'Overall' layer
 svi_overall = svi_detroit.sel(layer='Overall')
 
