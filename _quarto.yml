@@ -1,5 +1,5 @@
 project:
-  title: "SCHOOL Water Module"
+  title: "SCHOOL Air Quality Module"
   type: website
   output-dir: docs
 format:
@@ -28,8 +28,8 @@ website:
         menu:
           - text: "Lesson 1: Student-Led Monitoring"
             url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html
-          - text: "Lesson 2: SVI and EJScreen"
-            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-ejscreen.html
+          - text: "Lesson 2: Exploring ICIS-AIR, TRI, SVI, and Health Outcomes"
+            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-tri-icis-places.html
           - text: "Lesson 3: GRDIv1 and PM.25"
             url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-grdiv1-pm25.html
          
