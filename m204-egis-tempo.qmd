@@ -1,0 +1,203 @@
+---
+title: " Accessing Tropospheric Emissions: Monitoring of Pollution (TEMPO, v3, NO2 Vertical Column) through Earthdata GIS"
+author: "George Verghese"
+format: html
+bibliography: references.bib
+---
+
+## Brief
+
+The Tropospheric Emissions: Monitoring of Pollution (TEMPO) Nitrogen Dioxide Vertical Column Troposphere Beta layer provides information on the amount of nitrogen dioxide in the troposphere, available as approximately one-hour scans for daylight hours over North America, from May 2024 to present. These data should be considered as beta products and are not optimized for operational use.
+
+### **TEMPO Mission Overview**
+
+The Tropospheric Emissions: Monitoring of Pollution (TEMPO) instrument is a grating spectrometer, sensitive to visible (VIS) and ultraviolet (UV) wavelengths of light with a spectral range of 290-490 + 540-740 nm and 0.6 nm spectral resolution. The TEMPO instrument is attached to the Earth-facing side of a commercial telecommunications satellite (Intelsat 40e) in geostationary orbit over 91˚ W longitude (about 22,000 miles above Earth’s equator). This allows TEMPO to maintain a continuous view of North America so that the instrument's light-collecting mirror can make a complete east-to-west scan of the field of regard hourly during daylight hours. By measuring sunlight reflected and scattered from the Earth's surface and atmosphere back to the instrument's detectors, TEMPO's ultraviolet and visible light sensors provide measurements of ozone, nitrogen dioxide, formaldehyde, and other constituents involved in the chemical dynamics of Earth’s atmosphere.
+
+The primary mission objectives of TEMPO involve understanding the dynamics of air quality, pollution sources, and their impact on climate change. By providing near real-time data and comprehensive atmospheric composition measurements, TEMPO will assist scientists in studying pollution patterns, evaluating the efficacy of environmental policies, and predicting future trends in air quality.
+
+### Layer Overview
+
+EGIS Layer Access: <https://gis.earthdata.nasa.gov/image/rest/services/C2930763263-LARC_CLOUD/TEMPO_NO2_L3_V03_HOURLY_TROPOSPHERIC_VERTICAL_COLUMN_BETA/ImageServer>
+
+The Tropospheric Emissions: Monitoring of Pollution (TEMPO) Nitrogen Dioxide Vertical Column Troposphere layer provides information on the amount of nitrogen dioxide in the troposphere. This is provided as the total number of nitrogen dioxide molecules in the tropospheric column of air above one square centimeter on the Earth’s surface (units: molecules/cm\^2). Nitrogen dioxide Level 3 files provide trace gas information on a regular grid. Level 3 files are derived by combining information from all Level 2 files constituting a TEMPO East-West scan cycle, using an area-weighted re-gridding approach. The data have been converted from their native file format (netCDF4) to Cloud Raster Format (CRF).
+
+**Temporal Coverage**
+
+The temporal resolution of a nominal scan is approximately one hour during daylight hours, with more frequent scans in the morning over the eastern portion of the field of regard (FOR) and in the evenings over the western portion of the FOR. Each image is presented with the starting timestamp of the corresponding TEMPO scan. Due to the nature of the TEMPO instrument’s east to west scanning pattern, each image is a composite of measurements taken over a period of 40-60 minutes, depending on the spatial coverage of the scan. Data are updated daily with the previous day's data. Data are available from May 2024 to present.
+
+**Geographic Coverage**
+
+ Imagery are available for North America. This layer is presented in its native geographic coordinate system (WGS 1984) and resolution. The sensor’s native spatial resolution is \~2 km x 4.75 km at the center of TEMPO’s FOR and the Level 3 product resolution is 0.02 x 0.02 degrees.
+
+**Data Filtering**
+
+The layer is filtered to display high-quality pixels using the main data quality flag (removing low confidence measurements), solar zenith angle (removing data retrieved at high solar zenith angles), and effective cloud fraction (removing where clouds obscure the tropospheric column) variables. The filters applied are set to remove pixels based on the following: main_data_quality_flag \> 1, eff_cloud_fraction \> 0.5, and solar_zenith_angle \> 80. 
+
+**Data Validation**
+
+These data should be considered as beta products per the Beta Product Maturity level defined in the [TEMPO validation plan](https://tempo.si.edu/documents/SAO-DRD-11_TEMPO%20Science%20Validation_Plan_Baseline.pdf). The products are not optimized for operational use and anomalies may exist. Users should refrain from making conclusive public statements regarding science and applications of the TEMPO data products until the products are designated to be at the provisional validation status according to the validation plan. Users may consult the [TEMPO User Guide](https://asdc.larc.nasa.gov/documents/tempo/guide/TEMPO_Level-2-3_trace_gas_clouds_user_guide_V1.0.pdf) for descriptions of the data and associated known issues. 
+
+**Recommended Usage Notes**
+
+When viewing the image service in the ESRI online map viewer, it is recommended to use the multidimensional slider rather than the default time slider. The multidimensional slider can be accessed via the “multidimensional” icon in the right-hand menu.
+
+**Contact**
+
+For inquiries about this service, please contact [larc-dl-asdc-tempo\@mail.nasa.gov](mailto:larc-dl-asdc-tempo@mail.nasa.gov) or post/view questions on the [Earthdata Forum](https://forum.earthdata.nasa.gov/).
+
+#### Import libraries
+
+```{python}
+import requests
+import json
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from datetime import datetime
+```
+
+#### Use ArcGIS RESTful capabilities
+
+```{python}
+# Load data from REST end point
+service_url = "https://gis.earthdata.nasa.gov/UAT/rest/services/TEMPO_testing/L3_No2_tropo_2day_sample/ImageServer"
+md_raster = Raster(service_url, is_multidimensional=True, engine=None, gis=gis)
+```
+
+```{python}
+#Print Image Service Multidimensional Info
+print (md_raster.multidimensional_info)
+```
+
+```{python}
+# Print basic information about the multidimensional dataset
+print(f"Dataset extent: {md_raster.extent}")
+print(f"Variable names: {md_raster.variable_names}")
+#print(f"Time extent: {md_raster.time_extent}")
+```
+
+```{python}
+# Check your Raster function templates
+md_imagery = ImageryLayer(service_url, gis=gis)
+
+for fn in md_imagery.properties.rasterFunctionInfos:
+    print(fn['name'])
+```
+
+```{python}
+# Build url to retrieve the Multidimensional Information as a JSON
+multidimensional_info = base_url + '/multidimensionalInfo?f=pjson'
+
+# Send the request for Multidimensional Information
+multidimensional_get = requests.get(multidimensional_info)
+
+# Reset the content of the request as a JSON
+multidimensional_content = multidimensional_get.json()
+
+# You can view the full Multidimensional Information by:
+print(json.dumps(multidimensional_content, indent=2))
+
+# Filter JSON to output only the Variables
+variables = multidimensional_content['multidimensionalInfo']['variables']
+short_names = [var.get('name') for var in variables]
+long_names = [var.get('attributes').get('long_name') for var in variables]
+full_names = list(zip(short_names, long_names))
+print(full_names[:])
+```
+
+```{python}
+# Extract relevant information into a DataFrame
+samples = [
+    {
+        "StdTime": sample["attributes"]["StdTime"],
+        variable_name: float(sample["attributes"][variable_name])
+    }
+    for sample in data["samples"] if "attributes" in sample
+]
+
+df = pd.DataFrame(samples)
+```
+
+```{python}
+# Convert StdTime from Unix timestamp (milliseconds) to datetime
+df['StdTime'] = pd.to_datetime(df['StdTime'], unit='ms')
+
+# Plotting
+plt.figure(figsize=(10, 6))
+plt.plot(df['StdTime'], df[variable_name], marker='o', linestyle='-')
+plt.title(f'{variable_name} Over Time')
+plt.xlabel('Time')
+plt.ylabel(variable_name)
+plt.grid(True)
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+import folium
+from folium.raster_layers import ImageOverlay
+
+# Create a map centered at a given latitude and longitude
+m = folium.Map(location=[0, 0], zoom_start=2,)  # Centered on a global view crs="EPSG4326"
+
+# Parameters for the Export Image request
+variable_name = "T2M"  # Example variable
+#image_date_time_str = "2022-01-01 23:59:59"
+#time_milliseconds = convert_to_milliseconds(image_date_time_str)
+time_milliseconds = "349747200000"
+bbox = "-180%2C-90%2C180%2C90"  # Example bounding box for global coverage
+format_string = "jpgpng"
+size = ""  # Example size, adjust as needed
+imageSR = ""
+bboxSR = ""
+
+# Construct the Export Image URL
+export_image_url = f"https://gis.earthdata.nasa.gov/image/rest/services/POWER/POWER_901_MONTHLY_METEOROLOGY_UTC/ImageServer/exportImage?bbox={bbox}&bboxSR={bboxSR}&size={size}&imageSR={imageSR}&time={time_milliseconds}&format={format}&pixelType=F64&noData=&noDataInterpretation=esriNoDataMatchAny&interpolation=RSP_BilinearInterpolation&compression=&compressionQuality=&bandIds=&sliceId=&mosaicRule=%7B%22multidimensionalDefinition%22%3A%5B%7B%22variableName%22%3A%22{variable_name}%22%7D%5D%7D&renderingRule=&adjustAspectRatio=true&validateExtent=false&lercVersion=1&compressionTolerance=&f=image"
+
+print(export_image_url)
+
+### Start of Jesters example code
+#NOTE: This is probably easier for the user to undestand than one really long string.  Python can turn a dictionary into API endpoint parameters.
+import urllib
+api_endpoint = "https://gis.earthdata.nasa.gov/server/rest/services/POWER/POWER_901_MONTHLY_METEOROLOGY_UTC/ImageServer/exportImage?"
+args = {
+    "bbox": bbox,
+    "bboxSR": bboxSR,
+    "size": size,
+    "imageSR": imageSR,
+    "time": time_milliseconds,
+    "format": format_string,
+    "pixelType": "F64",
+    "noData": "",
+    "noDataInterpretation": "esriNoDataMatchAny",
+    "interpolation": "RSP_BilinearInterpolation",
+    "compression": "",
+    "compressionQuality": "",
+    "bandIds": "",
+    "sliceId": "",
+    f"mosaicRule": f"%7B%22multidimensionalDefinition%22%3A%5B%7B%22variableName%22%3A%22{variable_name}%22%7D%5D%7D",
+    "renderingRule": "",
+    "adjustAspectRatio": "true",
+    "validateExtent": "false",
+    "lercVersion": "1",
+    "compressionTolerance": "",
+    "f": "image"
+}
+url = api_endpoint + urllib.parse.urlencode(args)
+### End of Jesters example code
+
+# Add ImageOverlay to the map
+ImageOverlay(
+    image=export_image_url,
+    bounds=[[-90, -180], [90, 180]],
+    opacity=0.5,
+).add_to(m)
+
+# Save the map as an HTML file
+m.save('map_with_image_overlay.html')
+
+# Display the map in Jupyter Notebook or JupyterLab
+m
+```
