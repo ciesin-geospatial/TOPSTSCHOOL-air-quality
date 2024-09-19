@@ -1,6 +1,8 @@
 ---
 title: "SVI, TRI, and Health Outcomes"
 format: html
+execute:
+    eval: false
 ---
 
 ## Overview
@@ -126,6 +128,7 @@ Make sure these modules are installed before you begin working with the code in 
 SVI has a primary overall SVI score, but also provides sublayers. These include minority, socioeconomic, housing, and household data.
 
 ```{python}
+#| eval: false
 import xarray as xr
 import rasterio
 import rasterio.mask
@@ -261,6 +264,7 @@ plt.show()
 ## ENVIROFACTS TRI Facilities w/ API
 
 ```{python}
+#| eval: false
 import xarray as xr
 import rasterio
 import rasterio.mask
@@ -394,6 +398,7 @@ print(f"Final number of TRI facilities in the Detroit metro area: {len(detroit_t
 ## Regulated Facilities w/ ICIS-AIR
 
 ```{python}
+#| eval: false
 import pandas as pd
 import requests
 import time
@@ -492,6 +497,7 @@ print(df_icis_air['AIRCounty'].unique())
 Create geopandas and plot.
 
 ```{python}
+#| eval: false
 # Count records with missing coordinate values
 missing_coords = df_detroit_metro[(df_detroit_metro['FacLat'].isnull()) | (df_detroit_metro['FacLong'].isnull())]
 print(f"Number of ICIS-AIR records with missing coordinates: {len(missing_coords)}")
@@ -546,6 +552,7 @@ print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
 ## Custom TRI Form A Search
 
 ```{python}
+#| eval: false
 # URL of the CSV file
 url = "https://dmap-epa-enviro-prod-export.s3.amazonaws.com/338211710.CSV"
 
@@ -623,6 +630,7 @@ print(f"Average air release per facility: {gdf_tri_custom[release_col].mean():,.
 ### Rasterizing Pollution Sums
 
 ```{python}
+#| eval: false
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -721,6 +729,7 @@ print(f"Maximum cell value in raster: {clipped_raster.max().values:,.2f}")
 ## Air Release Vulnerability Index
 
 ```{python}
+#| eval: false
 import numpy as np
 import xarray as xr
 import rioxarray
@@ -824,6 +833,7 @@ print(f"Mean vulnerability indicator: {vulnerability_indicator.mean().values:.4f
 ```
 
 ```{python}
+#| eval: false
 # Convert the vulnerability indicator to a pandas DataFrame
 vulnerability_df = vulnerability_indicator.to_dataframe(name='index').reset_index()
 
@@ -897,6 +907,7 @@ It provides a standardized way to compare health indicators across different geo
 ### Processing
 
 ```{python}
+#| eval: false
 import geopandas as gpd
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -986,6 +997,7 @@ print(gdf_asthma['countyname'].value_counts())
 ```
 
 ```{python}
+#| eval: false
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
