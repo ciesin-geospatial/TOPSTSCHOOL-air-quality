@@ -967,6 +967,14 @@ import xarray as xr
 import rasterio
 import rasterio.mask
 
+xr.set_options(
+    keep_attrs=True,
+    display_expand_attrs=True,
+    display_expand_coords=True,
+    display_expand_data=False,
+    display_expand_data_vars=True
+)
+
 # Specify the TIF files
 tif_files = [
     "data/svi/svi_2020_tract_overall_wgs84.tif",
