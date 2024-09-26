@@ -159,20 +159,21 @@ from shapely.geometry import box
 
 counties = ['Wayne', 'Oakland', 'Macomb']
 
-# Fetch Detroit metro area counties using pygris
+# Fetch the county boundaries for Michigan (MI) from the pygris dataset for the year 2022.
+# Then, filter the DataFrame to only include the counties in the Detroit metro area (Wayne, Oakland, Macomb).
 metro_counties = pygris.counties(state="MI", year=2022)
 detroit_metro = metro_counties[metro_counties['NAME'].isin(counties)]
 
-# Dissolve the counties into a single polygon
+# Combine the geometries of the selected counties into a single polygon (dissolve by state code).
 detroit_metro = detroit_metro.dissolve(by='STATEFP')
 
-# Convert to GeoDataFrame
+# Convert the dissolved geometries into a GeoDataFrame and ensure the coordinate reference system (CRS) is EPSG:4269.
 detroit_metro = gpd.GeoDataFrame(detroit_metro, geometry='geometry', crs='EPSG:4269')
 
-# Get the bounding box
+# Obtain the total bounding box for the Detroit metro area polygon.
 bbox = detroit_metro.total_bounds
 
-# Create the bounding box as a polygon
+# Create a bounding box polygon from the bounding coordinates and store it in a GeoDataFrame with the same CRS.
 bbox_polygon = gpd.GeoDataFrame(
     geometry=[box(*bbox)],
     crs=detroit_metro.crs
@@ -185,29 +186,36 @@ Let's verify this by overlaying it on a basemap.
 import matplotlib.pyplot as plt
 import contextily as ctx
 
-# Create the plot
+# Initialize a figure and axis with a 7x7 inch size for plotting.
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Reproject data to Web Mercator to match the basemap
+# Reproject the Detroit metro area and bounding box to Web Mercator (EPSG:3857) to align with the basemap.
 detroit_metro_bm = detroit_metro.to_crs(epsg=3857)
 bbox_polygon_bm = bbox_polygon.to_crs(epsg=3857)
 
-# Plot the metro area and bounding box
+# Plot the Detroit metro area with a light blue fill and dark blue edges at 30% opacity.
 detroit_metro_bm.plot(ax=ax, color='lightblue', edgecolor='darkblue', alpha=0.3)
+
+# Plot the boundary of the bounding box with a grey outline and a thicker line width.
 bbox_polygon_bm.boundary.plot(ax=ax, color='grey', linewidth=2)
 
-# Add the basemap
+# Add a basemap from OpenStreetMap (Mapnik) to provide background geographic context.
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Set the extent of the map to the bounding box
+# Adjust the map's visible area (extent) to fit the bounding box.
 ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
 ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
 
-# Remove axes
+# Remove axis lines and labels for a cleaner map visualization.
 ax.set_axis_off()
 
+# Add a title to the plot.
 plt.title("Detroit Metro Study Area", fontsize=16)
+
+# Optimize layout to ensure proper spacing around the plot.
 plt.tight_layout()
+
+# Display the final plot.
 plt.show()
 ```
 
