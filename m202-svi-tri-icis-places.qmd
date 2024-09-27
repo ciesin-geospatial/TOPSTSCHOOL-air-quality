@@ -187,6 +187,7 @@ import matplotlib.pyplot as plt
 import contextily as ctx
 
 # Initialize a figure and axis with a 7x7 inch size for plotting.
+# Tutorial
 fig, ax = plt.subplots(figsize=(7, 7))
 
 # Reproject the Detroit metro area and bounding box to Web Mercator (EPSG:3857) to align with the basemap.
