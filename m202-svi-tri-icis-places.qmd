@@ -239,10 +239,12 @@ We'll begin by querying this database for just Michigan facilities in the workfl
 We start with the base url for the ECHO API and our parameter list.
 
 ```{python}
-# Base URL for ECHO ICIS-AIR API
+# Base URL for the ECHO ICIS-AIR API, which provides access to air quality and compliance data from the EPA.
 base_url = "https://echodata.epa.gov/echo/air_rest_services"
 
-# Parameters for the initial API call
+# Query parameters for the API call:
+# - "output": Specifies the response format as JSON.
+# - "p_st": Filters results to include only the state of Michigan (MI).
 params = {
     "output": "JSON",
     "p_st": "MI"
@@ -262,39 +264,43 @@ Now we define 2 functions that will carry out the first 2 steps; 1) identifying 
 ```{python}
 import requests
 
-# Define the function to query the API for the facilities of interest
+# Define a function to query the ECHO ICIS-AIR API for facilities of interest in Michigan.
+# If successful, extract the Query ID (qid) and total number of facilities from the API response.
 def get_facilities():
     response = requests.get(f"{base_url}.get_facilities", params=params)
     if response.status_code == 200:
         data = response.json()
         if 'Results' in data:
-            qid = data['Results']['QueryID']
+            qid = data['Results']['QueryID'] # Unique Query ID to fetch detailed facility data.
             print(f"Query ID: {qid}")
-            print(f"Total Facilities: {data['Results']['QueryRows']}")
+            print(f"Total Facilities: {data['Results']['QueryRows']}")  # Number of facilities in the query result.
             return qid
+    # Log an error if the API request fails or the data is incomplete.
     print("Failed to get facilities and QID")
     return None
 
-# Define the function to retrieve the relevant data from the facilities of interest
+# Define a function to retrieve detailed facility data using the Query ID (qid).
+# Retrieves paginated data, adding all facility results to the all_facilities list.
 def get_facility_data(qid):
     all_facilities = []
     page = 1
     while True:
+        # Query parameters include the Query ID and the page number for paginated results.
         params = {"qid": qid, "pageno": page, "output": "JSON"}
         response = requests.get(f"{base_url}.get_qid", params=params)
         if response.status_code == 200:
             data = response.json()
             if 'Results' in data and 'Facilities' in data['Results']:
-                facilities = data['Results']['Facilities']
-                if not facilities:  # No more facilities to retrieve
+                facilities = data['Results']['Facilities'] # List of facilities on the current page.
+                if not facilities:   # Break if no more facilities to retrieve.
                     break
-                all_facilities.extend(facilities)
+                all_facilities.extend(facilities) # Add the facilities from the current page to the result list.
                 print(f"Retrieved page {page}")
                 page += 1
             else:
-                break
+                break # Break if 'Results' or 'Facilities' key is missing.
         else:
-            print(f"Failed to retrieve page {page}")
+            print(f"Failed to retrieve page {page}")  # Log an error if the API request fails for the current page.
             break
     return all_facilities
 ```
@@ -302,22 +308,24 @@ def get_facility_data(qid):
 Now that we've defined the functions we can make a request to the API with our Detroit metro counties.
 
 ```{python}
-# Step 1: Get the Query ID
+# Step 1: Retrieve the Query ID (qid) by querying the API for ICIS-AIR facilities in Michigan.
 qid = get_facilities()
 
 if qid:
-    # Step 2: Use get_qid to retrieve all facility data
+    # Step 2: If the Query ID is retrieved, use it to get all relevant facility data.
     print("Retrieving facility data...")
     facilities = get_facility_data(qid)
     
-    # Convert to DataFrame
+    # Convert the list of facilities into a pandas DataFrame for easier data analysis and manipulation.
     df_icis_air = pd.DataFrame(facilities)
     
+    # Print the total number of facilities retrieved and display the column names in the dataset.
     print(f"\nSuccessfully retrieved {len(df_icis_air)} ICIS-AIR facilities for Michigan")
     print("\nColumns in the dataset:")
     print(df_icis_air.columns)
     
 else:
+    # If the Query ID is not retrieved, output an error message indicating the failure.
     print("Failed to retrieve facility data")
 ```
 
@@ -350,14 +358,14 @@ These columns provide information about each facility's location, operational ch
 We can check some basic information like how many facilities are in Detroit metro and the breakdown by our 3 counties.
 
 ```{python}
-# Subset the dataframe to include only the Detroit metro counties
+# Subset the DataFrame to include only the ICIS-AIR facilities located in the Detroit metro counties (Wayne, Oakland, Macomb).
 icis_air_detroit = df_icis_air[df_icis_air['AIRCounty'].isin(counties)]
 
-# Print information about the subset
+# Print a summary of the total number of ICIS-AIR facilities in Michigan and those specifically in the Detroit metro area.
 print(f"Total ICIS-AIR facilities in Michigan: {len(df_icis_air)}")
 print(f"ICIS-AIR facilities in Detroit metro area: {len(icis_air_detroit)}")
 
-# Display the count of facilities in each metro county
+# Display the count of ICIS-AIR facilities for each county within the Detroit metro area.
 print("\nFacilities per county:")
 print(icis_air_detroit['AIRCounty'].value_counts())
 ```
@@ -365,11 +373,11 @@ print(icis_air_detroit['AIRCounty'].value_counts())
 Next we should check for facilities with missing latitude or longitude coordinates.
 
 ```{python}
-# Count records with missing coordinate values
+# Identify and count the records in the Detroit metro subset where latitude or longitude values are missing.
 missing_coords = icis_air_detroit[(icis_air_detroit['FacLat'].isnull()) | (icis_air_detroit['FacLong'].isnull())]
 print(f"Number of ICIS-AIR records with missing coordinates: {len(missing_coords)}")
 
-# Remove records with missing coordinates
+# Remove records with missing latitude or longitude from the dataset to ensure only facilities with valid coordinates remain.
 icis_air_detroit = icis_air_detroit.dropna(subset=['FacLat', 'FacLong'])
 ```
 
