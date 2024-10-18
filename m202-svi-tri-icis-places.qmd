@@ -386,43 +386,45 @@ No missing records! That's great. As you'll find out later, you won't always be 
 Now we can create a spatial object, reproject it so it matches the basemap of Detroit, and make a map showing the location of all the ICIS-AIR facilities in Detroit metro.
 
 ```{python}
-# Create a GeoDataFrame for ICIS-AIR facilities
+# Convert the ICIS-AIR facilities data into a GeoDataFrame with valid point geometries (using longitude and latitude).
 gdf_icis_air = gpd.GeoDataFrame(
     icis_air_detroit, 
     geometry=gpd.points_from_xy(icis_air_detroit.FacLong, icis_air_detroit.FacLat),
-    crs="EPSG:4326"
+    crs="EPSG:4326" # Coordinate reference system set to WGS 84 (EPSG:4326)
 )
 
-# Reproject ICIS-AIR data to Web Mercator so it matches the basemap
+# Reproject the ICIS-AIR facilities' GeoDataFrame to Web Mercator (EPSG:3857) for alignment with basemap data.
 gdf_icis_air_bm = gdf_icis_air.to_crs(epsg=3857)
 
-# Create the plot
+# Set up the plot with a 7x7 inch figure.
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the metro area and bounding box (reusing objects from earlier)
+# Plot the Detroit metro area boundary and bounding box, using previously reprojected objects.
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Plot ICIS-AIR facilities
+# Plot the ICIS-AIR facilities as cyan markers, with transparency (alpha=0.5) and grey outlines.
 gdf_icis_air_bm.plot(ax=ax, color='cyan', markersize=50, alpha=0.5, label='ICIS-AIR Facilities', edgecolor = "grey")
 
-# Add the basemap
+# Add an OpenStreetMap basemap for geographical context.
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Set the extent of the map to the bounding box
+# Adjust the map's extent to fit the bounding box around the Detroit metro area.
 ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
 ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
 
-# Remove axes
+# Hide the axes to make the plot cleaner.
 ax.set_axis_off()
 
-# Add legend
+# Add a legend to the plot to label the ICIS-AIR facilities.
 ax.legend()
 
+# Add a title and improve the layout of the plot.
 plt.title("Detroit Metro Area ICIS-AIR Facilities", fontsize=16)
 plt.tight_layout()
 plt.show()
 
+# Output the total number of ICIS-AIR facilities plotted.
 print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
 ```
 
@@ -431,41 +433,43 @@ These are distributed along business and industrial sectors as expected, but we 
 Which regulated facilities have been in violation status? We can plot all the facilities with at least one violation during a reporting quarter and use graduated symbols that reflect the total number of quarters with violations. This information is in the `AIRQtrsWithViol` column.
 
 ```{python}
-# Convert to numeric, replacing non-numeric values with NaN
+# Convert the 'AIRQtrsWithViol' column to numeric, replacing any non-numeric values with NaN.
 gdf_icis_air_bm['AIRQtrsWithViol'] = pd.to_numeric(gdf_icis_air_bm['AIRQtrsWithViol'], errors='coerce')
 
-# subset the dataset for those with violations
+# Subset the dataset to include only ICIS-AIR facilities with reported violations (quarters with violations > 0).
 gdf_icis_air_violators = gdf_icis_air_bm = gdf_icis_air_bm[gdf_icis_air_bm['AIRQtrsWithViol'] > 0]
 
-# Create the plot
+# Set up the plot with a 7x7 inch figure.
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the metro area and bounding box (reusing objects from earlier)
+# Plot the Detroit metro area boundary and bounding box for geographical context.
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Plot TRI facilities with graduated symbols based on air releases
+# Plot the violators (facilities with violations) using graduated symbol sizes based on 'AIRQtrsWithViol' values.
+# The symbol size is scaled (multiplied by 10) to make differences more visible.
 scatter = ax.scatter(gdf_icis_air_violators.geometry.x,
                      gdf_icis_air_violators.geometry.y, 
-                     s=gdf_icis_air_violators['AIRQtrsWithViol']*10,  # Adjust the multiplier as needed
-                     c='orangered', 
-                     edgecolor='yellow', 
+                     s=gdf_icis_air_violators['AIRQtrsWithViol']*10,  # Adjust marker size by violation count
+                     c='orangered', # Color the violators in 'orangered' for visibility
+                     edgecolor='yellow', # Add a yellow edge to make the points stand out
                      linewidth=1, 
-                     alpha=0.7)
+                     alpha=0.7) # Set transparency for better map visibility
 
-# Add the basemap
+# Add an OpenStreetMap basemap to enhance the visual context of the plot.
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Set the extent of the map to the bounding box
+# Set the map's extent to match the bounding box around the Detroit metro area.
 ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
 ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
 
-# Remove axes
+# Hide axes for a cleaner map.
 ax.set_axis_off()
 
-# Add legend
+# Add a legend to label and distinguish facilities with violations.
 ax.legend()
 
+# Set the plot title and finalize the layout for professional presentation.
 plt.title("Detroit Metro Area ICIS-AIR Facilities w/ Violations", fontsize=16)
 plt.tight_layout()
 plt.show()
@@ -476,21 +480,22 @@ We can also create a table showing which businesses have been in violation statu
 ```{python}
 from tabulate import tabulate
 
+# Filter the dataset to include only facilities with 10 or more quarters of violations.
 gdf_icis_air_violators = gdf_icis_air_bm = gdf_icis_air_bm[gdf_icis_air_bm['AIRQtrsWithViol'] >= 10]
 
-# List the columns we want to use
+# Define the columns to be displayed in the final table.
 table_columns = ['AIRName', 'AIRStreet', 'AIRCity', 'AIRQtrsWithViol', 'AIRLastViolDate']
 
-# Create a new DataFrame with only the columns we want
+# Create a new DataFrame with only the selected columns for table generation.
 table_data = gdf_icis_air_violators[table_columns].copy()
 
-# Ensure AIRLastViolDate is in datetime format
+# Convert the 'AIRLastViolDate' column to a datetime format for proper sorting and display.
 table_data['AIRLastViolDate'] = pd.to_datetime(table_data['AIRLastViolDate'])
 
-# Sort the DataFrame by AIRLastViolDate in descending order
+# Sort the DataFrame by the 'AIRLastViolDate' column in descending order to show the most recent violations first.
 table_data = table_data.sort_values('AIRLastViolDate', ascending=False)
 
-# Create a dictionary to map old column names to pretty column names
+# Define a dictionary to map the original column names to more readable/pretty names for the table.
 pretty_names = {
     'AIRName': 'Name',
     'AIRStreet': 'Street',
@@ -499,14 +504,16 @@ pretty_names = {
     'AIRLastViolDate': 'Violation Date'
 }
 
-# Rename the columns
+# Apply the new readable column names.
 table_data.rename(columns=pretty_names, inplace=True)
 
-# Format the 'Violation Date' column to a specific date format (optional)
+# Optionally, format the 'Violation Date' column to display dates in a 'YYYY-MM-DD' format.
 table_data['Violation Date'] = table_data['Violation Date'].dt.strftime('%Y-%m-%d')
 
-# Create the table
+# Generate the table using the 'tabulate' library and format it as an HTML table for presentation.
 table = tabulate(table_data, headers='keys', tablefmt='html', showindex=False)
+
+# Display the resulting table.
 table 
 ```
 
