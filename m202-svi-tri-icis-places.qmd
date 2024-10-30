@@ -589,30 +589,42 @@ The agreement, described as "groundbreaking" by the Sierra Club, introduces seve
 We'll continue to use the Detroit metro boundary we created earlier. We assigned them the names `detroit_metro` and `detroit_metro_bm` (projected to mercator to match **b**ase**m**aps for plotting).
 
 ```{python}
-# Print the bounding box coordinates
+# Print the coordinates of the bounding box, which defines the rectangular boundary for the area of interest
 print("Bounding Box:")
+
+# Display the minimum longitude (X-axis) of the bounding box
 print(f"Minimum X (Longitude): {bbox[0]}")
+
+# Display the minimum latitude (Y-axis) of the bounding box
 print(f"Minimum Y (Latitude): {bbox[1]}")
+
+# Display the maximum longitude (X-axis) of the bounding box
 print(f"Maximum X (Longitude): {bbox[2]}")
+
+# Display the maximum latitude (Y-axis) of the bounding box
 print(f"Maximum Y (Latitude): {bbox[3]}")
 ```
 
 Now we'll create and empty list to store the TRI data, loop through each county making an API query, and place the retrieved data in the empty container.
 
 ```{python}
-# Fetch TRI facility data from EPA API for each county
+# Initialize a list to hold TRI (Toxic Release Inventory) facility data for each county in Michigan
 tri_data = []
 
-# Loop through each county to make a separate API inquiry (was having trouble attempting all at once)
+# Loop through each county in the specified list to fetch TRI data separately
+# (avoiding issues encountered when querying all counties at once)
 for county in counties:
+    # Construct the API URL to query TRI facilities for the current county
     api_url = f"https://data.epa.gov/efservice/tri_facility/state_abbr/MI/county_name/{county}/JSON"
     response = requests.get(api_url)
-    # Is our response good
+
+    # Check if the response was successful
     if response.status_code == 200:
         county_data = response.json()
-        # Add the county to the list
+        # Append the current county's TRI data to the overall list
         tri_data.extend(county_data)
     else:
+        # Print an error message if data retrieval failed for the county
         print(f"Failed to fetch data for {county} County. Status code: {response.status_code}")
 
 ```
@@ -622,19 +634,21 @@ for county in counties:
 The TRI data comes in json format. They can be a little confusing to interpret, becauce each record (traditionally a row in a table) is viewed with columns structured vertically. Let's look at the first record.
 
 ```{python}
+# Access and print the second entry in the TRI data list to inspect a sample facility's data structure
 tri_data[1]
 ```
 
 This record shows all the information for PPG GROW DETROIT with columns and values listed side-by-side ('city_name': 'DETROIT'). This may seem difficult to deal with, but most programming languages have tools to easily parse json data into traditional tables. `pd.DataFrame` does it automatically when you attempt to create a **pandas** data frame.
 
 ```{python}
-# Convert TRI data to a DataFrame
+# Convert the collected TRI data list into a Pandas DataFrame for easier data manipulation and analysis
 tri_df = pd.DataFrame(tri_data)
 
+# Output the total count of facilities retrieved to confirm successful data fetching
 print(f"Number of facilities fetched: {len(tri_df)}")
 
-# Check the first few rows (too large to print in this document)
-# tri_df.head
+# Display the first few rows of the DataFrame for a quick data preview (uncomment if needed for inspection)
+# tri_df.head()
 ```
 
 Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have latitude and longitude values.
@@ -642,15 +656,15 @@ Checking the first few rows--everything looks as it should. We want to geocode t
 We'll check and remove those without.
 
 ```{python}
-# Create a copy of the dataframe to avoid SettingWithCopyWarning
+# Create a copy of the TRI DataFrame to prevent modifications that could trigger a SettingWithCopyWarning
 tri_df_clean = tri_df.copy()
 
-# Remove facilities with empty latitude or longitude values
+# Remove rows where latitude or longitude is missing to ensure data completeness
 tri_df_clean = tri_df_clean.dropna(subset=['pref_latitude', 'pref_longitude'])
 
 print(f"Number of facilities after removing empty coordinates: {len(tri_df_clean)}")
 
-# Convert latitude and longitude to numeric type
+# Convert latitude and longitude columns to numeric, handling non-numeric values by setting them to NaN
 tri_df_clean['pref_latitude'] = pd.to_numeric(tri_df_clean['pref_latitude'], errors='coerce')
 tri_df_clean['pref_longitude'] = pd.to_numeric(tri_df_clean['pref_longitude'], errors='coerce')
 ```
@@ -660,13 +674,13 @@ Ouch! We lost roughly 300 records due to missing coordinates (789 vs. 478). If t
 In my personal investigations of this data, I noticed that some longitude coordinates were not negative, but had an absolute value (e.g. 83.25) that made sense for the Detroit metro area, therefore we will flip the sign on these records.
 
 ```{python}
-# Function to correct longitude by making it negative if positive
+# Define a function to correct longitudes that are mistakenly positive, converting them to negative values for North America
 def correct_longitude(lon):
     if lon > 0:
         return -lon
     return lon
 
-# Apply longitude correction
+# Apply longitude correction to all facilities in the DataFrame
 tri_df_clean['pref_longitude'] = tri_df_clean['pref_longitude'].apply(correct_longitude)
 ```
 
@@ -675,18 +689,18 @@ Additionally, there are some records with wild longitudinal values that are not 
 Toss the quartile outliers.
 
 ```{python}
-# Calculate IQR for longitude
+# Calculate the Interquartile Range (IQR) for longitude to identify and remove outlier values
 Q1 = tri_df_clean['pref_longitude'].quantile(0.25)
 Q3 = tri_df_clean['pref_longitude'].quantile(0.75)
 IQR = Q3 - Q1
 
-# Define bounds for outliers
+# Define acceptable range for longitude, filtering out points beyond 1.5 * IQR
 lower_bound = Q1 - 1.5 * IQR
 upper_bound = Q3 + 1.5 * IQR
 
 lower_bound, upper_bound
 
-# Remove outliers
+# Remove facilities with longitudes outside of the defined bounds to eliminate extreme outliers
 tri_df_clean = tri_df_clean[(tri_df_clean['pref_longitude'] >= lower_bound) & 
                             (tri_df_clean['pref_longitude'] <= upper_bound)]
 
@@ -700,47 +714,48 @@ Thankfully we only lost 2 more records from outlier.
 The data has been cleaned up a bit so now lets create a spatial point object from the data with **geopandas** and use **matplotlib** to plot the values on top of a basemap of Detroit we'll acquire using **contextily** and our original Wayne, Macomb, and Oakland counties boundary.
 
 ```{python}
-# Create a GeoDataFrame from the cleaned TRI data
+# Create a GeoDataFrame from the cleaned TRI data, converting latitude and longitude into geometric points
 detroit_tri = gpd.GeoDataFrame(
     tri_df_clean, 
     geometry=gpd.points_from_xy(tri_df_clean.pref_longitude, tri_df_clean.pref_latitude),
-    crs="EPSG:4326"
+    crs="EPSG:4326" # Set the coordinate reference system to WGS 84 (latitude/longitude)
 )
 
-# Reproject data to Web Mercator for contextily
-# detroit_metro = detroit_metro.to_crs(epsg=3857)
-# bbox_polygon = bbox_polygon.to_crs(epsg=3857)
+# Reproject TRI data to the Web Mercator projection (EPSG:3857) for compatibility with the basemap
 detroit_tri = detroit_tri.to_crs(epsg=3857)
 
-# Create the plot
+# Initialize a plot with a fixed size
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the metro area and bounding box (reusing objects from earlier)
+# Plot the Detroit metro area boundaries and the bounding box as background layers
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Plot TRI facilities (reusing the detroit_tri object from earlier)
+# Plot TRI facilities as purple points with a grey edge, representing facilities' locations in the metro area
 detroit_tri.plot(ax=ax, color='purple', edgecolor='grey', markersize=50, alpha=0.5, label='TRI Facilities')
-# Plot ICIS-AIR facilities
+
+# Plot ICIS-AIR facilities as cyan points with a grey edge, indicating the locations of air-quality-monitored facilities
 gdf_icis_air_bm.plot(ax=ax, color='cyan', edgecolor='grey', markersize=50, alpha=0.5, label='ICIS-AIR Facilities')
 
-# Add the basemap
+# Overlay a basemap for geographical context, using OpenStreetMap tiles
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Set the extent of the map to the bounding box
+# Set the map's viewing area to the bounding box’s coordinates, zooming in on the Detroit metro area
 ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
 ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
 
-# Remove axes
+# Hide axis labels and ticks for a cleaner map presentation
 ax.set_axis_off()
 
-# Add legend
+# Add a legend to differentiate TRI and ICIS-AIR facilities on the map
 ax.legend()
 
+# Add a title for context and adjust layout for better spacing
 plt.title("Detroit Metro Area TRI and ICIS-AIR Facilities", fontsize=16)
 plt.tight_layout()
 plt.show()
 
+# Print the number of facilities included in the plot for confirmation
 print(f"Number of TRI facilities plotted: {len(detroit_tri)}")
 print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
 ```
@@ -770,7 +785,12 @@ d) To record air quality index values for major cities
 We can make the query to Envirofacts. Let's breakdown the call.
 
 ```{python}
-# URL of the CSV file
+# Define the URL for the CSV file containing Toxic Release Inventory Form R data
+# This query requests data from the EPA Envirofacts API, specifying:
+# - Reporting Year: 2021
+# - Air releases greater than 0
+# - State: Michigan (MI)
+# - Counties: Wayne, Oakland, and Macomb
 url = "https://data.epa.gov/efservice/V_TRI_FORM_R_EZ/REPORTING_YEAR/2021/AIR_TOTAL_RELEASE/>/0/STATE_ABBR/MI/COUNTY_NAME/CONTAINING/WAYNE/CONTAINING/OAKLAND/CONTAINING/MACOMB/CSV"
 ```
 
@@ -783,11 +803,13 @@ url = "https://data.epa.gov/efservice/V_TRI_FORM_R_EZ/REPORTING_YEAR/2021/AIR_TO
 -   We want it as a csv: CSV
 
 ```{python}
-# Read the CSV file directly with pandas
+# Read the TRI Form R data CSV file directly into a pandas DataFrame
 tri_form_r = pd.read_csv(url)
+
+# Confirm successful data loading by printing the number of records
 print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
 
-# Display information about the dataset
+# Display column names to understand the structure of the dataset
 print("\nColumns in the dataset:")
 print(tri_form_r.columns)
 ```
@@ -795,19 +817,24 @@ print(tri_form_r.columns)
 We have roughly the same number of facilities as before, but this table has a lot of columns (568). We should make it more manageable.
 
 ```{python}
+# The dataset contains numerous columns (568), so we will retain only essential columns for analysis
+# Select columns: facility name, address, city, reporting year, and air release amounts
 keeps = [
     'facility_name', 'street_address', 'city_name',
     'reporting_year', 'air_total_release']
 
+# Update DataFrame to only include the selected columns
 tri_form_r = tri_form_r[keeps]
 ```
 
 This works well but we can get more recent data that is already filtered using the [web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). The user selects location, years of interest, and columns of interests. The portal serves up your requested dataset in an Amazon S3 cloud storage. We can important the dataset directly from the address they provide you.
 
 ```{python}
+# Read a secondary TRI Form R CSV file directly from the URL
+# This may contain additional or alternative data for further analysis
 tri_form_r = pd.read_csv("https://dmap-epa-enviro-prod-export.s3.amazonaws.com/396975438.CSV")
 
-# Display information about the dataset
+# Confirm successful reading by printing the number of records and dataset structure
 print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
 print("\nColumns in the dataset:")
 print(tri_form_r.columns)
@@ -816,7 +843,8 @@ print(tri_form_r.columns)
 This is a bit more manageable, but we have multiple records per facility because each chemical release has a separate record. This allows the user to investigate specific chemicals, but for the purposes of this exercise we will aggregate `AIR_TOTAL_RELEASE` for each facility.
 
 ```{python}
-# Check how it looks (too large to print on the web)
+# Display the first few rows of the dataset for a quick inspection
+# Note: this printout is limited to avoid excessive output in a web environment
 # tri_form_r.head
 ```
 
