@@ -1,5 +1,5 @@
 ---
-title: "Exploring SVI, TRI, and Health Outcomes"
+title: "Exploring SVI, TRI, and Health Outcomes in Metro Detroit"
 author: "Joshua Brinks"
 date: "September 4, 2024"
 df-print: paged
@@ -12,23 +12,29 @@ keep-ipynb: true
 
 ## Overview
 
-In this lesson, we will introduce you to 3 public health and air quality datasets. These include the EPA's Toxic Release Inventory (TRI), the EPA's Integrated Compliance Information System for Air (ICIS-AIR), and the CDC's PLACES health outcomes dataset. You will learn how to form queries and retrieve each dataset from their respective API, process the returned object into a useable format, create visualizations and perform simple analysis. You will also use NASA's Social Vulnerability Index (SVI) to examine socioeconomic patterns in the greater Detroit metropolitan area and explore relationships with public health.
+In this lesson, we will introduce you to 3 public health and air quality datasets: the United States [Environmental Protection Agency](https://www.epa.gov/)'s (EPA's) [Toxic Release Inventory](https://www.epa.gov/toxics-release-inventory-tri-program/tri-toolbox) (TRI), the EPA's [Integrated Compliance Information System for Air](https://www.epa.gov/enviro/icis-air-overview) (ICIS-AIR), and the U.S. [Centers For Diesease Control and Prevention's](https://www.cdc.gov/) (CDC's) [PLACES health outcomes](https://www.cdc.gov/places/index.html) dataset. You will learn how to form queries and retrieve each dataset from their respective API, process the returned object into a useable format, create visualizations and perform simple analysis. You will also use the CDC's [Social Vulnerability Index](https://sedac.ciesin.columbia.edu/data/set/usgrid-us-social-vulnerability-index-rev01) (SVI), available through NASA, to examine socioeconomic patterns in the greater Detroit metropolitan area and explore relationships with public health.
 
 ::: {.callout-tip style="color: #5a7a2b;"}
 ## Programming Reminder
 
 This lesson uses the Python programming environment.
 :::
+::: column-margin
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Data Science Review
 
+An Application Programming Interface (API) is a set of protocols, tools, and definitions that enable different software applications to communicate with each other. It acts as an intermediary, allowing one application to request specific data or actions from another application or service without needing access to its entire codebase. APIs define the methods and data formats that applications can use to request and exchange information, typically through specific *endpoints* (URLs) that accept requests and return responses in standardized formats like JSON. They are crucial for integrating external services, accessing databases, and enabling communication between different parts of larger open science software systems.
+:::
+:::
 ## Learning Objectives
 
 After completing this lesson, you should be able to:
 
 -   Retrieve multiple public health datasets through the EPA and CDC's APIs.
 -   Create multipanel raster maps from multilayered SVI data.
--   Geolocating tabular data using latitude and longitude.
+-   Geolocate tabular data using latitude and longitude.
 -   Create maps joining geolocated points and basemaps.
--   Create maps with graduated point symbols for point source pollution releases.
+-   Create maps with graduated point symbols to visualize point source pollution releases.
 -   Interpolate a raster surface from point spatial data.
 -   Perform raster math to create specialized indexes.
 -   Perform spatial correlation analysis.
@@ -36,20 +42,20 @@ After completing this lesson, you should be able to:
 ::: {.callout-warning}
 ## Preface: A Note on Data Interpretation and Ethical Considerations
 
-This lesson is designed to introduce you to various environmental, public health, and socioeconomic datasets, and to provide you with the tools to analyze and visualize this information. However, it's crucial to approach this material with an understanding of its sensitive nature and potential implications.
+This lesson is designed to introduce you to various environmental, public health, and socioeconomic datasets, and to provide you with the tools to analyze and visualize this information; however, it is crucial to approach this material with an understanding of its sensitive nature and potential implications.
 
 The topics of environmental justice, institutional racism, socioeconomic conditions, and pollution are complex and multifaceted. The data and analyses presented in this lesson are not intended to draw definitive conclusions or suggest scientific evidence of cause and effect relationships. Rather, they are meant to equip you with the skills to investigate data and perform analyses that could be applied to your local communities.
 
-As you work through this lesson, remember that correlation does not imply causation. The patterns you may observe in the data could be influenced by numerous factors not captured in these datasets. It's essential to approach your findings with caution and to consider the broader historical, social, and economic contexts that shape environmental and health outcomes in different communities.
+As you work through this lesson, remember that correlation does not imply causation. The patterns you may observe in the data could be influenced by factors not represented in  these datasets. Approach your findings with caution, and consider the broader historical, social, and economic contexts that shape environmental and health outcomes in different communities.
 
-This lesson aims to empower you with data literacy and analytical skills. We encourage you to use these tools responsibly, always considering the ethical implications of your analyses and the potential impact on the communities represented in the data. When drawing insights or making decisions based on such analyses, it's crucial to involve community stakeholders, consider multiple perspectives, and seek additional expertise when necessary.
+This lesson will empower you with data literacy and analytical skills. We encourage you to use these tools and skills responsibly. Consider the ethical implications of your analyses and the potential impact on the communities represented in the data. When drawing insights or making decisions based on such analyses, it’s crucial to involve community stakeholders, consider multiple perspectives, and seek additional expertise when necessary.
 :::
 
 ## Introduction
 
 In many urban areas, air quality issues disproportionately affect low-income communities and communities of color. This disparity is a key focus of environmental justice efforts. In cities like Detroit, Chicago, and Cleveland industrial facilities, highways, and other pollution sources are often concentrated in disadvantaged neighborhoods. Detroit has a history of industrial pollution and is working to address air quality issues in areas like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic. Similarly, Chicago has seen community efforts to address air pollution in areas like the Southeast Side, where residents have fought against polluting industries and advocated for stricter regulations.
 
-The EPA is the primary federal agency responsible for environmental protection in the United States. It sets and enforces air quality standards, including the National Ambient Air Quality Standards (NAAQS) for six criteria pollutants. The EPA also maintains the AirNow system, which provides real-time air quality data to the public. CDC (Centers for Disease Control and Prevention): While primarily focused on public health, the CDC plays a crucial role in understanding the health impacts of air pollution. It conducts research on the relationships between air quality and various health outcomes, and provides guidance on protecting public health from environmental hazards.
+The EPA is the primary federal agency responsible for environmental protection in the United States. It sets and enforces air quality standards, including the National Ambient Air Quality Standards (NAAQS) for six criteria pollutants. The EPA also maintains the AirNow system, which provides real-time air quality data to the public. While primarily focused on public health, the CDC plays a crucial role in understanding the health impacts of air pollution. It conducts research on the relationships between air quality and various health outcomes, and provides guidance on protecting public health from environmental hazards.
 
 In response to these challenges, community-driven science initiatives have emerged. These efforts involve local residents in collecting data on air quality and other environmental factors, often using low-cost sensors and mobile monitoring techniques. This approach helps fill gaps in official monitoring networks and empowers communities to advocate for themselves. Open data is crucial for community-driven solutions in several ways:
 
@@ -58,7 +64,7 @@ In response to these challenges, community-driven science initiatives have emerg
 -   Innovation: Open data enables researchers, activists, and tech developers to create new tools and analyses that can benefit communities.
 -   Collaboration: Open data facilitates collaboration between communities, scientists, and policymakers, leading to more effective solutions.
 
-While the EPA and CDC provide federal networks of open-access datasets like the Air Quality System (AQS), TRI, ICIS-AIR, and PLACES collections, community driven data collection is a large part of driving change in traditionally underrepresented communities. In Chicago, the Array of Things project has installed sensors throughout the city, providing open data on various environmental factors including air quality, while Detroit's Community Air Monitoring Project uses low-cost sensors to collect and share air quality data in areas underserved by official monitoring stations.
+While the EPA and CDC provide federal networks of open-access datasets like the Air Quality System (AQS), TRI, ICIS-AIR, and Population Level Analysis and Community Estimates (PLACES) collections, community driven data collection is a large part of driving change in traditionally underrepresented communities. In Chicago, the Array of Things project has installed sensors throughout the city, providing open data on various environmental factors including air quality, while Detroit's Community Air Monitoring Project uses low-cost sensors to collect and share air quality data in areas underserved by official monitoring stations.
 
 With access to open data, communities can:
 
@@ -76,10 +82,11 @@ The Clear the Air Coalition, a new environmental justice advocacy group in Michi
 
 [![Clear the Air Coalition](https://npr.brightspotcdn.com/dims4/default/42a4f01/2147483647/strip/true/crop/960x720+0+0/resize/1760x1320!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F78%2F01%2F1711cf6e442dbe579d452c0fc6f6%2Fclearair.jpg)](https://www.michiganpublic.org/environment-climate-change/2024-05-02/new-environmental-justice-coalition-aims-to-change-state-law-pressure-egle)
 
-While the Michigan Department of Environment, Great Lakes, and Energy (EGLE) states its commitment to protecting underserved communities and notes improvements in air quality over recent decades, coalition members argue that the current approach is insufficient. They call for regulators to consider the combined effects of multiple pollution sources in marginalized areas and to give local governments more power to reject new polluting facilities in already burdened communities. The coalition plans to raise awareness and push for these changes during the upcoming Air Quality Awareness Week.
+The Michigan Department of Environment, Great Lakes, and Energy (EGLE) emphasizes its commitment to protecting underserved communities and notes improvements in air quality over recent decades, but Coalition members argue that the current approach is insufficient. They call for regulators to consider the combined effects of multiple pollution sources in marginalized areas and to give local governments more power to reject new polluting facilities in already burdened communities. 
+
 :::
 
-The state of Michigan, Department of Environment, Great Lakes, and Energy (EGLE), and the Office of the Environmental Justice Public Advocate are one of the most active state departments aiming to address issues of the environment, public health, and social justice. Here are some of the projects enacted in greater Detroit area:
+The Michigan EGLE and the Office of the Environmental Justice Public Advocate are two of the more active state departments aiming to address issues of the environment, public health, and social justice. Here are some of the projects enacted in greater Detroit area:
 
 -   [Detroit Environmental Agenda](https://detroitenv.org/): This community-led initiative works closely with EGLE to address environmental concerns in Detroit. It focuses on issues like air quality, water quality, and waste management.
 -   [48217 Community Air Monitoring Project](https://www.michigan.gov/-/media/Project/Websites/egle/Documents/Reports/AQD/monitoring/2018-04-27-48217-air-monitoring-project.pdf): Named after the zip code of a heavily industrialized area in Southwest Detroit, this project involves community members working with EGLE to monitor air quality using low-cost sensors.
@@ -89,7 +96,7 @@ The state of Michigan, Department of Environment, Great Lakes, and Energy (EGLE)
 -   [Detroit River Sediment Cleanup](https://www.epa.gov/great-lakes-aocs/detroit-riverwalk-great-lakes-legacy-act-project-detroit-river-aoc): EGLE has been involved in efforts to clean up contaminated sediments in the Detroit River, which disproportionately affects nearby low-income communities.
 -   [Asthma Prevention Programs](https://getasthmahelp.org/asthma-collaborative-of-detroit.aspx): EGLE supports community-based asthma prevention programs in Detroit, recognizing the link between air quality and asthma rates in disadvantaged neighborhoods.
 
-These are just a few of examples that demonstrate the ongoing collaboration between community groups, local government, and EGLE to address environmental justice concerns in Detroit.
+These are just a few examples that demonstrate the ongoing collaboration between community groups, local government, and EGLE to address environmental justice concerns in Detroit.
 
 Air quality issues in urban areas disproportionately affect low-income communities and communities of color, making it a critical focus for environmental justice efforts. Federal agencies like the EPA and CDC play crucial roles in setting standards and conducting research, but community-driven science initiatives have emerged as powerful tools for local action. Open data is key to these efforts, enabling transparency, accessibility, innovation, and collaboration. Cities like Detroit and Chicago are at the forefront of these initiatives, with projects that empower residents to monitor and advocate for better air quality. While challenges remain, particularly in data management and accessibility, the collaboration between community groups, local governments, and state agencies like Michigan's EGLE demonstrates a promising path forward.
 
@@ -146,9 +153,9 @@ Where TRI focuses on the quantities of specific toxic chemicals released into th
 
 ##### Defining Our Study Area
 
-Next we'll query the API for ICIS-AIR regulated facilities in the greater Detroit area, but first we need to create a spatial object that defines our study area that we can use throughout this analysis. The U.S. Census Bureau defines the Detroit, MI Metropolitan Statistical Area (MSA) as including 6 counties (Wayne, Macomb, Oakland, Lapeer, Livingston, and St. Clair), but for this lesson we will focus on the core 3 counties (Wayne, Macomb, and Oakland); both population and air emissions related facilities are much more sparse in the outer counties.
+Before we can query the API for ICIS-AIR regulated facilities in the greater Detroit area, we need to create a spatial object that defines our study area and that we can use throughout this analysis. The U.S. Census Bureau defines the Detroit, MI Metropolitan Statistical Area (MSA) as including 6 counties (Wayne, Macomb, Oakland, Lapeer, Livingston, and St. Clair), but for this lesson we will focus on the core 3 counties (Wayne, Macomb, and Oakland); both population and air emissions related facilities are sparser in the outer counties.
 
-We can us **pygris** to get vector boundaries for the counties and dissolve them into a single boundary we can you for cropping data and restricting API searches.
+We can us **pygris** to get vector boundaries for the counties and dissolve them into a single boundary we can use for cropping data and restricting API searches.
 
 ```{python}
 import geopandas as gpd
@@ -251,13 +258,7 @@ params = {
 }
 ```
 
-::: column-margin
-::: {.callout-tip style="color: #5a7a2b;"}
-#### Data Science Review
 
-An Application Programming Interface (API) is a set of protocols, tools, and definitions that enable different software applications to communicate with each other. It acts as an intermediary, allowing one application to request specific data or actions from another application or service without needing access to its entire codebase. APIs define the methods and data formats that applications can use to request and exchange information, typically through specific *endpoints* (URLs) that accept requests and return responses in standardized formats like JSON. They are crucial for integrating external services, accessing databases, and enabling communication between different parts of larger open science software systems.
-:::
-:::
 
 Now we define 2 functions that will carry out the first 2 steps; 1) identifying the facilities in our search and 2) retrieve the facility data.
 
@@ -333,25 +334,28 @@ There are over three thousand facilities in the ICIS-AIR Michigan dataset. Here 
 
 #### Key Columns in the ICIS-AIR ECHO API Dataset
 
--   **AIRName**: The name of the facility
--   **SourceID**: A unique identifier for the air pollution source
--   **AIRStreet**, **AIRCity**, **AIRState**, **AIRZip**: Address components of the facility
--   **RegistryID**: A unique identifier for the facility in the EPA's registry
--   **AIRCounty**: The county where the facility is located
--   **AIREPARegion**: The EPA region responsible for the facility
--   **AIRNAICS**: North American Industry Classification System code(s) for the facility
--   **FacLat**, **FacLong**: Latitude and longitude coordinates of the facility
--   **AIRPrograms**: Air quality programs applicable to the facility
--   **AIRStatus**: Current operational status of the facility
--   **AIRUniverse**: Categorization of the facility within air quality regulation
--   **AIRComplStatus**: Current compliance status under the Clean Air Act
--   **AIRHpvStatus**: High Priority Violator status
--   **AIRQtrsWithViol**: Number of quarters with violations
--   **AIRLastViolDate**: Date of the most recent violation
--   **AIREvalCnt**: Count of evaluations conducted
--   **AIRLastEvalDate**: Date of the most recent evaluation
--   **AIRFceCnt**: Count of Full Compliance Evaluations
--   **AIRLastFceDate**: Date of the last Full Compliance Evaluation
+| **Key Column**        | **Description**                                                                                   |
+|-----------------------|---------------------------------------------------------------------------------------------------|
+| AIRName               | The name of the facility                                                                          |
+| SourceID              | A unique identifier for the air pollution source                                                  |
+| AIRStreet, AIRCity, AIRState, AIRZip | Address components of the facility                                                 |
+| RegistryID            | A unique identifier for the facility in the EPA’s registry                                        |
+| AIRCounty             | The county where the facility is located                                                          |
+| AIREPARegion          | The EPA region responsible for the facility                                                       |
+| AIRNAICS              | North American Industry Classification System code(s) for the facility                            |
+| FacLat, FacLong       | Latitude and longitude coordinates of the facility                                                |
+| AIRPrograms           | Air quality programs applicable to the facility                                                   |
+| AIRStatus             | Current operational status of the facility                                                        |
+| AIRUniverse           | Categorization of the facility within air quality regulation                                      |
+| AIRComplStatus        | Current compliance status under the Clean Air Act                                                 |
+| AIRHpvStatus          | High Priority Violator status                                                                     |
+| AIRQtrsWithViol       | Number of quarters with violations                                                                |
+| AIRLastViolDate       | Date of the most recent violation                                                                 |
+| AIREvalCnt            | Count of evaluations conducted                                                                    |
+| AIRLastEvalDate       | Date of the most recent evaluation                                                                |
+| AIRFceCnt             | Count of Full Compliance Evaluations                                                              |
+| AIRLastFceDate        | Date of the last Full Compliance Evaluation                                                       |
+
 
 These columns provide information about each facility's location, operational characteristics, compliance history, and regulatory oversight under the Clean Air Act. It includes information on violations, evaluations, and compliance status that assess a facility's environmental performance and regulatory compliance.
 
@@ -430,7 +434,7 @@ print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
 
 These are distributed along business and industrial sectors as expected, but we can't infer much else from this map.
 
-Which regulated facilities have been in violation status? We can plot all the facilities with at least one violation during a reporting quarter and use graduated symbols that reflect the total number of quarters with violations. This information is in the `AIRQtrsWithViol` column.
+Let’s look for regulated facilities that have been in violation status. We can plot all the facilities with at least one violation during a reporting quarter and use graduated symbols that reflect the total number of quarters with violations. This information is in the `AIRQtrsWithViol` column.
 
 ```{python}
 # Convert the 'AIRQtrsWithViol' column to numeric, replacing any non-numeric values with NaN.
@@ -475,7 +479,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-We can also create a table showing which businesses have been in violation statues, their name, address, and the date of their most recent violation using the **tabulate** module.
+We can also create a table showing which businesses have been in violation status, their name, address, and the date of their most recent violation using the **tabulate** module.
 
 ```{python}
 from tabulate import tabulate
@@ -517,7 +521,10 @@ table = tabulate(table_data, headers='keys', tablefmt='html', showindex=False)
 table 
 ```
 
-ICIS-AIR is a powerfule tool for communites and policy-makers to identify regulated facilities and their compliance status, but the dataset does have limitations. Next, we'll take a look at facilities required to report to the Toxic Release Inventory (TRI).
+ICIS-AIR is a powerful tool for communities and policy-makers to identify regulated facilities and their compliance status, but the dataset does have limitations.
+
+Next, we’ll take a look at facilities required to report to the Toxic Release Inventory (TRI).
+
 
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
@@ -597,7 +604,7 @@ print(f"Maximum X (Longitude): {bbox[2]}")
 print(f"Maximum Y (Latitude): {bbox[3]}")
 ```
 
-Now we'll create and empty list to store the TRI data, loop through each county making an API query, and place the retrieved data in the empty container.
+Now we'll create an empty list to store the TRI data, loop through each county making an API query, and place the retrieved data in the empty list.
 
 ```{python}
 # Fetch TRI facility data from EPA API for each county
@@ -619,7 +626,7 @@ for county in counties:
 
 #### Processing the Data
 
-The TRI data comes in json format. They can be a little confusing to interpret, becauce each record (traditionally a row in a table) is viewed with columns structured vertically. Let's look at the first record.
+The TRI data comes in json format. This format can be confusing to interpret, because each record (traditionally a row in a table) is viewed with columns structured vertically. Let’s look at the first record.
 
 ```{python}
 tri_data[1]
@@ -637,7 +644,7 @@ print(f"Number of facilities fetched: {len(tri_df)}")
 # tri_df.head
 ```
 
-Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have latitude and longitude values.
+Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have coordinate  values.
 
 We'll check and remove those without.
 
@@ -655,7 +662,7 @@ tri_df_clean['pref_latitude'] = pd.to_numeric(tri_df_clean['pref_latitude'], err
 tri_df_clean['pref_longitude'] = pd.to_numeric(tri_df_clean['pref_longitude'], errors='coerce')
 ```
 
-Ouch! We lost roughly 300 records due to missing coordinates (789 vs. 478). If this were an important analysis for policy-making or scientific research we would take the time to geocode the listed addresses into lat/long coordinates, but for the purposes of this exercise we'll move on.
+Ouch! We lost roughly 300 records due to missing coordinate information (789 vs. 478). If this were an important analysis for policy-making or scientific research we would take the time to geocode the listed addresses into latitude/longitude coordinates, but for the purposes of this exercise we’ll move on.
 
 In my personal investigations of this data, I noticed that some longitude coordinates were not negative, but had an absolute value (e.g. 83.25) that made sense for the Detroit metro area, therefore we will flip the sign on these records.
 
@@ -670,7 +677,7 @@ def correct_longitude(lon):
 tri_df_clean['pref_longitude'] = tri_df_clean['pref_longitude'].apply(correct_longitude)
 ```
 
-Additionally, there are some records with wild longitudinal values that are not simply from a missing negative sign. We'll identify these outliers using the interquantile range. Anything outside the range will be tosses. One of the downsides of the TRI database is that many aspects are provided directly by the facility (and therefore subject to errors). Again, if this were a more important analysis we would carefully explore all of these missing records and possible geocode using the address.
+Additionally, there are some records with wild longitudinal values that are not simply from a missing negative sign. We'll identify these outliers using the interquantile range. Anything outside the range will be tossed. One of the downsides of the TRI database is that many aspects are provided directly by the facility (and therefore subject to errors). Again, if this were a more important analysis we would carefully explore all of these missing records and possibly geocode using the address.
 
 Toss the quartile outliers.
 
