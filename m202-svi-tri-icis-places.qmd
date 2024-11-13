@@ -1646,43 +1646,46 @@ This step allows us to work with our interpolated data using **xarray**, which p
 Next, we'll clip our interpolated surface to the Detroit metro area. This ensures our data matches our other rasters. Then we'll project it to match basemaps so we can create a map of the data.
 
 ```{python}
-# Clip the dataset using the detroit_metro polygon
+# Clip the asthma dataset to the boundaries of the Detroit metro area
+# Ensures data outside of the metro area is excluded
 ds_clipped = ds.rio.clip(detroit_metro.geometry, drop=False)
 
-# Reproject to Web Mercator (EPSG:3857)
+# Reproject the clipped dataset to Web Mercator (EPSG:3857) for basemap compatibility
 ds_3857 = ds_clipped.rio.reproject("EPSG:3857")
 ```
 
 Finally, let's create a map of our interpolated asthma prevalence:
 
 ```{python}
-# Create the plot
+# Initialize the plot for visualizing interpolated asthma prevalence
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the interpolated and clipped data
+# Display the interpolated asthma prevalence data, adjusting transparency and color map
 im = ds_3857.asthma.plot(ax=ax, cmap='YlOrRd', 
                          alpha=0.7, add_colorbar=False)
 
-# Add colorbar with adjusted height
+# Add a colorbar with custom size and label for asthma prevalence
 cbar = plt.colorbar(im, ax=ax, label='Asthma Prevalence', 
                     fraction=0.047, pad=0.04, aspect=20)
 
-# Add basemap
+# Add a basemap for geographical context using Web Mercator projection
 ctx.add_basemap(ax, crs=ds_3857.rio.crs, 
                 source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Add a border to the map
+# Plot Detroit metro area boundary for clear region distinction
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Set the extent to match the Detroit metro area
+# Set plot boundaries to focus on the Detroit metro area only
 bounds_3857 = transform_bounds("EPSG:4326", "EPSG:3857", 
                                x_min, y_min, x_max, y_max)
 ax.set_xlim(bounds_3857[0], bounds_3857[2])
 ax.set_ylim(bounds_3857[1], bounds_3857[3])
 
+# Add title and remove default axis for clean presentation
 plt.title('IDW Interpolated Asthma Prevalence in Detroit Metro Area', fontsize=16)
 ax.axis('off')
 
+# Optimize layout
 plt.tight_layout()
 plt.show()
 ```
@@ -1696,16 +1699,19 @@ We can start with a simple correlation analysis and then visualize it with a sca
 ```{python}
 from scipy import stats
 
-# Ensure both rasters have the same shape and are aligned
+# Reproject the air release data to align with the asthma dataset for comparison
 air_release_aligned = air_release_raster_da.rio.reproject_match(ds_clipped)
 
-# Flatten the arrays and remove NaN values
+# Flatten the raster arrays for correlation analysis
 air_release_flat = air_release_aligned.values.flatten()
-# Take the log of the release values to account for extreme outliers
+# Apply logarithmic transformation to air release data to reduce impact of extreme values
 air_release_flat = np.log1p(air_release_flat)
 asthma_flat = ds_clipped.asthma.values.flatten()
+
+# Mask to exclude NaN values for accurate correlation calculation
 mask = ~np.isnan(air_release_flat) & ~np.isnan(asthma_flat)
 
+# Compute Pearson correlation coefficient to measure association between air releases and asthma prevalence
 correlation, p_value = stats.pearsonr(air_release_flat[mask], asthma_flat[mask])
 print(f"Correlation coefficient: {correlation}")
 print(f"P-value: {p_value}")
@@ -1714,16 +1720,20 @@ print(f"P-value: {p_value}")
 Creating a scatterplot of the paired values can provide a better look at what's going on.
 
 ```{python}
-# Create the empty map
+# Initialize the figure for scatter plot
 plt.figure(figsize=(7, 7))
-# Create the scatter plot of the values
+
+# Create a scatter plot comparing TRI Air Releases against Asthma Prevalence
 plt.scatter(air_release_flat[mask], asthma_flat[mask], alpha=0.5)
-# Create Axis Labels
+
+# Label axes for clarity
 plt.xlabel('TRI Air Releases')
 plt.ylabel('Asthma Prevalence')
-# Title
+
+# Add a descriptive title to convey the analysis purpose
 plt.title('TRI Air Releases vs Asthma Prevalence')
-# Let's see it
+
+# Display the scatter plot
 plt.show()
 ```
 
@@ -1738,11 +1748,14 @@ from pysal.explore import esda
 from pysal.lib import weights
 import shapely
 
-# Convert rasters to a GeoDataFrame
+# Convert aligned raster data to a GeoDataFrame for spatial analysis
 df = gpd.GeoDataFrame(
     {
+        # Include air release and asthma prevalence data as columns
         'air_release': air_release_aligned.values.flatten(),
         'asthma': ds_clipped.asthma.values.flatten(),
+
+        # Create geometry points for each raster cell
         'geometry': [
             shapely.geometry.Point(x, y) 
             for x, y in zip(
@@ -1764,40 +1777,45 @@ A p-value, or probability value, is a statistical concept used to determine the 
 Check for missing values and create the spatial weights matrix that determines how wide of a net we want to cast as we search for a local dependence structure (you could change these values and see how it impacts the results). You can read more about settings for spatial autocorrelation and Moran's I analysis [here](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-statistics/spatial-autocorrelation.htm).
 
 ```{python}
-# Remove any rows with NaN values
+# Remove rows with any NaN values to ensure valid spatial statistics
 df = df.dropna()
 
-# Create a spatial weights matrix
-w = weights.distance.KNN.from_dataframe(df, k=8)  # Using 8 nearest neighbors
-w.transform = 'r'  # Row-standardize the weights
+# Create a spatial weights matrix based on the 8 nearest neighbors for each observation
+# The row-standardization ('r') ensures that each row sums to 1, which is useful for Moran's I calculation
+w = weights.distance.KNN.from_dataframe(df, k=8)  
+w.transform = 'r'  
 ```
 
 Now we'll cycle through the Moran function for air release, current asthma among adults, and the 2 combined (bivariate). First air releases.
 
 ```{python}
-# Create a Moran scatter plot for air release
+# Import the moran_scatterplot function for visualizing spatial autocorrelation
 from splot.esda import moran_scatterplot
 
-# Calculate Moran's I for air release
+# Calculate Moran's I statistic to measure spatial autocorrelation in air release data
 moran_air = esda.Moran(df['air_release'], w)
 
+# Print Moran's I value and the associated p-value for significance assessment
 print("Moran's I for Air Release:")
 print(f"I: {moran_air.I}")
 print(f"p-value: {moran_air.p_sim}")
 
+# Generate a Moran scatter plot to visualize spatial autocorrelation for air release values
 fig, ax = plt.subplots(figsize=(7, 7))
 moran_scatterplot(moran_air, ax=ax)
-# Get the current limits
+
+# Set plot limits to ensure both axes have the same range for accurate spatial comparison
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
-# Find the min and max of both axes
 vmin = min(xlim[0], ylim[0])
 vmax = max(xlim[1], ylim[1])
-# Set both axes to the same limits
 ax.set_xlim(vmin, vmax)
 ax.set_ylim(vmin, vmax)
-# Ensure the aspect ratio is 1:1
+
+# Set the aspect ratio to 1:1 to maintain equal scaling on both axes
 ax.set_aspect('equal', adjustable='box')
+
+# Add a descriptive title to the plot
 ax.set_title("Moran Scatter Plot: Air Release")
 plt.show()
 ```
@@ -1805,27 +1823,28 @@ plt.show()
 When evaluating Moran's I for single variables we are assessing how clustered like values are; i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is lower and we can the same feature as before in that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution. 
 
 ```{python}
-# Calculate Moran's I for asthma prevalence
+# Calculate Moran's I statistic for spatial autocorrelation in asthma prevalence values
 moran_asthma = esda.Moran(df['asthma'], w)
 
+# Display Moran's I value and p-value to assess the spatial pattern in asthma prevalence
 print("\nMoran's I for Asthma Prevalence:")
 print(f"I: {moran_asthma.I}")
 print(f"p-value: {moran_asthma.p_sim}")
 
-# Create a Moran scatter plot for asthma prevalence
+# Generate a Moran scatter plot to visualize spatial autocorrelation in asthma prevalence data
 fig, ax = plt.subplots(figsize=(7, 7))
 moran_scatterplot(moran_asthma, ax=ax)
-# Get the current limits
+
+# Set plot limits and aspect ratio to ensure a 1:1 scale
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
-# Find the min and max of both axes
 vmin = min(xlim[0], ylim[0])
 vmax = max(xlim[1], ylim[1])
-# Set both axes to the same limits
 ax.set_xlim(vmin, vmax)
 ax.set_ylim(vmin, vmax)
-# Ensure the aspect ratio is 1:1
 ax.set_aspect('equal', adjustable='box')
+
+# Set title for the plot
 ax.set_title("Moran Scatter Plot: Asthma Prevalence")
 plt.show()
 ```
@@ -1833,29 +1852,28 @@ plt.show()
 Asthma prevelance has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.  
 
 ```{python}
-# Calculate bivariate Moran's I
+# Calculate Bivariate Moran's I to examine spatial correlation between air release and asthma prevalence
 moran_bv = esda.Moran_BV(df['air_release'], df['asthma'], w)
 
+# Display Bivariate Moran's I value and p-value to assess significance
 print("\nBivariate Moran's I (Air Release vs Asthma):")
 print(f"I: {moran_bv.I}")
 print(f"p-value: {moran_bv.p_sim}")
 
-# Create a bivariate Moran scatter plot
+# Generate a bivariate Moran scatter plot to visualize spatial correlation between air release and asthma prevalence
 fig, ax = plt.subplots(figsize=(7, 7))
-# make the plot
 moran_scatterplot(moran_bv, ax=ax)
-# Get the current limits
+
+# Set plot limits and aspect ratio for consistent scaling
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
-# Find the min and max of both axes
 vmin = min(xlim[0], ylim[0])
 vmax = max(xlim[1], ylim[1])
-# Set both axes to the same limits
 ax.set_xlim(vmin, vmax)
 ax.set_ylim(vmin, vmax)
-# Ensure the aspect ratio is 1:1
 ax.set_aspect('equal', adjustable='box')
-# Set the title
+
+# Set title for the bivariate Moran scatter plot
 ax.set_title("Bivariate Moran Scatter Plot: Air Release vs Asthma")
 plt.show()
 ```
