@@ -700,7 +700,7 @@ tri_df_clean = tri_df_clean[(tri_df_clean['pref_longitude'] >= lower_bound) &
 print(f"Number of facilities after removing longitude outliers: {len(tri_df_clean)}")
 ```
 
-Thankfully we only lost 2 more records from outlier.
+Thankfully we only lost 2 more records from outliers.
 
 #### Visualizing the Data
 
@@ -752,13 +752,13 @@ print(f"Number of TRI facilities plotted: {len(detroit_tri)}")
 print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
 ```
 
-We can see that there are far fewer facilities being tracked in TRI compared to ICIS-AIR. While some of this can be attributed to the records we tossed after checking for valid geographic coordinates and outliers, but generally speaking ICIS-AIR will contain far more as it tracks every facility regulated by the Clean Air Act as opposed to only those that are part of TRI.
+We can see that there are far fewer facilities being tracked in TRI compared to ICIS-AIR. Some of this can be attributed to the records we tossed after checking for valid geographic coordinates and outliers, but generally speaking ICIS-AIR will contain far more as it tracks every facility regulated by the Clean Air Act as opposed to only those that are part of TRI.
 
-You may have also noticed that this dataset does not contain any actually pollution data; only facility information for those that are regulated by TRI.
+You may have also noticed that this dataset does not contain any actual pollution data; only facility information for those that are regulated by TRI.
 
 TRI is made up of numerous tables containing a wealth of information regarding the facilities themselves and all the regulated chemicals that are handled at each site. The TRI_FACILITY table we requested is the starter table used in most of the examples in the Envirofacts API documentation, however, it does not contain any chemical release data.
 
-Navigating the TRI Envirofacts interface can be overwhelming at times. Multiple tables can be queried with a single URL, however, for a proper join to be carried out both tables must contain at least 1 column. In most cases this can be accomplished using TRI_FACILITY_ID. That said, air pollution release data (column name [AIR_TOTAL_RELEASE](https://enviro.epa.gov/enviro/ef_metadata_html.tri_page?p_column_name=air_total_release)) is only found in the [TRI_FORM_R](https://enviro.epa.gov/enviro/ef_metadata_html.ef_metadata_table?p_table_name=TRI_FORM_R&p_topic=TRI) table, which does not contain the FACILITY_ID column.
+Navigating the TRI Envirofacts interface can be overwhelming at times. Multiple tables can be queried with a single URL, however, for a proper join to be carried out both tables must contain at least one column in common. In most cases this can be accomplished using TRI_FACILITY_ID. That said, air pollution release data (column name [AIR_TOTAL_RELEASE](https://enviro.epa.gov/enviro/ef_metadata_html.tri_page?p_column_name=air_total_release)) is only found in the [TRI_FORM_R](https://enviro.epa.gov/enviro/ef_metadata_html.ef_metadata_table?p_table_name=TRI_FORM_R&p_topic=TRI) table, which does not contain the FACILITY_ID column.
 
 You can querry the V_TRI_FORM_R_EZ using the API even though it's not a documented table listed in the API website. This form contains facility information and AIR_TOTAL_RELEASE reporting, but it only goes until 2021. To get the most recent data (2023) you would have to manually download the individual tables with separate calls perform the joins, or use the [custom form search web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). We'll demonstrate a quick API call for the V_TRI_FORM_R_EZ, but move forward with the most recent data available in the custom form search web portal.
 
@@ -774,7 +774,7 @@ d) To record air quality index values for major cities
 
 ### Toxic Release Inventory: Form R
 
-We can make the query to Envirofacts. Let's breakdown the call.
+We can make the query to Envirofacts. Let's break down the call.
 
 ```{python}
 # URL of the CSV file
@@ -809,7 +809,8 @@ keeps = [
 tri_form_r = tri_form_r[keeps]
 ```
 
-This works well but we can get more recent data that is already filtered using the [web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). The user selects location, years of interest, and columns of interests. The portal serves up your requested dataset in an Amazon S3 cloud storage. We can important the dataset directly from the address they provide you.
+This works well but we can get more recent data that is already filtered using the [web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). The user selects location, years of interest, and columns of interests. The portal serves up your requested dataset in an Amazon S3 cloud storage. We can import the dataset directly from the address they provide.
+
 
 ```{python}
 tri_form_r = pd.read_csv("https://dmap-epa-enviro-prod-export.s3.amazonaws.com/396975438.CSV")
@@ -820,7 +821,7 @@ print("\nColumns in the dataset:")
 print(tri_form_r.columns)
 ```
 
-This is a bit more manageable, but we have multiple records per facility because each chemical release has a separate record. This allows the user to investigate specific chemicals, but for the purposes of this exercise we will aggregate `AIR_TOTAL_RELEASE` for each facility.
+This is a bit more manageable, but we have multiple records per facility because each chemical release has a separate record. This allows the user to investigate specific chemicals, but for the purposes of this exercise we will aggregate `AIR_TOTAL_RELEASE` for each facility, to get a single row per facility.
 
 ```{python}
 # Check how it looks (too large to print on the web)
@@ -840,7 +841,7 @@ print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
 
 There were only 211 unique listings in the 2023 data.
 
-As before, we should check for valid coordinates and release data.
+As before, we should check for valid coordinates and missing air release data.
 
 ```{python}
 # Assuming the latitude and longitude columns are named 'LATITUDE' and 'LONGITUDE'
@@ -855,7 +856,7 @@ df_tri_clean = tri_form_r.dropna(subset=[lat_col, lon_col, release_col])
 print(f"\nNumber of records after removing missing data: {len(df_tri_clean)}")
 ```
 
-There were no missing coordinates are release data.
+There were no missing coordinates or missing air release data.
 
 Now we can create a spatial object with **GeoPandas** using the latitude and longitude coordinates in the table.
 
@@ -868,13 +869,13 @@ gdf_tri_form_r = gpd.GeoDataFrame(
 )
 ```
 
-Let's check the distribution of the air release data. I suspect there will be outliers.
+Let’s check the distribution of the air release data for outliers. 
 
 ```{python}
 # Create the histogram
 plt.figure(figsize=(8, 8))
 plt.hist(gdf_tri_form_r['AIR_TOTAL_RELEASE'], bins=10, edgecolor='black')
-plt.title('Histogram of Air Total Release Sum')
+plt.title('Histogram of 2023 Air Total Release Sum')
 plt.xlabel('Air Sum')
 plt.ylabel('Frequency')
 plt.grid(True, alpha=0.3)
@@ -894,7 +895,7 @@ gdf_tri_form_r['LOG_AIR_RELEASE'] = np.log1p(gdf_tri_form_r['AIR_TOTAL_RELEASE']
 # Create the histogram
 plt.figure(figsize=(8, 8))
 plt.hist(gdf_tri_form_r['LOG_AIR_RELEASE'], bins=10, edgecolor='black')
-plt.title('Histogram of the Log of Air Total Release Sum')
+plt.title('Histogram of the Log of 2023 Air Total Release Sum')
 plt.xlabel('Log of Air Sum')
 plt.ylabel('Frequency')
 plt.grid(True, alpha=0.3)
@@ -945,7 +946,7 @@ legend_elements = [plt.scatter([], [], s=size*20, c='orangered', edgecolor='yell
 ax.legend(handles=legend_elements, title='Log Total Air Releases (lbs)', 
           loc='lower right', title_fontsize=12, fontsize=10)
 
-plt.title("Detroit Metro Area TRI Facilities - Total Air Releases (Custom Data)", fontsize=16)
+plt.title("Detroit Metro Area TRI Facilities - 2023 Total Air Releases (Custom Data)", fontsize=16)
 plt.tight_layout()
 plt.show()
 
@@ -973,22 +974,22 @@ NASA's Social Vulnerability Index (SVI) raster dataset, available through the So
 
 The raster format allows for more detailed spatial analysis and integration with other environmental datasets. This makes it particularly valuable for researchers and policymakers studying the intersection of social vulnerability and environmental risks, such as air pollution exposure. By overlaying this SVI data with air quality information, for instance, analysts can identify areas where socially vulnerable populations may be disproportionately affected by poor air quality, supporting environmental justice initiatives and targeted intervention strategies.
 
-SEDAC, as part of NASA's Earth Observing System Data and Information System (EOSDIS), hosts this dataset along with other socioeconomic and environmental data, facilitating interdisciplinary research on human-environment interactions. The SVI raster dataset's high resolution and comprehensive coverage make it a powerful tool for assessing environmental equity and informing policy decisions at various geographic scales.
+SEDAC, as part of NASA’s Earth Observing System Data and Information System (EOSDIS), hosts this dataset along with other socioeconomic and environmental data, facilitating interdisciplinary research on human-environment interactions. The SVI raster dataset’s high resolution and comprehensive coverage make it a powerful tool for assessing environmental equity and informing policy decisions at various geographic scales.
 
-Although the SVI dataset is free to acquire, it does require an Earth Data account. If you don't already have an Earth Data account you can follow these steps to download the SVI dataset on your local computer:
+The SVI dataset is free to users with a NASA  Earth Data account. The Earth Data account is free and gives you access to all SEDAC data as well as a wide range of NASA Earth science data. It’s a valuable resource for researchers, students, and anyone interested in environmental and socioeconomic data.
 
-1.  Visit the NASA Earthdata website: Go to https://urs.earthdata.nasa.gov/ Click on "Register": Look for the "Register" button on the top right corner of the page.
-2.  Fill out the registration form: Provide the required information, including your name, email address, and a password. You'll also need to create a username.
-3.  Verify your email: NASA will send a verification email to the address you provided. Click on the link in this email to confirm your account.
-4.  Log in to Earth Data: Once your account is verified, you can log in using your username and password.
-5.  Access SEDAC: Visit the SEDAC website (https://sedac.ciesin.columbia.edu/) and use your Earth Data credentials to log in when prompted.
-6.  Download the data: Once you've found the SVI dataset, you can use your Earth Data account to download it.
+If you don’t already have an Earth Data account you can follow these steps to download the SVI dataset on your local computer:
 
-Remember, your Earth Data account gives you access not just to SEDAC, but to a wide range of NASA Earth science data. It's a valuable resource for researchers, students, and anyone interested in environmental and socioeconomic data.
+1.  Visit the[NASA Earthdata website](https://urs.earthdata.nasa.gov/). Click on the “Register” button on the top right corner of the page.
+2.  Fill out the registration form with the required information, including your name, email address, and a password. Create a username.
+3.  Verify your email. NASA will send a verification email to the address you provided. Click on the link in this email to confirm your account.
+4.  Once your account is verified, log in to Earth Data using your username and password.
+5.  Visit the [SEDAC](https://sedac.ciesin.columbia.edu/) website and search for the U.S. Social Vulnerability Index Grids, v1.01 dataset by entering “SVI” in the search bar. 
+6.  Download the 2020 WGS84 SVI grids; enter your Earth Data credentials to log in when prompted.
 
 #### Data Processing
 
-Once you've downloaded the dataset to your working directory, you can proceed with the analysis. We'll be using the 2020 census tract version of SVI.
+Once you’ve downloaded the dataset to your working directory, you can proceed with the analysis.
 
 The different layers of SVI are provided as individual files, but sometimes it's easier to work with a multilayer object. We can create one using **xarray**. To begin, we'll read in each file individually, clip it to our border of Detroit metro, and create an individual data array.
 
@@ -1117,11 +1118,12 @@ d) Population density in urban areas
 
 ### Integrating TRI and SVI
 
-There are numerous ways to assess the reationships between the SVI and TRI data. For this lesson we'll identify areas where air releases and vulnerability are highest together by creating a new rasterized index that combines both layers.
+There are numerous ways to assess the relationships between the SVI and TRI data. For this lesson we’ll identify areas where air releases and vulnerability are highest together by creating a new rasterized index that combines both layers.
 
-To begin we need to rasterize the air release point data. We will create an empty raster grid and "fill" the cells with the **sum** of the air release values from any points the are overlapped by the cells.
+To begin we need to rasterize the air release point data. We will create an empty raster grid and “fill” the cells with the sum of the air release values from any points that are overlapped by the cells.
 
 Start by getting the bounds from our boundary object, specify the desired resolution, and set up the transform.
+
 
 ```{python}
 from rasterio.transform import from_origin
@@ -1140,7 +1142,7 @@ ny = int((maxy - miny) / resolution)
 transform = from_origin(minx, maxy, resolution, resolution)
 ```
 
-Now we have to prepare the point values and rasterize them. A key thing to note here is the `merge_alg=rasterio.enums.MergeAlg.add` argument passed to the rasterize function. This makes sure that cells with more than 1 point will add the values together (the default is to simply replace).
+Now we have to prepare the point values and rasterize them. A key thing to note here is the `merge_alg=rasterio.enums.MergeAlg.add` argument passed to the rasterize function. This argument makes sure that cells with more than 1 point will add the values together (the default is to simply replace).
 
 ```{python}
 from rasterio import features
@@ -1171,7 +1173,7 @@ air_release_raster_da = xr.DataArray(air_release_raster,
 air_release_raster_da.rio.write_crs(detroit_metro_bm.crs, inplace=True)
 ```
 
-The spaces between county borders can create odd values because there are no points right next to each other. We can clip the raster to our Detroit boundary to fix this.
+The spaces between county borders can create odd values because there are no points right next to each other. We can clip the raster to our Detroit metro boundary to fix this.
 
 ```{python}
 # Clip the raster with the Detroit metro boundary
@@ -1233,7 +1235,7 @@ print(f"Total air releases: {gdf_tri_form_r_bm['AIR_TOTAL_RELEASE'].sum():,.2f}"
 print(f"Maximum cell value in raster: {air_release_raster_da.max().values:,.2f}")
 ```
 
-The raster looks as expected with the highest values in locations where our previous map had the largest circles. We overlayed the points to see the sources of the values. The cell resolution is set to 5000m. This was selected so we can evaluate the map and the process we used to create the raster, but any value could be set depending on the intended use.
+The raster looks as expected with the highest values in locations where our previous map had the largest circles. We overlaid the points to see the sources of the values. The cell resolution is set to 5000m. This was selected so we can evaluate the map and the process we used to create the raster, but any value could be set depending on the intended use.
 
 #### Air Release Vulnerability Index
 
@@ -1372,7 +1374,7 @@ for i, (idx, row) in enumerate(top_10_gdf.iterrows(), 1):
     print(f"Row index = {idx}, Index value = {round(row['index'], 2)}")
 ```
 
-As you would expect looking at the input layers, the most vulnerable and polluted areas are along the river coridor in Loncoln Park, Melvindale, Mexicantown, and River Rouge. There are multiple locations with indexes greater than 0.70. Information like this can be valuable for targeted relief or mitigation programs.
+As the input layers suggest, the most vulnerable and polluted areas are along the river corridor in Lincoln Park, Melvindale, Mexicantown, and River Rouge. There are multiple locations with indexes greater than 0.70. This is valuable information for targeted relief or mitigation programs.
 
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
@@ -1512,7 +1514,7 @@ print("\nNumber of census tracts per county:")
 print(gdf_asthma['countyname'].value_counts())
 ```
 
-Wow. Some census tracts along the river front and central downtown area have adult asthma prevalance of nearly 20%! I'm not an epidimeologist, but that seems extremely high; especially when you compare to the outer suburbs and more affluent areas in the Royal Oak-Ferndale area. However, in light of our exploration of TRI and ICIS-AIR data it might not be surprising to see elevated asthma rates in these areas. 
+Wow. Some census tracts along the river front and central downtown area have adult asthma prevalence of nearly 20%! I’m not an epidemiologist, but that seems extremely high; especially when you compare to the outer suburbs and more affluent areas in the Royal Oak-Ferndale area. However, in light of our exploration of TRI and ICIS-AIR data it might not be surprising to see elevated asthma rates in these areas.
 
 Given that we've mostly been working with and creating raster data in the previous sections, it might be easier to draw systematic comparisons between pollution and health outcomes if the CDC data is also in a raster format. 
 
@@ -1547,7 +1549,7 @@ Inverse Distance Weighting (IDW) is a spatial interpolation method used to estim
 :::
 :::
 
-Now we create the structure of the raster we'll create. This is based on our desired resolution and the extent of our data.
+Now let’s create the structure of the raster we’ll create. This is based on our desired resolution and the extent of our data.
 
 ```{python}
 # Create a grid to interpolate over
@@ -1570,7 +1572,7 @@ points = np.column_stack((X, Y))
 grid_z = griddata(points, Z, (grid_xx, grid_yy), method='linear')
 ```
 
-This created a regular grid over our study area and then used the `griddata` function to perform linear interpolation (which is a form of IDW) on our asthma prevalence data.
+First we created a regular grid over our study area and then used the `griddata` function to perform linear interpolation (which is a form of IDW) on our asthma prevalence data.
 
 Now, let's convert our interpolated data into an xarray Dataset so it's easier to manipulate.
 
@@ -1625,7 +1627,7 @@ bounds_3857 = transform_bounds("EPSG:4326", "EPSG:3857",
 ax.set_xlim(bounds_3857[0], bounds_3857[2])
 ax.set_ylim(bounds_3857[1], bounds_3857[3])
 
-plt.title('IDW Interpolated Asthma Prevalence in Detroit Metro Area', fontsize=16)
+plt.title('IDW Interpolated Asthma Prevalence in Detroit Metro Area 2023', fontsize=16)
 ax.axis('off')
 
 plt.tight_layout()
@@ -1636,7 +1638,7 @@ This code creates a map of the interpolated asthma prevalence, providing a smoot
 
 By comparing this interpolated surface with our earlier maps of air pollution and social vulnerability, we can start to explore potential relationships between environmental factors, social conditions, and health outcomes in the Detroit metro area.
 
-We can start with a simple correlation analysis and then visualize it with a scatterplot. The simpleist way to perform the analysis is the extract the raw value pairs and calculate the Pearson correlation.
+We can start with a simple correlation analysis and then visualize it with a scatterplot. The simplest way to perform the analysis is to extract the raw value pairs and calculate the Pearson correlation.
 
 ```{python}
 from scipy import stats
@@ -1672,11 +1674,11 @@ plt.title('TRI Air Releases vs Asthma Prevalence')
 plt.show()
 ```
 
-This paints a clearer picture. Although there is a modest positive correlation, there are numerous cells with 0 TRI Air Release and a wide variety of Asthma prevelance values, which negates any correlation we might be seeing at higher release levels. This is a simple pixel by pixel comparison of matching values. We can perform a more robust analysis accounting for the spatial strucuture using a global autocorrelation analysis and Moran's I.
+This paints a clearer picture. Although there is a modest positive correlation, there are numerous cells with 0 TRI Air Release and a wide variety of Asthma prevalence values, which negates any correlation we might be seeing at higher release levels. This is a simple pixel by pixel comparison of matching values. We can perform a more robust analysis accounting for the spatial structure using a global autocorrelation analysis and Moran’s I.
 
 Pearson's correlation and Moran's I are both measures of association, but they serve different purposes and account for different aspects of data. Pearson's correlation measures the linear relationship between two variables without considering their spatial context. It simply looks at how two variables change together, regardless of where the data points are located in space. In contrast, Moran's I is specifically designed for spatial data and measures spatial autocorrelation – the degree to which a variable is correlated with itself across geographic space. Moran's I takes into account both the values of observations and their spatial relationships, typically using a spatial weights matrix. While Pearson's correlation can tell you if two variables are related overall, Moran's I can reveal whether high or low values of a variable tend to cluster together in space, or if they're randomly distributed. This makes Moran's I particularly useful for analyzing geographical patterns and spatial dependencies, which are crucial in fields like environmental science, epidemiology, and urban planning.
 
-We can perform this analysis in Python use **pysal**. We already know our data is spatially aligned from the previous code chunks. We can create a spatial data frame and continue on.
+We can perform this analysis in Python using **pysal**. We already know our data is spatially aligned from the previous code chunks. We can create a spatial data frame and continue on.
 
 ```{python}
 from pysal.explore import esda
@@ -1717,7 +1719,7 @@ w = weights.distance.KNN.from_dataframe(df, k=8)  # Using 8 nearest neighbors
 w.transform = 'r'  # Row-standardize the weights
 ```
 
-Now we'll cycle through the Moran function for air release, current asthma among adults, and the 2 combined (bivariate). First air releases.
+Now we'll cycle through the Moran function for air release, current asthma among adults, and the 2 combined (bivariate). First, air releases.
 
 ```{python}
 # Create a Moran scatter plot for air release
@@ -1747,7 +1749,7 @@ ax.set_title("Moran Scatter Plot: Air Release")
 plt.show()
 ```
 
-When evaluating Moran's I for single variables we are assessing how clustered like values are; i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is lower and we can the same feature as before in that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution. 
+When evaluating Moran's I for single variables we are assessing how clustered like values are, i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is lower and we can the same feature as before in that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution. 
 
 ```{python}
 # Calculate Moran's I for asthma prevalence
@@ -1775,7 +1777,7 @@ ax.set_title("Moran Scatter Plot: Asthma Prevalence")
 plt.show()
 ```
 
-Asthma prevelance has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.  
+Asthma prevalence has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.  
 
 ```{python}
 # Calculate bivariate Moran's I
@@ -1805,16 +1807,16 @@ ax.set_title("Bivariate Moran Scatter Plot: Air Release vs Asthma")
 plt.show()
 ```
 
-Similar to the pearson analysis, when we analyze their combined spatial dependence the relatipnship is not as strong; largely in part to the high levels of 0 air release values. That said the relationship is positive and it is statistically significant (p-value 0.001). 
+Similar to the Pearson analysis, when we analyze their combined spatial dependence the relationship is not as strong; largely due to the high levels of 0 air release values. That said, the relationship is positive and it is statistically significant (p-value 0.001).
 
 This could be due to several factors that went unaccounted for in our simple analysis. 
 
-- Our choice of size/resolution when creating our summed air release raster. 
+- Our choice of size/resolution when creating our summed air release raster.
 - The impacts of TRI air releases could be much more widespread than the 5km resolution we specified.
-- We only analyze TRI regulated facilities and their emissions. 
+- We only analyze TRI regulated facilities and their emissions; we do not have data from unregulated facilities
 - We did not account for traffic density or other sources of particulate matter emissions.
-- We did not control for socioeconomic status, prevantative healthcare access, and a whole host of other confounding variables.
-- There is no underlying relationship. Unlikely based on large amounts of peer reviewed literature, but a possibility none the less.
+- We did not control for socioeconomic status, preventative healthcare access, and a whole host of other confounding variables.
+- There is no underlying relationship. This is unlikely, based on large amounts of peer reviewed literature, but a possibility nonetheless.
 
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
@@ -1828,7 +1830,7 @@ d) Locations of healthcare facilities in each county
 
 ## Conclusion
 
-This lesson provided a comprehensive exploration of various environmental and public health datasets, focusing on the Detroit metropolitan area. By analyzing data from ICIS-AIR, the Toxic Release Inventory (TRI), the Social Vulnerability Index (SVI), and CDC PLACES, we gained insights into the complex relationships between industrial air pollution, social vulnerability, and health outcomes. The integration of these datasets, combined with geospatial analysis techniques, allowed us to identify areas where environmental hazards and social vulnerabilities intersect, highlighting potential environmental justice concerns. This approach demonstrates the power of combining diverse datasets and utilizing geospatial tools to inform policy decisions and target interventions in areas of greatest need.
+This lesson provided a comprehensive exploration of four environmental and public health datasets, focusing on the Detroit metropolitan area. By analyzing data from ICIS-AIR, the Toxic Release Inventory (TRI), the Social Vulnerability Index (SVI), and CDC PLACES, we gained insights into the complex relationships between industrial air pollution, social vulnerability, and health outcomes. The integration of these datasets, combined with geospatial analysis techniques, allowed us to identify areas where environmental hazards and social vulnerabilities intersect, highlighting potential environmental justice concerns. This approach demonstrates the power of combining diverse datasets and utilizing geospatial tools to inform policy decisions and target interventions in areas of greatest need.
 
 ## Key Learning Points
 
@@ -1844,7 +1846,7 @@ Congratulations! In this lesson you:
 - Analyzed spatial patterns of air pollution, social vulnerability, and health outcomes
 - Applied raster math and resampling techniques to align and compare different spatial datasets
 - Interpreted results in the context of environmental justice and public health concerns
-- Perform a Pearson and Moran's I correlation analysis
+- Performed Pearson and Moran’s I correlation analyses
 
 ## Lesson 3
 
