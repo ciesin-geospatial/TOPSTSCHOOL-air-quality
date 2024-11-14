@@ -201,24 +201,30 @@ def calculate_country_stats(country_sample, grdi_raster, pm25_raster=None):
         country_GID = row['GID_0']
         try:
             country_poly = pygadm.Items(admin=country_GID, content_level=0)
+            if isinstance(country_poly, gpd.GeoDataFrame):
+                country_geometry = country_poly.geometry.iloc[0]  # Ensure single geometry
+            else:
+                country_geometry = country_poly
         except Exception as e:
             print(country, "skipped due to error:", e)
             continue
 
         # Create a mask for the polygons and perform zonal statistics on GRDI raster
         grdi_country_zs = rasterstats.zonal_stats(
-            country_poly, grdi_raster.values[0], 
+            country_geometry, grdi_raster.values[0], 
             affine=grdi_raster.rio.transform(), 
-            stats=" min mean max percentile_20 percentile_40 percentile_60 percentile_80"
+            stats=" min mean max percentile_20 percentile_40 percentile_60 percentile_80",
+            nodata_value=grdi_raster.rio.nodata
         )
 
         # Uncomment and update the following lines if you want to include PM2.5 statistics
         if pm25_raster is not None:
             pm25_country_zs = rasterstats.zonal_stats(
-                country_poly, pm25_raster.values[0], 
+                country_geometry, pm25_raster.values[0], 
                 affine=pm25_raster.rio.transform(), 
-                stats="mean"
-            )
+                stats="mean",
+                nodata_value=pm25_raster.rio.nodata
+                )
 
         # Extract statistics into a dictionary
         country_stats = {
@@ -234,8 +240,8 @@ def calculate_country_stats(country_sample, grdi_raster, pm25_raster=None):
             'GRDI_P20': grdi_country_zs[0]['percentile_20'],
             'GRDI_P40': grdi_country_zs[0]['percentile_40'],
             'GRDI_P60': grdi_country_zs[0]['percentile_60'],
-            'GRDI_P80': grdi_country_zs[0]['percentile_80'],
-            'geometry' : country_poly['geometry'].iloc[0]
+            'GRDI_P80': grdi_country_zs[0]['percentile_80']#,
+            # 'geometry' : country_poly['geometry'].iloc[0]
         }
 
         # If PM2.5 statistics are calculated, add them to the dictionary
@@ -243,14 +249,25 @@ def calculate_country_stats(country_sample, grdi_raster, pm25_raster=None):
             country_stats.update({
                 'PM25_Mean': pm25_country_zs[0]['mean']
             })
+        
+        # Filter out None values from `country_stats`
+        country_stats = {k: v for k, v in country_stats.items() if pd.notnull(v)}
 
-        country_stats_gdf = gpd.GeoDataFrame([country_stats], geometry='geometry')
-        stats_results = pd.concat([stats_results, country_stats_gdf], ignore_index=True)
+        country_stats_gdf = gpd.GeoDataFrame([country_stats], geometry=[country_geometry])
 
+        # Append to results if country_stats_gdf has non-empty columns
+        if not country_stats_gdf.empty and country_stats_gdf.notna().any().any():
+            stats_results = pd.concat([stats_results, country_stats_gdf], ignore_index=True)
+
+    # Drop any rows in `stats_results` that have NaN in any cell
+    stats_results = stats_results.dropna()
+    # Reset the index
+    stats_results = stats_results.reset_index(drop=True)
     return stats_results
 
 
 ```
+
 Let's put our defined function to use:
 
 ```{python}
