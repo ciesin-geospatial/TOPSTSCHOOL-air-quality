@@ -29,9 +29,9 @@ As we have learned from previous lessons in this module, air quality is an impor
 
 ### Background
 
-Air pollution is now recognized as the single biggest environmental threat to human health. Air pollution affects different aspects of health and impacts everyone in low- middle- and high-income countries alilke. It is estimated that pollution is responsible for 9 million deaths per year [@fuller2022]. The burden of disease attributable to air pollution is now on a par with other major global health risks such as unhealthy diet and tobacco smoking [@who2021; @who2022]. Air pollution also places risks upon several of the United Nations’ 2023 Sustianable Development Goals (SDGs), including SDG 3 (Good health and well-being), SDG 11 (Sistainable Communities), and SDG 15 (Life on Land), among others [@un_sdgs_2024]. Monitoring air quality is crucial for the monitoring of well being of people around the world and for the advancement of global sustainable development policies that address these environmental risks.
+Air pollution is now recognized as the single biggest environmental threat to human health. Air pollution affects different aspects of health and impacts everyone in low- middle- and high-income countries alike. It is estimated that pollution is responsible for 9 million deaths per year [@fuller2022]. The burden of disease attributable to air pollution is now on a par with other major global health risks such as unhealthy diet and tobacco smoking [@who2021; @who2022]. Air pollution also places risks upon several of the United Nations’ 2023 Sustainable Development Goals (SDGs), including SDG 3 (Good health and well-being), SDG 11 (Sustainable Communities), and SDG 15 (Life on Land), among others [@un_sdgs_2024]. Monitoring air quality is crucial for the monitoring of well being of people around the world and for the advancement of global sustainable development policies that address these environmental risks.
 
-Particulate matter (PM₂.₅ and PM₁₀) can penetrate deep into the lungs and bloodstream, causing respiratory and cardiovascular issues and are linked to conditions like heart disease and lung cancer (World Health Organization, 2022). Benefits from improved air quality include prevention of air pollution-related premature deaths, chronic diseases, damages to ecosystems and crops, as well as the economic benefits for human health from air quality improvement [@calvin2023]. The United Nation’s Intergovernmental Panel on Climate Change’s latest Climate report acknowledges the largest adaptation gaps exist in projects that manage complex dynamics between air quality and climate risks, and that reductions in greenhouse gas (GHG) emissions would lead to improvements in air quality within a few years [@calvin2023]). Progress has been made to improve air quality, particularly in high-income countries, however; 99% of the world’s population is living in places where the World Health Organization’s (WHO’s) air quality guidelines are not being met[@who2021; @who2022].
+Particulate matter (PM₂.₅ and PM₁₀) can penetrate deep into the lungs and bloodstream, causing respiratory and cardiovascular issues and are linked to conditions like heart disease and lung cancer (World Health Organization, 2022). Benefits from improved air quality include prevention of air pollution-related premature deaths, chronic diseases, damages to ecosystems and crops, as well as the economic benefits for human health from air quality improvement [@calvin2023]. The United Nation’s Intergovernmental Panel on Climate Change’s (IPCC) latest Climate report acknowledges the largest adaptation gaps exist in projects that manage complex dynamics between air quality and climate risks, and that reductions in greenhouse gas (GHG) emissions would lead to improvements in air quality within a few years [@calvin2023]). Progress has been made to improve air quality, particularly in high-income countries, however; 99% of the world’s population is living in places where the World Health Organization’s (WHO’s) air quality guidelines are not being met[@who2021; @who2022].
 
 The WHO Global Air Quality Guidelines, first introduced in 1987, recommends safe levels for six key pollutants—PM₂.₅, PM₁₀, ozone (O₃), nitrogen dioxide (NO₂), sulfur dioxide (SO₂), and carbon monoxide (CO) which represent critical risks to human health globally. Recently updated guidelines respond to new scientific findings demonstrating that even lower concentrations of air pollutants than previously understood can lead to severe health impacts. Table 1 shows the latest Air Quality Guidelines (AQG) for PM2.5.
 
@@ -39,40 +39,41 @@ We focus on PM2.5 because we will be working with the SEDAC Global Annual PM2.5 
 
 Table 1. WHO Recommended AQG levels and interim targets
 
-<table>
-  <tr>
-    <th rowspan="2">Pollutant</th>
-    <th rowspan="2">Averaging Time</th>
-    <th colspan="4">Interim Target</th>
-    <th rowspan="2">AQG Level</th>
+<table style="border-collapse: collapse; width: 100%;">
+  <tr style="border: 1px solid black;">
+    <th rowspan="2" style="border: 1px solid black; padding: 8px;">Pollutant</th>
+    <th rowspan="2" style="border: 1px solid black; padding: 8px;">Averaging Time</th>
+    <th colspan="4" style="border: 1px solid black; padding: 8px;">Interim Target</th>
+    <th rowspan="2" style="border: 1px solid black; padding: 8px;">AQG Level</th>
   </tr>
-  <tr>
-    <th>1</th>
-    <th>2</th>
-    <th>3</th>
-    <th>4</th>
+  <tr style="border: 1px solid black;">
+    <th style="padding: 8px;">1</th>
+    <th style="padding: 8px;">2</th>
+    <th style="padding: 8px;">3</th>
+    <th style="padding: 8px;">4</th>
   </tr>
-  <tr>
-    <td rowspan="2">PM2.5, µg/m³</td>
-    <td>Annual</td>
-    <td>35</td>
-    <td>25</td>
-    <td>15</td>
-    <td>10</td>
-    <td>5</td>
+  <tr style="border: 1px solid black;">
+    <td rowspan="2" style="border: 1px solid black; padding: 8px;">PM2.5, µg/m³</td>
+    <td style="border: 1px solid black; padding: 8px;">Annual</td>
+    <td style="border: 1px solid black; padding: 8px;">35</td>
+    <td style="border: 1px solid black; padding: 8px;">25</td>
+    <td style="border: 1px solid black; padding: 8px;">15</td>
+    <td style="border: 1px solid black; padding: 8px;">10</td>
+    <td style="border: 1px solid black; padding: 8px;">5</td>
   </tr>
-  <tr>
-    <td>24-hour* </td>
-    <td>75</td>
-    <td>50</td>
-    <td>37.5</td>
-    <td>25</td>
-    <td>15</td>
+  <tr style="border: 1px solid black;">
+    <td style="border: 1px solid black; padding: 8px;">24-hour*</td>
+    <td style="border: 1px solid black; padding: 8px;">75</td>
+    <td style="border: 1px solid black; padding: 8px;">50</td>
+    <td style="border: 1px solid black; padding: 8px;">37.5</td>
+    <td style="border: 1px solid black; padding: 8px;">25</td>
+    <td style="border: 1px solid black; padding: 8px;">15</td>
   </tr>
 </table>
+
 \*99th percentile (i.e. 3-4 exceedance days per year).
 
-Inequality, political instability, increased cost of living are some of the causes preventing significant progress to reduce poverty and meet the SDGs. This continued environmental inequality can also be seen in the significant majority (89%) of premature deaths attributed to air pollution, which occur in low- and middle- income countries (World Health Organization, 2022). In an account of 110 countries, 1.1 billion people (18%) are considered to live in “acute” multidimensional poverty, with half living in Sub-Saharan Africa and a third living in South Asia (UNDP (United Nations Development Programme), 2023). Studies have shown that persons with lower socioeconomic status disproportionately experience higher concentrations of pollutants (Flanagan et al., 2019). The level of poverty experienced by vulnerable communities can compound the risks posed by pollution leading to worsening well being and health outcomes.
+Inequality, political instability, and increased cost of living are some of the causes preventing significant progress to reduce poverty and meet the SDGs. This continued environmental inequality can also be seen in the significant majority (89%) of premature deaths attributed to air pollution, which occur in low- and middle- income countries (World Health Organization, 2022). In an account of 110 countries, 1.1 billion people (18%) are considered to live in “acute” multidimensional poverty, with half living in Sub-Saharan Africa and a third living in South Asia (UNDP (United Nations Development Programme), 2023). Studies have shown that persons with lower socioeconomic status disproportionately experience higher concentrations of pollutants (Flanagan et al., 2019). The level of poverty experienced by vulnerable communities can compound the risks posed by pollution leading to worsening well being and health outcomes.
 
 ## Data Collection and Integration
 
@@ -256,56 +257,6 @@ Let's put our defined function to use:
 stats_results = calculate_country_stats(country_sample, grdi_raster, pm25_raster)
 ```
 
-<!-- ```{python}
-
-stats_results = gpd.GeoDataFrame()
-
-for index, row in country_sample.iloc[:].iterrows():
-    country = row['NAME_0']
-    country_GID = row['GID_0']
-    try:
-        country_poly =  pygadm.Items(admin=country_GID, content_level=0)
-    except:
-        print(country, " skipped.")
-        continue
-
-    # Create a mask for the polygons
-    grdi_country_zs= rasterstats.zonal_stats(country_poly, grdi_raster.values[0], affine=grdi_raster.rio.transform(), stats="min mean max percentile_20 percentile_40 percentile_60 percentile_80")
-    pm25_country_zs= rasterstats.zonal_stats(country_poly, pm25_raster.values[0], affine=pm25_raster.rio.transform(), stats="mean")
-    
-    # # Extract statistics into a dictionary
-    country_stats = {
-        'Country_Name': country,
-        'Country_GID' : country_GID,
-        # 'GRDI_Count': grdi_country_zs[0]['count'],
-        'GRDI_Min': grdi_country_zs[0]['min'],
-        'GRDI_Mean': grdi_country_zs[0]['mean'],
-        'GRDI_Max': grdi_country_zs[0]['max'],
-        # 'GRDI_Median': grdi_country_zs[0]['median'],
-        # 'GRDI_Std': grdi_country_zs[0]['std'],
-        # 'GRDI_Range': grdi_country_zs[0]['range'],
-        'GRDI_P20': grdi_country_zs[0]['percentile_20'],
-        'GRDI_P40': grdi_country_zs[0]['percentile_40'],
-        'GRDI_P60': grdi_country_zs[0]['percentile_60'],
-        'GRDI_P80': grdi_country_zs[0]['percentile_80'],
-        # 'PM25_Count': pm25_country_zs[0]['count'],
-        # 'PM25_Min': pm25_country_zs[0]['min'],
-        'PM25_Mean': pm25_country_zs[0]['mean'],
-        # 'PM25_Max': pm25_country_zs[0]['max'],
-        # 'PM25_Median': pm25_country_zs[0]['median'],
-        # 'PM25_Std': pm25_country_zs[0]['std'],
-        # 'PM25_Range': pm25_country_zs[0]['range'],
-        # 'PM25_P20': pm25_country_zs[0]['percentile_20'],
-        # 'PM25_P40': pm25_country_zs[0]['percentile_40'],
-        # 'PM25_P60': pm25_country_zs[0]['percentile_60'],
-        # 'PM25_P80': pm25_country_zs[0]['percentile_80'],
-        'geometry' : country_poly['geometry'].iloc[0]
-    }
-    country_stats_gdf = gpd.GeoDataFrame([country_stats], geometry='geometry')
-    # stats_results.append(country_stats_gdf)
-    stats_results = pd.concat([stats_results, country_stats_gdf], ignore_index=True) 
-    
-``` -->
 
 Let's use the `.head()` method from Pandas to check the top of our table
 
