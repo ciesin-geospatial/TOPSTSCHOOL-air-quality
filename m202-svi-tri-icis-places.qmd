@@ -596,30 +596,42 @@ The agreement, described as "groundbreaking" by the Sierra Club, introduces seve
 We'll continue to use the Detroit metro boundary we created earlier. We assigned them the names `detroit_metro` and `detroit_metro_bm` (projected to mercator to match **b**ase**m**aps for plotting).
 
 ```{python}
-# Print the bounding box coordinates
+# Print the coordinates of the bounding box, which defines the rectangular boundary for the area of interest
 print("Bounding Box:")
+
+# Display the minimum longitude (X-axis) of the bounding box
 print(f"Minimum X (Longitude): {bbox[0]}")
+
+# Display the minimum latitude (Y-axis) of the bounding box
 print(f"Minimum Y (Latitude): {bbox[1]}")
+
+# Display the maximum longitude (X-axis) of the bounding box
 print(f"Maximum X (Longitude): {bbox[2]}")
+
+# Display the maximum latitude (Y-axis) of the bounding box
 print(f"Maximum Y (Latitude): {bbox[3]}")
 ```
 
 Now we'll create an empty list to store the TRI data, loop through each county making an API query, and place the retrieved data in the empty list.
 
 ```{python}
-# Fetch TRI facility data from EPA API for each county
+# Initialize a list to hold TRI (Toxic Release Inventory) facility data for each county in Michigan
 tri_data = []
 
-# Loop through each county to make a separate API inquiry (was having trouble attempting all at once)
+# Loop through each county in the specified list to fetch TRI data separately
+# (avoiding issues encountered when querying all counties at once)
 for county in counties:
+    # Construct the API URL to query TRI facilities for the current county
     api_url = f"https://data.epa.gov/efservice/tri_facility/state_abbr/MI/county_name/{county}/JSON"
     response = requests.get(api_url)
-    # Is our response good
+
+    # Check if the response was successful
     if response.status_code == 200:
         county_data = response.json()
-        # Add the county to the list
+        # Append the current county's TRI data to the overall list
         tri_data.extend(county_data)
     else:
+        # Print an error message if data retrieval failed for the county
         print(f"Failed to fetch data for {county} County. Status code: {response.status_code}")
 
 ```
@@ -629,19 +641,21 @@ for county in counties:
 The TRI data comes in json format. This format can be confusing to interpret, because each record (traditionally a row in a table) is viewed with columns structured vertically. Let’s look at the first record.
 
 ```{python}
+# Access and print the second entry in the TRI data list to inspect a sample facility's data structure
 tri_data[1]
 ```
 
 This record shows all the information for PPG GROW DETROIT with columns and values listed side-by-side ('city_name': 'DETROIT'). This may seem difficult to deal with, but most programming languages have tools to easily parse json data into traditional tables. `pd.DataFrame` does it automatically when you attempt to create a **pandas** data frame.
 
 ```{python}
-# Convert TRI data to a DataFrame
+# Convert the collected TRI data list into a Pandas DataFrame for easier data manipulation and analysis
 tri_df = pd.DataFrame(tri_data)
 
+# Output the total count of facilities retrieved to confirm successful data fetching
 print(f"Number of facilities fetched: {len(tri_df)}")
 
-# Check the first few rows (too large to print in this document)
-# tri_df.head
+# Display the first few rows of the DataFrame for a quick data preview (uncomment if needed for inspection)
+# tri_df.head()
 ```
 
 Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have coordinate  values.
@@ -649,15 +663,15 @@ Checking the first few rows--everything looks as it should. We want to geocode t
 We'll check and remove those without.
 
 ```{python}
-# Create a copy of the dataframe to avoid SettingWithCopyWarning
+# Create a copy of the TRI DataFrame to prevent modifications that could trigger a SettingWithCopyWarning
 tri_df_clean = tri_df.copy()
 
-# Remove facilities with empty latitude or longitude values
+# Remove rows where latitude or longitude is missing to ensure data completeness
 tri_df_clean = tri_df_clean.dropna(subset=['pref_latitude', 'pref_longitude'])
 
 print(f"Number of facilities after removing empty coordinates: {len(tri_df_clean)}")
 
-# Convert latitude and longitude to numeric type
+# Convert latitude and longitude columns to numeric, handling non-numeric values by setting them to NaN
 tri_df_clean['pref_latitude'] = pd.to_numeric(tri_df_clean['pref_latitude'], errors='coerce')
 tri_df_clean['pref_longitude'] = pd.to_numeric(tri_df_clean['pref_longitude'], errors='coerce')
 ```
@@ -667,13 +681,13 @@ Ouch! We lost roughly 300 records due to missing coordinate information (789 vs.
 In my personal investigations of this data, I noticed that some longitude coordinates were not negative, but had an absolute value (e.g. 83.25) that made sense for the Detroit metro area, therefore we will flip the sign on these records.
 
 ```{python}
-# Function to correct longitude by making it negative if positive
+# Define a function to correct longitudes that are mistakenly positive, converting them to negative values for North America
 def correct_longitude(lon):
     if lon > 0:
         return -lon
     return lon
 
-# Apply longitude correction
+# Apply longitude correction to all facilities in the DataFrame
 tri_df_clean['pref_longitude'] = tri_df_clean['pref_longitude'].apply(correct_longitude)
 ```
 
@@ -682,18 +696,18 @@ Additionally, there are some records with wild longitudinal values that are not 
 Toss the quartile outliers.
 
 ```{python}
-# Calculate IQR for longitude
+# Calculate the Interquartile Range (IQR) for longitude to identify and remove outlier values
 Q1 = tri_df_clean['pref_longitude'].quantile(0.25)
 Q3 = tri_df_clean['pref_longitude'].quantile(0.75)
 IQR = Q3 - Q1
 
-# Define bounds for outliers
+# Define acceptable range for longitude, filtering out points beyond 1.5 * IQR
 lower_bound = Q1 - 1.5 * IQR
 upper_bound = Q3 + 1.5 * IQR
 
 lower_bound, upper_bound
 
-# Remove outliers
+# Remove facilities with longitudes outside of the defined bounds to eliminate extreme outliers
 tri_df_clean = tri_df_clean[(tri_df_clean['pref_longitude'] >= lower_bound) & 
                             (tri_df_clean['pref_longitude'] <= upper_bound)]
 
@@ -707,47 +721,48 @@ Thankfully we only lost 2 more records from outliers.
 The data has been cleaned up a bit so now lets create a spatial point object from the data with **geopandas** and use **matplotlib** to plot the values on top of a basemap of Detroit we'll acquire using **contextily** and our original Wayne, Macomb, and Oakland counties boundary.
 
 ```{python}
-# Create a GeoDataFrame from the cleaned TRI data
+# Create a GeoDataFrame from the cleaned TRI data, converting latitude and longitude into geometric points
 detroit_tri = gpd.GeoDataFrame(
     tri_df_clean, 
     geometry=gpd.points_from_xy(tri_df_clean.pref_longitude, tri_df_clean.pref_latitude),
-    crs="EPSG:4326"
+    crs="EPSG:4326" # Set the coordinate reference system to WGS 84 (latitude/longitude)
 )
 
-# Reproject data to Web Mercator for contextily
-# detroit_metro = detroit_metro.to_crs(epsg=3857)
-# bbox_polygon = bbox_polygon.to_crs(epsg=3857)
+# Reproject TRI data to the Web Mercator projection (EPSG:3857) for compatibility with the basemap
 detroit_tri = detroit_tri.to_crs(epsg=3857)
 
-# Create the plot
+# Initialize a plot with a fixed size
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the metro area and bounding box (reusing objects from earlier)
+# Plot the Detroit metro area boundaries and the bounding box as background layers
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Plot TRI facilities (reusing the detroit_tri object from earlier)
+# Plot TRI facilities as purple points with a grey edge, representing facilities' locations in the metro area
 detroit_tri.plot(ax=ax, color='purple', edgecolor='grey', markersize=50, alpha=0.5, label='TRI Facilities')
-# Plot ICIS-AIR facilities
+
+# Plot ICIS-AIR facilities as cyan points with a grey edge, indicating the locations of air-quality-monitored facilities
 gdf_icis_air_bm.plot(ax=ax, color='cyan', edgecolor='grey', markersize=50, alpha=0.5, label='ICIS-AIR Facilities')
 
-# Add the basemap
+# Overlay a basemap for geographical context, using OpenStreetMap tiles
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Set the extent of the map to the bounding box
+# Set the map's viewing area to the bounding box’s coordinates, zooming in on the Detroit metro area
 ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
 ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
 
-# Remove axes
+# Hide axis labels and ticks for a cleaner map presentation
 ax.set_axis_off()
 
-# Add legend
+# Add a legend to differentiate TRI and ICIS-AIR facilities on the map
 ax.legend()
 
+# Add a title for context and adjust layout for better spacing
 plt.title("Detroit Metro Area TRI and ICIS-AIR Facilities", fontsize=16)
 plt.tight_layout()
 plt.show()
 
+# Print the number of facilities included in the plot for confirmation
 print(f"Number of TRI facilities plotted: {len(detroit_tri)}")
 print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
 ```
@@ -777,7 +792,12 @@ d) To record air quality index values for major cities
 We can make the query to Envirofacts. Let's break down the call.
 
 ```{python}
-# URL of the CSV file
+# Define the URL for the CSV file containing Toxic Release Inventory Form R data
+# This query requests data from the EPA Envirofacts API, specifying:
+# - Reporting Year: 2021
+# - Air releases greater than 0
+# - State: Michigan (MI)
+# - Counties: Wayne, Oakland, and Macomb
 url = "https://data.epa.gov/efservice/V_TRI_FORM_R_EZ/REPORTING_YEAR/2021/AIR_TOTAL_RELEASE/>/0/STATE_ABBR/MI/COUNTY_NAME/CONTAINING/WAYNE/CONTAINING/OAKLAND/CONTAINING/MACOMB/CSV"
 ```
 
@@ -790,11 +810,13 @@ url = "https://data.epa.gov/efservice/V_TRI_FORM_R_EZ/REPORTING_YEAR/2021/AIR_TO
 -   We want it as a csv: CSV
 
 ```{python}
-# Read the CSV file directly with pandas
+# Read the TRI Form R data CSV file directly into a pandas DataFrame
 tri_form_r = pd.read_csv(url)
+
+# Confirm successful data loading by printing the number of records
 print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
 
-# Display information about the dataset
+# Display column names to understand the structure of the dataset
 print("\nColumns in the dataset:")
 print(tri_form_r.columns)
 ```
@@ -802,10 +824,13 @@ print(tri_form_r.columns)
 We have roughly the same number of facilities as before, but this table has a lot of columns (568). We should make it more manageable.
 
 ```{python}
+# The dataset contains numerous columns (568), so we will retain only essential columns for analysis
+# Select columns: facility name, address, city, reporting year, and air release amounts
 keeps = [
     'facility_name', 'street_address', 'city_name',
     'reporting_year', 'air_total_release']
 
+# Update DataFrame to only include the selected columns
 tri_form_r = tri_form_r[keeps]
 ```
 
@@ -813,9 +838,11 @@ This works well but we can get more recent data that is already filtered using t
 
 
 ```{python}
+# Read a secondary TRI Form R CSV file directly from the URL
+# This may contain additional or alternative data for further analysis
 tri_form_r = pd.read_csv("https://dmap-epa-enviro-prod-export.s3.amazonaws.com/396975438.CSV")
 
-# Display information about the dataset
+# Confirm successful reading by printing the number of records and dataset structure
 print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
 print("\nColumns in the dataset:")
 print(tri_form_r.columns)
@@ -824,18 +851,20 @@ print(tri_form_r.columns)
 This is a bit more manageable, but we have multiple records per facility because each chemical release has a separate record. This allows the user to investigate specific chemicals, but for the purposes of this exercise we will aggregate `AIR_TOTAL_RELEASE` for each facility, to get a single row per facility.
 
 ```{python}
-# Check how it looks (too large to print on the web)
+# Display the first few rows of the dataset for a quick inspection
+# Note: this printout is limited to avoid excessive output in a web environment
 # tri_form_r.head
 ```
 
 Let's aggregate it.
 
 ```{python}
-# Sum across individual facilities
+# Group the dataset by facility name and location details, summing the total air releases per facility
+# This aggregation step consolidates all entries for each unique facility based on name, latitude, longitude, and address
 tri_form_r = tri_form_r.groupby(['FACILITY_NAME', 'LATITUDE','LONGITUDE','STREET_ADDRESS'], as_index=False).agg({
-    'AIR_TOTAL_RELEASE': 'sum'
+    'AIR_TOTAL_RELEASE': 'sum' # Sum the air release values for each facility
 })
-# How many records are there now
+# Display the total number of unique facilities after grouping
 print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
 ```
 
@@ -844,15 +873,16 @@ There were only 211 unique listings in the 2023 data.
 As before, we should check for valid coordinates and missing air release data.
 
 ```{python}
-# Assuming the latitude and longitude columns are named 'LATITUDE' and 'LONGITUDE'
-# Adjust these names if they're different in your CSV
+# Define column names for latitude, longitude, and air release values
+# Assumes column names match; adjust 'LATITUDE', 'LONGITUDE', and 'AIR_TOTAL_RELEASE' if necessary
 lat_col = 'LATITUDE'
 lon_col = 'LONGITUDE'
-release_col = 'AIR_TOTAL_RELEASE'  # Adjust this to the actual column name for air releases
+release_col = 'AIR_TOTAL_RELEASE'  # Column for the total air release per facility
 
-# Remove records with missing coordinates or air release data
+# Remove any records with missing coordinates or air release data to ensure data integrity for spatial analysis
 df_tri_clean = tri_form_r.dropna(subset=[lat_col, lon_col, release_col])
 
+# Output the number of records remaining after removing rows with missing data
 print(f"\nNumber of records after removing missing data: {len(df_tri_clean)}")
 ```
 
@@ -861,7 +891,8 @@ There were no missing coordinates or missing air release data.
 Now we can create a spatial object with **GeoPandas** using the latitude and longitude coordinates in the table.
 
 ```{python}
-# Create a GeoDataFrame
+# Convert the cleaned TRI data to a GeoDataFrame for spatial analysis
+# Creates a 'geometry' column based on longitude and latitude, setting the coordinate system to EPSG:4326 (WGS 84)
 gdf_tri_form_r = gpd.GeoDataFrame(
     df_tri_clean, 
     geometry=gpd.points_from_xy(df_tri_clean[lon_col], df_tri_clean[lat_col]),
@@ -872,15 +903,16 @@ gdf_tri_form_r = gpd.GeoDataFrame(
 Let’s check the distribution of the air release data for outliers. 
 
 ```{python}
-# Create the histogram
-plt.figure(figsize=(8, 8))
-plt.hist(gdf_tri_form_r['AIR_TOTAL_RELEASE'], bins=10, edgecolor='black')
-plt.title('Histogram of 2023 Air Total Release Sum')
-plt.xlabel('Air Sum')
-plt.ylabel('Frequency')
-plt.grid(True, alpha=0.3)
 
-# Show the plot
+# Plot a histogram to visualize the distribution of total air release values across facilities
+plt.figure(figsize=(8, 8))  # Define plot size
+plt.hist(gdf_tri_form_r['AIR_TOTAL_RELEASE'], bins=10, edgecolor='black') # Set bin count and edge color
+plt.title('Distribution of Air Total Release Values') # Plot title
+plt.xlabel('Air Total Release Sum') # X-axis label for air release values
+plt.ylabel('Frequency') # Y-axis label for frequency of values
+plt.grid(True, alpha=0.3) # Add grid with slight transparency for readability
+
+# Display the histogram
 plt.show()
 ```
 
@@ -889,18 +921,19 @@ Looks like there are outliers around 100,000 lbs and 400,000 lbs. Before we map 
 ```{python}
 import numpy as np
 
-# Assuming 'result' is your DataFrame from earlier
+# Calculate the natural logarithm of air release values +1 to handle any zero values safely
+# This transformation helps normalize the data, reducing skew for clearer visualization
 gdf_tri_form_r['LOG_AIR_RELEASE'] = np.log1p(gdf_tri_form_r['AIR_TOTAL_RELEASE'])
 
-# Create the histogram
+# Plot a histogram to visualize the distribution of the log-transformed air release values
 plt.figure(figsize=(8, 8))
-plt.hist(gdf_tri_form_r['LOG_AIR_RELEASE'], bins=10, edgecolor='black')
-plt.title('Histogram of the Log of 2023 Air Total Release Sum')
-plt.xlabel('Log of Air Sum')
-plt.ylabel('Frequency')
-plt.grid(True, alpha=0.3)
+plt.hist(gdf_tri_form_r['LOG_AIR_RELEASE'], bins=10, edgecolor='black') # Set bin count and edge color
+plt.title('Distribution of Log-Transformed Air Release Values') # Plot title
+plt.xlabel('Log of Air Total Release Sum') # X-axis label for log air release values
+plt.ylabel('Frequency') # Y-axis label for frequency of values
+plt.grid(True, alpha=0.3) # Add grid with slight transparency for readability
 
-# Show the plot
+# Display the histogram
 plt.show()
 
 ```
@@ -910,46 +943,49 @@ That looks much better.
 Now we can visualize the data, by overlaying the points on a basemap of Detroit while using graduated symbols to illustrate the amount of air releases for a given facility.
 
 ```{python}
-# Reproject to Web Mercator to match the basemap
+# Reproject TRI facility data to Web Mercator (EPSG:3857) to align with the basemap projection
 gdf_tri_form_r_bm = gdf_tri_form_r.to_crs(epsg=3857)
 
-# Create the plot
+# Create the map plot
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the metro area and bounding box (reusing objects from earlier)
+# Plot the Detroit metro area boundary and bounding box with customized colors
 detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=2)
 
-# Plot TRI facilities with graduated symbols based on air releases
+# Scatter plot TRI facilities with symbol sizes proportional to the log of air releases
+# Scaling factor applied for better visibility; adjust as needed
 scatter = ax.scatter(gdf_tri_form_r_bm.geometry.x, gdf_tri_form_r_bm.geometry.y, 
-                     s=gdf_tri_form_r_bm['LOG_AIR_RELEASE']*20,  # Adjust the scaling factor as needed
-                     c='orangered',  # Static fill color
-                     edgecolor='yellow',  # Outline color
-                     linewidth=1,  # Adjust the outline width as needed
-                     alpha=0.7)
+                     s=gdf_tri_form_r_bm['LOG_AIR_RELEASE']*20,  # Scale size of symbols by log air releases
+                     c='orangered',  # Color fill of symbols
+                     edgecolor='yellow',  # Outline color of symbols
+                     linewidth=1,  # Outline thickness for clarity
+                     alpha=0.7) # Adjust transparency level
 
-# Add the basemap
+# Add OpenStreetMap basemap for spatial context
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Set the extent of the map to the bounding box
+# Set map view to focus on the bounding box area
 ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
 ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
 
-# Remove axes
+# Remove axes for a cleaner map view
 ax.set_axis_off()
 
-# Add a legend for symbol sizes
-legend_sizes = [0,4,8,12]  # Example sizes, adjust based on your data
+# Add a legend with sample sizes for symbol scaling reference
+legend_sizes = [0,4,8,12]  # Adjust sample sizes based on data scale
 legend_elements = [plt.scatter([], [], s=size*20, c='orangered', edgecolor='yellow', 
                                linewidth=1, alpha=1, label=f'{size:,}') 
                    for size in legend_sizes]
 ax.legend(handles=legend_elements, title='Log Total Air Releases (lbs)', 
-          loc='lower right', title_fontsize=12, fontsize=10)
+          loc='lower right', title_fontsize=12, fontsize=10) # Customize legend title and text
 
-plt.title("Detroit Metro Area TRI Facilities - 2023 Total Air Releases (Custom Data)", fontsize=16)
+# Set the plot title
+plt.title("Detroit Metro Area TRI Facilities - Total Air Releases (Custom Data)", fontsize=16)
 plt.tight_layout()
 plt.show()
 
+# Output summary statistics for TRI facilities plotted and air release values
 print(f"\nNumber of TRI facilities plotted: {len(gdf_tri_form_r)}")
 print(f"Total air releases: {gdf_tri_form_r[release_col].sum():,.2f} lbs")
 print(f"Average air release per facility: {gdf_tri_form_r[release_col].mean():,.2f} lbs")
@@ -998,15 +1034,16 @@ import xarray as xr
 import rasterio
 import rasterio.mask
 
+# Set xarray display options for enhanced attribute visibility when viewing data
 xr.set_options(
-    keep_attrs=True,
-    display_expand_attrs=True,
-    display_expand_coords=True,
-    display_expand_data=False,
-    display_expand_data_vars=True
+    keep_attrs=True,  # Retain attributes in computations
+    display_expand_attrs=True, # Expand attribute display
+    display_expand_coords=True, # Show all coordinates
+    display_expand_data=False, # Collapse data display to save space
+    display_expand_data_vars=True # Expand variable display
 )
 
-# Specify the TIF files
+# Define paths to SVI (Social Vulnerability Index) TIF files, each representing a different aspect of vulnerability
 tif_files = [
     "data/svi/svi_2020_tract_overall_wgs84.tif",
     "data/svi/svi_2020_tract_minority_wgs84.tif",
@@ -1015,92 +1052,85 @@ tif_files = [
     "data/svi/svi_2020_tract_household_wgs84.tif"
 ]
 
-# Create an empty list to store the individual DataArrays
+# Initialize an empty list to store DataArrays created from each raster
 data_arrays = []
 
-# Read each TIF file, clip it to Detroit metro's extent, and append it to the list
+# Iterate over each TIF file to read, clip to Detroit metro area, and convert to xarray DataArray
 for file in tif_files:
     with rasterio.open(file) as src:
-        # Reproject Detroit metro boundary to match the raster CRS
+        # Align Detroit metro boundary to raster CRS for compatibility
         metro_reprojected = detroit_metro.to_crs(src.crs)
         
-        # Clip the raster to Detroit metro's geometry
+        # Clip the raster to the Detroit metro area based on its geometry
         out_image, out_transform = rasterio.mask.mask(src, metro_reprojected.geometry, crop=True)
-        out_meta = src.meta.copy()
+        out_meta = src.meta.copy() # Copy metadata for adjustments
         
-        # Update the metadata
+        # Update metadata with new dimensions and transformation details after cropping
         out_meta.update({"driver": "GTiff",
                          "height": out_image.shape[1],
                          "width": out_image.shape[2],
                          "transform": out_transform})
         
-        # Create coordinates
-        height = out_meta['height']
-        width = out_meta['width']
+        # Set up mesh grid coordinates to match the raster's new dimensions
+        height, width = out_meta['height'], out_meta['width']
         cols, rows = np.meshgrid(np.arange(width), np.arange(height))
         xs, ys = rasterio.transform.xy(out_transform, rows, cols)
         
-        # Convert lists to numpy arrays
-        xs = np.array(xs)
-        ys = np.array(ys)
+        # Convert lists to numpy arrays and reshape to match the raster dimensions
+        xs, ys = np.array(xs).reshape(height, width), np.array(ys).reshape(height, width)
         
-        # Reshape coordinates to match dimensions of the raster
-        xs = xs.reshape(height, width)
-        ys = ys.reshape(height, width)
-        
-        # Create a DataArray from the clipped data
-        da = xr.DataArray(out_image[0],  # Use the first band
-                          coords={'y': ('y', ys[:, 0]),
-                                  'x': ('x', xs[0, :])},
+        # Create an xarray DataArray with coordinates for each cell based on the raster grid
+        da = xr.DataArray(out_image[0],  # Extract the first band of the clipped image
+                          coords={'y': ('y', ys[:, 0]),  # Latitude
+                                  'x': ('x', xs[0, :])}, # Longitude
                           dims=['y', 'x'])
-        da.attrs['crs'] = str(src.crs)  # Convert CRS to string
-        da.attrs['transform'] = out_transform
-        data_arrays.append(da)
+        da.attrs['crs'] = str(src.crs)  # Store CRS as an attribute in string format
+        da.attrs['transform'] = out_transform # Add transform details to attributes
+        data_arrays.append(da) # Append DataArray to list
 ```
 
 Now we can combine them together and give the layers "pretty" names.
 
 ```{python}
-# Combine all DataArrays into a single DataSet
+# Combine all DataArrays from different SVI files into a single xarray DataSet
 svi_detroit = xr.concat(data_arrays, dim='layer')
 
-# Rename the layers
+# Define and assign layer names to clarify SVI aspect for each data layer in the combined dataset
 layer_names = ['Overall', 'Minority', 'Socioeconomic', 'Housing', 'Household']
 svi_detroit = svi_detroit.assign_coords(layer=('layer', layer_names))
-svi_detroit
+svi_detroit # Display the DataSet for verification
 ```
 
 Now we can plot each layer.
 
 ```{python}
-# Define the colorbar limits (SVI is a 0-1 scale)
+# Define minimum and maximum values for the color scale; SVI ranges from 0 (low) to 1 (high vulnerability)
 vmin, vmax = 0, 1
 
-# Create a multipanel plot
+# Create a multi-panel plot with subplots arranged in a 3x2 grid
 fig, axes = plt.subplots(3, 2, figsize=(8, 10))
-axes = axes.flatten()
+axes = axes.flatten()  # Flatten the 2D array of axes for easier iteration
 
-# Plot each layer
+# Plot each SVI layer in a separate subplot
 for i, layer in enumerate(svi_detroit.layer.values):
-    # Plot with custom color limits
+    # Render the layer with a plasma colormap and fixed color range for consistency
     im = svi_detroit.sel(layer=layer).plot(ax=axes[i], add_colorbar=False, vmin=vmin, vmax=vmax, cmap='plasma')
-    axes[i].set_title(layer)
-    # Remove axes and labels
-    axes[i].axis('off')
+    axes[i].set_title(layer) # Title each subplot with the SVI aspect
+    axes[i].axis('off') # Turn off axis ticks for cleaner appearance
     
-    # Plot Detroit metro boundary
+    # Overlay Detroit metro boundary on each subplot
     metro_reprojected.boundary.plot(ax=axes[i], color='red', linewidth=1)
 
-# Remove the extra subplot
+# Remove the unused subplot in the 3x2 grid layout
 fig.delaxes(axes[5])
 
-# Add a single colorbar
-cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
+# Add a single shared colorbar to indicate the SVI score scale across all subplots
+cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7]) # Position colorbar at right side of plot
 cbar = fig.colorbar(im, cax=cbar_ax, label='SVI Score', 
-                    fraction=0.047, pad=0.04, aspect=20)
+                    fraction=0.047, pad=0.04, aspect=20) # Customize colorbar properties
 
-plt.tight_layout()
-plt.show()
+plt.tight_layout()  # Adjust layout for clarity and spacing
+plt.show() # Display the final plot
 ```
 
 This provides an excellent look at demographic trends in the Detroit metro area. Overall vulnerability is highest in the inner city. The most striking drivers are the concentration of minorities and socioeconomic vulnerability in the downtown area. The housing and household components are slightly more varied throughout the region.
@@ -1128,17 +1158,18 @@ Start by getting the bounds from our boundary object, specify the desired resolu
 ```{python}
 from rasterio.transform import from_origin
 
-# Get the bounds of the Detroit metro area
+# Retrieve the spatial boundaries (min/max x and y coordinates) of the Detroit metro area
 minx, miny, maxx, maxy = detroit_metro_bm.total_bounds
 
-# Define the resolution (1km/1000m) to match SVI
+# Define the resolution of each cell in meters (5,000 meters = 5km) to align with SVI data resolution
 resolution = 5000
 
-# Calculate the number of cells
-nx = int((maxx - minx) / resolution)
-ny = int((maxy - miny) / resolution)
+# Calculate the number of cells needed to cover the Detroit metro area extent
+# in both x (width) and y (height) directions based on the resolution
+nx = int((maxx - minx) / resolution) # Number of cells horizontally
+ny = int((maxy - miny) / resolution) # Number of cells vertically
 
-# Create the transform for the raster
+# Create the transformation for converting between the spatial extent and pixel grid of the raster
 transform = from_origin(minx, maxy, resolution, resolution)
 ```
 
@@ -1147,16 +1178,18 @@ Now we have to prepare the point values and rasterize them. A key thing to note 
 ```{python}
 from rasterio import features
 
-# Prepare geometries and values for rasterization
+# Prepare the geometries (points) and their associated values for rasterization
+# Each tuple contains a geometry (location) and the AIR_TOTAL_RELEASE value for raster cell assignment
 shapes = ((geom, value) for geom, value in zip(gdf_tri_form_r_bm.geometry, gdf_tri_form_r_bm.AIR_TOTAL_RELEASE))
 
-# Rasterize the point data
-air_release_raster = features.rasterize(shapes=shapes, 
-                            out_shape=(ny, nx), 
-                            transform=transform, 
-                            fill=0, 
-                            all_touched=True, 
-                            merge_alg=rasterio.enums.MergeAlg.add)
+# Rasterize the point data into a grid, with each cell reflecting the air release values
+air_release_raster = features.rasterize(
+    shapes=shapes, # Geometries and values to rasterize
+    out_shape=(ny, nx), # Output raster shape, matching previously calculated cell count
+    transform=transform, # Transformation matrix for raster alignment with spatial extent
+    fill=0,  # Default fill value (0) for cells without data
+    all_touched=True, # Includes all cells touched by a geometry to ensure full coverage
+    merge_alg=rasterio.enums.MergeAlg.add) # Merge algorithm to sum overlapping values in cells
 ```
 
 We rasterized with **rasterio**, but we need to convert this to an **xarray** object to continue and we need **rioxarray** to write the crs information for the **xarray** object.
@@ -1164,23 +1197,27 @@ We rasterized with **rasterio**, but we need to convert this to an **xarray** ob
 ```{python}
 import rioxarray
 
-# Convert the raster to an xarray DataArray
-# Note: We use ny and nx here to ensure the coordinates match the raster shape
-air_release_raster_da = xr.DataArray(air_release_raster, 
-                         coords={'y': np.linspace(maxy, miny, ny),
-                                 'x': np.linspace(minx, maxx, nx)},
-                         dims=['y', 'x'])
+# Convert the rasterized array to an xarray DataArray for enhanced data handling
+# Set coordinates to spatial extent using latitude (y) and longitude (x) for geospatial consistency
+air_release_raster_da = xr.DataArray(
+    air_release_raster, # Rasterized air release data
+    coords={'y': np.linspace(maxy, miny, ny), # Y-axis coordinates, from top to bottom
+        'x': np.linspace(minx, maxx, nx)}, # X-axis coordinates, from left to right
+    dims=['y', 'x']) # Dimension labels for DataArray
+
+# Write the Detroit metro area CRS to the DataArray for georeferencing
 air_release_raster_da.rio.write_crs(detroit_metro_bm.crs, inplace=True)
 ```
 
 The spaces between county borders can create odd values because there are no points right next to each other. We can clip the raster to our Detroit metro boundary to fix this.
 
 ```{python}
-# Clip the raster with the Detroit metro boundary
+# Clip the rasterized DataArray to the Detroit metro boundary to limit data to the target area
 air_release_raster_da = air_release_raster_da.rio.clip(
-    detroit_metro_bm.geometry.values, 
-    detroit_metro_bm.crs, 
-    drop=False, all_touched=True)
+    detroit_metro_bm.geometry.values,  # Boundary geometry for clipping
+    detroit_metro_bm.crs,  # Coordinate reference system of the boundary
+    drop=False,   # Retain original raster size; cells outside geometry are masked
+    all_touched=True)  # Include any cells touched by the boundary for full coverage
 ```
 
 Now we can see how our rasterized air release values look.
@@ -1188,48 +1225,56 @@ Now we can see how our rasterized air release values look.
 ```{python}
 from matplotlib.colors import BoundaryNorm, ListedColormap
 
-# Define the breaks for the discrete scale
+# Define class intervals (breaks) for categorizing air release values into discrete color bands
 breaks = [0, 1, 10, 100, 1000, 10000, 100000, 250000, 500000]
 
-# Create a custom colormap
+# Create a custom colormap to represent different levels of air release with distinct colors
 colors = ['#fffff3', '#FFFFCC', '#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#B10026']
 cmap = ListedColormap(colors)
 
-# Create a normalization based on the breaks
+# Create a normalization scheme to map values to the defined color breaks
 norm = BoundaryNorm(breaks, cmap.N)
 
-# Create the plot
+# Set up the plot with a defined size
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the TRI facility points
+# Plot TRI facility points in blue, with adjusted transparency (alpha) for visibility
 gdf_tri_form_r_bm.plot(ax=ax, color='blue', markersize=10, alpha=0.7)
 
-# Plot the clipped raster with the custom colormap and norm
-im = ax.imshow(air_release_raster_da, extent=[minx, maxx, miny, maxy], origin='upper', 
-               cmap=cmap, norm=norm)
+# Plot the air release raster, using the custom colormap and normalization scheme
+im = ax.imshow(
+    air_release_raster_da,  # Raster data for air release
+    extent=[minx, maxx, miny, maxy],  # Spatial extent to match the Detroit metro bounds
+    origin='upper',  # Ensure raster is oriented correctly (top-down)
+    cmap=cmap,  # Apply custom colormap
+    norm=norm)  # Normalize color according to defined breaks
 
-# Add colorbar with discrete labels
-cbar = plt.colorbar(im, ax=ax, extend='max', 
-                    label='Total Air Releases (pounds)', 
-                    ticks=breaks, 
-                    fraction=0.047, pad=0.04, aspect=20)
-cbar.ax.set_yticklabels([f'{b:,}' for b in breaks])
+# Add a color bar with labels indicating air release levels (discrete)
+cbar = plt.colorbar(
+    im, ax=ax, extend='max',  # Display max extension on color bar
+    label='Total Air Releases (pounds)',  # Label for color bar
+    ticks=breaks,  # Set breaks as tick positions
+    fraction=0.047, pad=0.04, aspect=20)  # Adjust color bar size and position
+cbar.ax.set_yticklabels([f'{b:,}' for b in breaks])  # Format tick labels with thousands separator
 
-# Plot the Detroit metro boundary
+# Plot Detroit metro area boundary as a black outline
 detroit_metro_bm.boundary.plot(ax=ax, color='black', linewidth=2)
 
-# Set the extent to match the Detroit metro area
+# Set plot extent to focus on Detroit metro area
 ax.set_xlim(minx, maxx)
 ax.set_ylim(miny, maxy)
 
-# Add title and labels
+# Add a title and axis labels
+
 ax.set_title('TRI Air Total Release (100m resolution sum) with Facility Locations', fontsize=16)
 ax.set_xlabel('X Coordinate')
 ax.set_ylabel('Y Coordinate')
 
+# Optimize layout and display the plot
 plt.tight_layout()
 plt.show()
 
+# Output summary information
 print(f"Number of TRI facilities plotted: {len(gdf_tri_form_r_bm)}")
 print(f"Total air releases: {gdf_tri_form_r_bm['AIR_TOTAL_RELEASE'].sum():,.2f}")
 print(f"Maximum cell value in raster: {air_release_raster_da.max().values:,.2f}")
@@ -1246,16 +1291,16 @@ Start by selecting just the SVI Overall layer and converting it to a **rioxarray
 ```{python}
 from rasterio.enums import Resampling
 
-# Select the 'Overall' layer
+# Select the 'Overall' layer from the Social Vulnerability Index (SVI) dataset specific to Detroit
 svi_overall = svi_detroit.sel(layer='Overall')
 
-# Convert to rioxarray for geospatial operations
+# Convert SVI layer to rioxarray for CRS-based geospatial operations
 svi_overall = svi_overall.rio.write_crs("EPSG:4326")
 
-# Reproject SVI to match the CRS of the air release raster
+# Reproject the SVI layer to match the CRS and spatial alignment of the air release raster
 svi_reprojected = svi_overall.rio.reproject_match(air_release_raster_da)
 
-# Disaggregate the air release data to match the resolution of the SVI data
+# Adjust the resolution of air release data to match the SVI resolution using bilinear resampling
 air_release_disaggregated = svi_reprojected.rio.reproject_match(
     svi_reprojected,
     resampling=Resampling.bilinear
@@ -1268,51 +1313,55 @@ There are a few more steps that will aid in interpretation.
 2.  We will scale the logged air release data to 0-1 to match the SVI data. Now the resulting index we create will have equal contributions from both datasets.
 
 ```{python}
-# Log1p transform the air release data and scale to 0-1
+# Apply log transformation (log1p) to compress wide-ranging air release values, then normalize to a 0-1 scale
 air_release_log = np.log1p(air_release_disaggregated)
 air_release_scaled = (air_release_log - air_release_log.min()) / (air_release_log.max() - air_release_log.min())
 
-# Multiply scaled air release data with SVI data
+
+# Multiply the scaled air release data with the reprojected SVI data to create a vulnerability indicator
+# This indicator combines environmental impact (air releases) with social vulnerability
 vulnerability_indicator = air_release_scaled * svi_reprojected
 ```
 
 Now let's visualize our index along with the inputs.
 
 ```{python}
-# Create the plots
+# Create a figure with 3 subplots stacked vertically for SVI, Air Release, and Vulnerability Indicator
 fig, axs = plt.subplots(3, 1, figsize=(8, 20))
 
-# Plot SVI Overall
+# Plot SVI Overall data with a color map (viridis), normalized between 0 and 1
 im1 = svi_reprojected.plot(ax=axs[0], cmap='viridis', vmin=0, vmax=1, add_colorbar=False)
 plt.colorbar(im1, ax=axs[0], label='SVI Overall', 
                     fraction=0.047, pad=0.04, aspect=20)
 axs[0].set_title('Social Vulnerability Index (Overall)', fontsize=16)
-detroit_metro.boundary.plot(ax=axs[0], color='black', linewidth=2)
+detroit_metro.boundary.plot(ax=axs[0], color='black', linewidth=2) # Add Detroit metro boundary
 
-# Plot Original Air Release (log-transformed for better visualization)
+# Plot the log-transformed Air Release data for enhanced visual differentiation
 im2 = np.log1p(air_release_disaggregated).plot(ax=axs[1], cmap='YlOrRd', add_colorbar=False)
 plt.colorbar(im2, ax=axs[1], label='Log(Air Release + 1)', 
                     fraction=0.047, pad=0.04, aspect=20)
 axs[1].set_title('Air Release (Log-transformed)', fontsize=16)
 detroit_metro.boundary.plot(ax=axs[1], color='black', linewidth=2)
 
-# Plot Air Release Vulnerability Indicator
+# Plot the Vulnerability Indicator as the product of SVI and scaled air release data
 im3 = vulnerability_indicator.plot(ax=axs[2], cmap='YlOrRd', vmin=0, vmax=1, add_colorbar=False)
 plt.colorbar(im3, ax=axs[2], label='Air Release Vulnerability Indicator', 
                     fraction=0.047, pad=0.04, aspect=20)
 axs[2].set_title('Air Release Vulnerability Indicator\n(Scaled Air Release * SVI)', fontsize=16)
 detroit_metro.boundary.plot(ax=axs[2], color='black', linewidth=2)
 
+# Set consistent axis limits and labels across all subplots
 for ax in axs:
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     ax.set_xlim(svi_reprojected.x.min(), svi_reprojected.x.max())
     ax.set_ylim(svi_reprojected.y.min(), svi_reprojected.y.max())
 
+# Adjust layout and display the plots
 plt.tight_layout()
 plt.show()
 
-# Print some statistics
+# Print out the maximum value of the vulnerability indicator for reference
 print(f"Maximum vulnerability indicator: {vulnerability_indicator.max().values:.4f}")
 ```
 
@@ -1323,13 +1372,13 @@ We can get a better sense of where these communities are by extracting the locat
 We'll convert the raster into a data frame, sort the values in descending order, and then extract the coordinates.
 
 ```{python}
-# Convert the vulnerability indicator to a pandas DataFrame
+# Convert vulnerability indicator to a DataFrame for easy sorting and manipulation
 vulnerability_df = vulnerability_indicator.to_dataframe(name='index').reset_index()
 
-# Sort by index value and get the top 10
+# Sort by index value (descending) to identify top 10 most vulnerable areas
 top_10 = vulnerability_df.sort_values('index', ascending=False).head(10)
 
-# Create points from the coordinates
+# Create GeoDataFrame from the top 10 points using coordinates as geometry
 top_10['geometry'] = gpd.points_from_xy(top_10.x, top_10.y)
 top_10_gdf = gpd.GeoDataFrame(top_10, geometry='geometry', crs=vulnerability_indicator.rio.crs)
 ```
@@ -1337,38 +1386,40 @@ top_10_gdf = gpd.GeoDataFrame(top_10, geometry='geometry', crs=vulnerability_ind
 Now let's make a map.
 
 ```{python}
-# Create the final map
+# Create the final map plot to display top 10 vulnerable areas with basemap and boundaries
 fig, ax = plt.subplots(figsize=(8, 8))
 
-# Plot the Detroit metro boundary
+# Plot Detroit metro area boundary in black
 detroit_metro_bm.boundary.plot(ax=ax, color='black', linewidth=2)
 
-# Plot the top 10 points
+# Plot the top 10 highest vulnerability points with blue markers
 top_10_gdf.plot(ax=ax, color='blue', markersize=100, alpha=0.7)
 
-# Add labels to the points
+# Annotate each top point with its rank for clarity
 for idx, row in top_10_gdf.iterrows():
     ax.annotate(f"#{idx+1}", (row.geometry.x, row.geometry.y), 
                 xytext=(3, 3), textcoords="offset points", 
                 color='black', fontweight='bold')
 
-# Add a basemap
+# Add a basemap to provide geographic context, using OpenStreetMap tiles
 ctx.add_basemap(ax, crs=vulnerability_indicator.rio.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Add a border to the map
+# Overlay a bounding box in blue as a border around the plotted area
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Set the extent to match the Detroit metro area
+# Limit map extent to focus on Detroit metro
 ax.set_xlim(vulnerability_indicator.x.min(), vulnerability_indicator.x.max())
 ax.set_ylim(vulnerability_indicator.y.min(), vulnerability_indicator.y.max())
 
+# Add title and remove axis display for a cleaner map
 ax.set_title('Top 10 Areas with Highest Air Release Vulnerability Index', fontsize=16)
 ax.set_axis_off()
 
+# Display the final map
 plt.tight_layout()
 plt.show()
 
-# Print the row index and index value of the top 10 points
+# Output index and vulnerability value of the top 10 areas for review
 print("Row index and index value of the top 10 points:")
 for i, (idx, row) in enumerate(top_10_gdf.iterrows(), 1):
     print(f"Row index = {idx}, Index value = {round(row['index'], 2)}")
@@ -1414,47 +1465,48 @@ As with ICIS-AIR and TRI, PLACES is available through a web search interface and
 We'll start by accessing the CDC PLACES data through their API and processing it for our analysis. First we set up our API request. We specify the endpoint URL, define our target counties, and create a filter to select data only for these counties in Michigan.
 
 ```{python}
-# Define the GeoJSON API endpoint
+# Define the GeoJSON API endpoint URL, specific to CDC health data
 url = "https://data.cdc.gov/resource/cwsq-ngmh.geojson"
 
-# Define the Detroit metro area counties
+# Define the list of Detroit metro area counties of interest
 detroit_counties = ['Wayne', 'Oakland', 'Macomb']
 
-# Create the county filter string
+# Construct the query filter string to specify only Detroit metro counties
 county_filter = " OR ".join([f"countyname = '{county}'" for county in detroit_counties])
 
-# Define the query parameters
+# Define query parameters to retrieve data for Detroit metro counties in Michigan
 params = {
     "$where": f"stateabbr = 'MI' AND ({county_filter})",
-    "$limit": 50000  # Adjust if necessary
+    "$limit": 50000   # Limit the results to a manageable number
 }
 ```
 
 Next, let's make the API request and process the response:
 
 ```{python}
-# Make the API request
+# Perform the API request to retrieve GeoJSON data for Detroit area health statistics
 response = requests.get(url, params=params)
 
+# Check if the request was successful
 if response.status_code == 200:
-    data = response.json()
+    data = response.json() # Parse the JSON data
     print(f"Successfully retrieved data")
 else:
     print(f"Failed to retrieve data. Status code: {response.status_code}")
     print(response.text)
 
-# Convert to GeoDataFrame
+# Convert the GeoJSON text to a GeoDataFrame for spatial analysis
 gdf = gpd.read_file(response.text)
 ```
 
 You can inspect the `gdf` return object on your own; it's too large to print here. Let's just take a look at the available health measures in CDC PLACES.
 
 ```{python}
-# Print available health measures
+# Display unique health measures available in the dataset to understand data variety
 print("\nAvailable health measures:")
 print(gdf['measure'].unique())
 
-# Print basic information about the GeoDataFrame
+# Print essential details of the GeoDataFrame structure and content
 print("\nGeoDataFrame Info:")
 print(gdf.info())
 ```
@@ -1464,34 +1516,36 @@ There's a lot of great data here considering the rarity of health outcomes data;
 Let's make a quick map to see how it looks.
 
 ```{python}
-# Create a sample map for one health measure (e.g., Current asthma)
+# Create a sample map to visualize data for a specific health measure, such as asthma prevalence
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Filter for the specific measure and ensure data_value is numeric
+# Filter the data for the asthma measure and ensure numeric conversion of data values
 gdf_asthma = gdf[gdf['measure'] == 'Current asthma among adults'].copy()
 gdf_asthma['data_value'] = pd.to_numeric(gdf_asthma['data_value'], errors='coerce')
 
-# Plot the asthma data
+# Plot asthma data with color variation based on prevalence
 gdf_asthma.plot(column='data_value', 
                 ax=ax, 
                 legend=True, 
                 legend_kwds={'label': 'Asthma Prevalence (%)', 'orientation': 'horizontal'},
                 cmap='YlOrRd',
-                missing_kwds={'color': 'lightgrey'})
+                missing_kwds={'color': 'lightgrey'}) # Specify color for missing data
 
-# Add basemap
+# Add basemap for geographic context
 ctx.add_basemap(ax, crs=gdf_asthma.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Add a border to the map
+# Overlay the Detroit metro area boundary
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Set the extent to match the Detroit metro area
+# Set map extent to focus on the Detroit metro area
 ax.set_xlim(gdf_asthma.total_bounds[0], gdf_asthma.total_bounds[2])
 ax.set_ylim(gdf_asthma.total_bounds[1], gdf_asthma.total_bounds[3])
 
+# Add map title and hide axis lines for a cleaner visualization
 plt.title('Asthma Prevalence in Detroit Metro Area', fontsize=16)
 ax.axis('off')
 
+# Adjust layout and show the map
 plt.tight_layout()
 plt.show()
 ```
@@ -1503,13 +1557,13 @@ We created a choropleth map showing asthma prevalence across the Detroit metro a
 Finally, let's print some statistics about the asthma data:
 
 ```{python}
-# Print some statistics for the asthma data
+# Calculate and display key statistics for asthma prevalence in the dataset
 print("\nAsthma Statistics:")
 print(f"Average asthma prevalence: {gdf_asthma['data_value'].mean():.2f}%")
 print(f"Minimum asthma prevalence: {gdf_asthma['data_value'].min():.2f}%")
 print(f"Maximum asthma prevalence: {gdf_asthma['data_value'].max():.2f}%")
 
-# Print the number of census tracts per county
+# Count and display the number of census tracts in each county to understand data distribution
 print("\nNumber of census tracts per county:")
 print(gdf_asthma['countyname'].value_counts())
 ```
@@ -1529,15 +1583,15 @@ from scipy.interpolate import griddata
 from rasterio.transform import from_origin
 from rasterio.warp import transform_bounds
 
-# Ensure gdf_asthma is in EPSG:4326
+# Ensure the GeoDataFrame for asthma data is in EPSG:4326 (latitude and longitude)
 gdf_asthma = gdf_asthma.to_crs(epsg=4326)
 
-# Extract coordinates and values
+# Extract longitude (X), latitude (Y), and asthma prevalence values (Z)
 X = gdf_asthma.geometry.x.values
 Y = gdf_asthma.geometry.y.values
 Z = gdf_asthma['data_value'].values
 
-# Remove any NaN values
+# Mask out any NaN values in the prevalence data to ensure valid input for interpolation
 mask = ~np.isnan(Z)
 X, Y, Z = X[mask], Y[mask], Z[mask]
 ```
@@ -1552,23 +1606,30 @@ Inverse Distance Weighting (IDW) is a spatial interpolation method used to estim
 Now let’s create the structure of the raster we’ll create. This is based on our desired resolution and the extent of our data.
 
 ```{python}
-# Create a grid to interpolate over
-# Resolution (degrees)
+# Define grid properties to perform interpolation over a defined spatial extent and resolution
+
+# Set the grid resolution in degrees for interpolation
 grid_resolution = 0.025
-# Extent
+# Define the spatial bounds (extent) of the grid based on asthma data coverage
 x_min, y_min, x_max, y_max = gdf_asthma.total_bounds
-# Arrange the locations of the x and y dimensions
+
+# Generate equally spaced coordinates based on grid resolution for X and Y dimensions
 grid_x = np.arange(x_min, x_max, grid_resolution)
 grid_y = np.arange(y_min, y_max, grid_resolution)
-# Mesh them to a grid
+
+# Create a 2D grid of coordinates by meshing grid_x and grid_y
 grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
 ```
 
 Now we're ready to interpolate the surface. 
 
 ```{python}
-# Perform IDW interpolation
+# Perform interpolation using Inverse Distance Weighting (IDW)
+
+# Stack longitude and latitude into coordinate pairs for IDW interpolation
 points = np.column_stack((X, Y))
+
+# Use linear interpolation to estimate asthma prevalence values on the grid
 grid_z = griddata(points, Z, (grid_xx, grid_yy), method='linear')
 ```
 
@@ -1577,14 +1638,16 @@ First we created a regular grid over our study area and then used the `griddata`
 Now, let's convert our interpolated data into an xarray Dataset so it's easier to manipulate.
 
 ```{python}
-# Create an xarray Dataset from the interpolated data
+# Convert the interpolated grid into an xarray Dataset for easier handling and export
+
+# Create an xarray dataset with interpolated asthma prevalence data, labeled by grid coordinates
 ds = xr.Dataset({
-    'asthma': (['y', 'x'], grid_z),
-    'x': grid_x,
-    'y': grid_y
+    'asthma': (['y', 'x'], grid_z),  # 'asthma' is the interpolated variable over the grid
+    'x': grid_x,  # X-coordinates (longitude)
+    'y': grid_y  # Y-coordinates (latitude)
 })
 
-# Set the correct CRS
+# Assign a coordinate reference system (CRS) to the dataset for spatial consistency
 ds.rio.write_crs("EPSG:4326", inplace=True)
 ```
 
@@ -1593,43 +1656,46 @@ This step allows us to work with our interpolated data using **xarray**, which p
 Next, we'll clip our interpolated surface to the Detroit metro area. This ensures our data matches our other rasters. Then we'll project it to match basemaps so we can create a map of the data.
 
 ```{python}
-# Clip the dataset using the detroit_metro polygon
+# Clip the asthma dataset to the boundaries of the Detroit metro area
+# Ensures data outside of the metro area is excluded
 ds_clipped = ds.rio.clip(detroit_metro.geometry, drop=False)
 
-# Reproject to Web Mercator (EPSG:3857)
+# Reproject the clipped dataset to Web Mercator (EPSG:3857) for basemap compatibility
 ds_3857 = ds_clipped.rio.reproject("EPSG:3857")
 ```
 
 Finally, let's create a map of our interpolated asthma prevalence:
 
 ```{python}
-# Create the plot
+# Initialize the plot for visualizing interpolated asthma prevalence
 fig, ax = plt.subplots(figsize=(7, 7))
 
-# Plot the interpolated and clipped data
+# Display the interpolated asthma prevalence data, adjusting transparency and color map
 im = ds_3857.asthma.plot(ax=ax, cmap='YlOrRd', 
                          alpha=0.7, add_colorbar=False)
 
-# Add colorbar with adjusted height
+# Add a colorbar with custom size and label for asthma prevalence
 cbar = plt.colorbar(im, ax=ax, label='Asthma Prevalence', 
                     fraction=0.047, pad=0.04, aspect=20)
 
-# Add basemap
+# Add a basemap for geographical context using Web Mercator projection
 ctx.add_basemap(ax, crs=ds_3857.rio.crs, 
                 source=ctx.providers.OpenStreetMap.Mapnik)
 
-# Add a border to the map
+# Plot Detroit metro area boundary for clear region distinction
 bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
 
-# Set the extent to match the Detroit metro area
+# Set plot boundaries to focus on the Detroit metro area only
 bounds_3857 = transform_bounds("EPSG:4326", "EPSG:3857", 
                                x_min, y_min, x_max, y_max)
 ax.set_xlim(bounds_3857[0], bounds_3857[2])
 ax.set_ylim(bounds_3857[1], bounds_3857[3])
 
-plt.title('IDW Interpolated Asthma Prevalence in Detroit Metro Area 2023', fontsize=16)
+# Add title and remove default axis for clean presentation
+plt.title('IDW Interpolated Asthma Prevalence in Detroit Metro Area', fontsize=16)
 ax.axis('off')
 
+# Optimize layout
 plt.tight_layout()
 plt.show()
 ```
@@ -1643,16 +1709,19 @@ We can start with a simple correlation analysis and then visualize it with a sca
 ```{python}
 from scipy import stats
 
-# Ensure both rasters have the same shape and are aligned
+# Reproject the air release data to align with the asthma dataset for comparison
 air_release_aligned = air_release_raster_da.rio.reproject_match(ds_clipped)
 
-# Flatten the arrays and remove NaN values
+# Flatten the raster arrays for correlation analysis
 air_release_flat = air_release_aligned.values.flatten()
-# Take the log of the release values to account for extreme outliers
+# Apply logarithmic transformation to air release data to reduce impact of extreme values
 air_release_flat = np.log1p(air_release_flat)
 asthma_flat = ds_clipped.asthma.values.flatten()
+
+# Mask to exclude NaN values for accurate correlation calculation
 mask = ~np.isnan(air_release_flat) & ~np.isnan(asthma_flat)
 
+# Compute Pearson correlation coefficient to measure association between air releases and asthma prevalence
 correlation, p_value = stats.pearsonr(air_release_flat[mask], asthma_flat[mask])
 print(f"Correlation coefficient: {correlation}")
 print(f"P-value: {p_value}")
@@ -1661,16 +1730,20 @@ print(f"P-value: {p_value}")
 Creating a scatterplot of the paired values can provide a better look at what's going on.
 
 ```{python}
-# Create the empty map
+# Initialize the figure for scatter plot
 plt.figure(figsize=(7, 7))
-# Create the scatter plot of the values
+
+# Create a scatter plot comparing TRI Air Releases against Asthma Prevalence
 plt.scatter(air_release_flat[mask], asthma_flat[mask], alpha=0.5)
-# Create Axis Labels
+
+# Label axes for clarity
 plt.xlabel('TRI Air Releases')
 plt.ylabel('Asthma Prevalence')
-# Title
+
+# Add a descriptive title to convey the analysis purpose
 plt.title('TRI Air Releases vs Asthma Prevalence')
-# Let's see it
+
+# Display the scatter plot
 plt.show()
 ```
 
@@ -1685,11 +1758,14 @@ from pysal.explore import esda
 from pysal.lib import weights
 import shapely
 
-# Convert rasters to a GeoDataFrame
+# Convert aligned raster data to a GeoDataFrame for spatial analysis
 df = gpd.GeoDataFrame(
     {
+        # Include air release and asthma prevalence data as columns
         'air_release': air_release_aligned.values.flatten(),
         'asthma': ds_clipped.asthma.values.flatten(),
+
+        # Create geometry points for each raster cell
         'geometry': [
             shapely.geometry.Point(x, y) 
             for x, y in zip(
@@ -1711,40 +1787,45 @@ A p-value, or probability value, is a statistical concept used to determine the 
 Check for missing values and create the spatial weights matrix that determines how wide of a net we want to cast as we search for a local dependence structure (you could change these values and see how it impacts the results). You can read more about settings for spatial autocorrelation and Moran's I analysis [here](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-statistics/spatial-autocorrelation.htm).
 
 ```{python}
-# Remove any rows with NaN values
+# Remove rows with any NaN values to ensure valid spatial statistics
 df = df.dropna()
 
-# Create a spatial weights matrix
-w = weights.distance.KNN.from_dataframe(df, k=8)  # Using 8 nearest neighbors
-w.transform = 'r'  # Row-standardize the weights
+# Create a spatial weights matrix based on the 8 nearest neighbors for each observation
+# The row-standardization ('r') ensures that each row sums to 1, which is useful for Moran's I calculation
+w = weights.distance.KNN.from_dataframe(df, k=8)  
+w.transform = 'r'  
 ```
 
 Now we'll cycle through the Moran function for air release, current asthma among adults, and the 2 combined (bivariate). First, air releases.
 
 ```{python}
-# Create a Moran scatter plot for air release
+# Import the moran_scatterplot function for visualizing spatial autocorrelation
 from splot.esda import moran_scatterplot
 
-# Calculate Moran's I for air release
+# Calculate Moran's I statistic to measure spatial autocorrelation in air release data
 moran_air = esda.Moran(df['air_release'], w)
 
+# Print Moran's I value and the associated p-value for significance assessment
 print("Moran's I for Air Release:")
 print(f"I: {moran_air.I}")
 print(f"p-value: {moran_air.p_sim}")
 
+# Generate a Moran scatter plot to visualize spatial autocorrelation for air release values
 fig, ax = plt.subplots(figsize=(7, 7))
 moran_scatterplot(moran_air, ax=ax)
-# Get the current limits
+
+# Set plot limits to ensure both axes have the same range for accurate spatial comparison
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
-# Find the min and max of both axes
 vmin = min(xlim[0], ylim[0])
 vmax = max(xlim[1], ylim[1])
-# Set both axes to the same limits
 ax.set_xlim(vmin, vmax)
 ax.set_ylim(vmin, vmax)
-# Ensure the aspect ratio is 1:1
+
+# Set the aspect ratio to 1:1 to maintain equal scaling on both axes
 ax.set_aspect('equal', adjustable='box')
+
+# Add a descriptive title to the plot
 ax.set_title("Moran Scatter Plot: Air Release")
 plt.show()
 ```
@@ -1752,27 +1833,28 @@ plt.show()
 When evaluating Moran's I for single variables we are assessing how clustered like values are, i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is lower and we can the same feature as before in that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution. 
 
 ```{python}
-# Calculate Moran's I for asthma prevalence
+# Calculate Moran's I statistic for spatial autocorrelation in asthma prevalence values
 moran_asthma = esda.Moran(df['asthma'], w)
 
+# Display Moran's I value and p-value to assess the spatial pattern in asthma prevalence
 print("\nMoran's I for Asthma Prevalence:")
 print(f"I: {moran_asthma.I}")
 print(f"p-value: {moran_asthma.p_sim}")
 
-# Create a Moran scatter plot for asthma prevalence
+# Generate a Moran scatter plot to visualize spatial autocorrelation in asthma prevalence data
 fig, ax = plt.subplots(figsize=(7, 7))
 moran_scatterplot(moran_asthma, ax=ax)
-# Get the current limits
+
+# Set plot limits and aspect ratio to ensure a 1:1 scale
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
-# Find the min and max of both axes
 vmin = min(xlim[0], ylim[0])
 vmax = max(xlim[1], ylim[1])
-# Set both axes to the same limits
 ax.set_xlim(vmin, vmax)
 ax.set_ylim(vmin, vmax)
-# Ensure the aspect ratio is 1:1
 ax.set_aspect('equal', adjustable='box')
+
+# Set title for the plot
 ax.set_title("Moran Scatter Plot: Asthma Prevalence")
 plt.show()
 ```
@@ -1780,29 +1862,28 @@ plt.show()
 Asthma prevalence has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.  
 
 ```{python}
-# Calculate bivariate Moran's I
+# Calculate Bivariate Moran's I to examine spatial correlation between air release and asthma prevalence
 moran_bv = esda.Moran_BV(df['air_release'], df['asthma'], w)
 
+# Display Bivariate Moran's I value and p-value to assess significance
 print("\nBivariate Moran's I (Air Release vs Asthma):")
 print(f"I: {moran_bv.I}")
 print(f"p-value: {moran_bv.p_sim}")
 
-# Create a bivariate Moran scatter plot
+# Generate a bivariate Moran scatter plot to visualize spatial correlation between air release and asthma prevalence
 fig, ax = plt.subplots(figsize=(7, 7))
-# make the plot
 moran_scatterplot(moran_bv, ax=ax)
-# Get the current limits
+
+# Set plot limits and aspect ratio for consistent scaling
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
-# Find the min and max of both axes
 vmin = min(xlim[0], ylim[0])
 vmax = max(xlim[1], ylim[1])
-# Set both axes to the same limits
 ax.set_xlim(vmin, vmax)
 ax.set_ylim(vmin, vmax)
-# Ensure the aspect ratio is 1:1
 ax.set_aspect('equal', adjustable='box')
-# Set the title
+
+# Set title for the bivariate Moran scatter plot
 ax.set_title("Bivariate Moran Scatter Plot: Air Release vs Asthma")
 plt.show()
 ```
