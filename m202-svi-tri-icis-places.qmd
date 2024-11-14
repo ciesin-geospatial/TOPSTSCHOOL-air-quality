@@ -1016,7 +1016,7 @@ The SVI dataset is free to users with a NASA  Earth Data account. The Earth Data
 
 If you don’t already have an Earth Data account you can follow these steps to download the SVI dataset on your local computer:
 
-1.  Visit the[NASA Earthdata website](https://urs.earthdata.nasa.gov/). Click on the “Register” button on the top right corner of the page.
+1.  Visit the [NASA Earthdata website](https://urs.earthdata.nasa.gov/). Click on the “Register” button on the top right corner of the page.
 2.  Fill out the registration form with the required information, including your name, email address, and a password. Create a username.
 3.  Verify your email. NASA will send a verification email to the address you provided. Click on the link in this email to confirm your account.
 4.  Once your account is verified, log in to Earth Data using your username and password.
