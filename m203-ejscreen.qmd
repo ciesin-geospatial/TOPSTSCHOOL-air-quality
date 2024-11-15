@@ -1,25 +1,31 @@
 ---
 title: "EJSreen exploratory"
 format: html
-author: "Elain Famutimi"
+author: "Elaine Famutimi"
 ---
 
 ## Overview
 
-In this lesson, you will use....
+In this lesson, we will learn how to use EJScreen, the Environmental Justice Screening and Mapping Tool developed by the Environmental Protection Agency. This tool allows one to map different types of indices with the option of generating reports and side by side comparisons. In this lesson, we will be focusing on Detroit, Michigan and surrounding areas, with a focus on racism and health.
 
 ## Learning Objectives
 
 After completing this lesson, you should be able to:
 
--   Exploring....
+-   Create a polygon of an area of interest.
+-   Generate community reports and explore charts of an area of interest or boundary. 
+-   Create bar graphs comparing separate regions from EJScreen generated graphs on Python.
+-   Interpret and compare different types of indexes. 
+-   Access and add a shapefile to the EJScreen mapper.
+
 
 ## Introduction
 ### What is EJScreen?
-EJScreen, the Environmental Justice Screening and Mapping Tool, was developed by the U.S. Environmental Protection Agency (EPA) to help identify and address environmental justice issues. The tool is designed to provide communities, NGOs, and policymakers with vital data on environmental and demographic factors that affect vulnerable populations. 
+EJScreen, the Environmental Justice Screening and Mapping Tool, was developed by the U.S. Environmental Protection Agency (EPA) to help identify and address environmental justice issues. The tool is designed to provide communities, NGOs, and policymakers with vital data on environmental and demographic factors that affect vulnerable populations.
 
 ### Background on the development of EJScreen
-The concept of environmental justice gained prominence in the 1980s and 1990s when it became clear that certain communities, especially low-income and minority populations, were disproportionately affected by environmental hazards. This concern led to the signing of Executive Order 12898 in 1994, which directed federal agencies, including the EPA, to address environmental justice in minority and low-income populations [https://www.epa.gov/laws-regulations/summary-executive-order-12898-federal-actions-address-environmental-justice]
+The concept of environmental justice gained prominence in the 1980s and 1990s when it became clear that certain communities, especially low-income and minority populations, were disproportionately affected by environmental hazards. This concern led to the signing of Executive Order 12898 in 1994, which directed federal agencies, including the EPA, to address environmental justice in minority and low-income populations [https://www.epa.gov/laws-regulations/summary-executive-order-12898-federal-actions-address-environmental-justice] 
+(Zahra et al., 2009) (USAID, 2024)
 
 ### Importance of EJScreen
 EJScreen is important in empowering communities. Access to EJScreen helps communities understand the specific environmental challenges they face, such as pollution levels or exposure to hazardous substances. By providing this data, the tool empowers residents to advocate for their health, safety, and well-being. According to the EPA, EJScreen allows communities to participate more effectively in public discussions, regulatory processes, and decision-making, backed by concrete data to support their concerns and needs. Environmental justice focuses on ensuring that no group of people, particularly minority and low-income communities, bears a disproportionate share of environmental burdens.[https://www.epa.gov/ejscreen/what-ejscreen]
@@ -29,82 +35,112 @@ By making environmental data accessible to the public, EJScreen also promotes tr
 Environmental issues often require collaborative solutions involving multiple stakeholders, such as government agencies, NGOs, businesses, and community groups. EJScreen provides a common platform for discussing and addressing these challenges, which fosters more effective partnerships and solutions.
 EJScreen’s development reflects the EPA's commitment to enhancing the accessibility of environmental data, promoting transparency, and addressing environmental justice concerns by equipping all stakeholders with the tools needed to assess and respond to environmental health disparities.
 
-## Exploring EJScreen
-Now we are going to explore the EJScreen website.
-Type in “Metro Detroit”, you should get a zoomed in region of the metropolitan region of Detroit.
-(IMAGE)
-
-Boundary: zip code
--Square drawing
-
-Notice the EJScreen Community Report, Explore charts, etc. We can use that to view statistical reports once we overlay the data.
-
-Lets view people of color.
--People of color
-(IMAGE)
-
-We can explore the map, and draw a boundary polygon that we are interested in viewing.
-(IMAGE)
-
-Notice the map contents:
-(IMAGE)
-
--Report
-
--describe everything - left vs right of first page
-
-right
-(IMAGE)
-
-(IMAGE)
-
-(IMAGE)
+Knowledge Check
+What is the importance of EJScreen?
+Helping environmental and social justice organizations support their campaigns
+Providing policymakers with data to create effective regulations
+Empowering residents to advocate for their health and safety
+Providing a common platform for collaborative solutions between multiple stakeholders
+All of the above
 
 
--To show that you can print it
-(IMAGE)
-To show that you can save images (click on logo with 3 rows)
-(IMAGE)
-(IMAGE)
-(IMAGE)
-
-Low life expectancy:
-(IMAGE)
-
-Asthma
-(IMAGE)
-
--Toxic releases to air
-	-Report
--Health disparities
-	-Report
--Add air pollution and toxic release inventory
-(IMAGE)
-(IMAGE)
-
-Lets compare the air pollution with toxics release inventory.
-(IMAGE)
-
-Socioeconomic and air pollution
-(IMAGE)
-Notice the size of the circles, could there be a correlation?
-
-Boundaries
-(IMAGE)
-
-Zip codes
-(IMAGE)
-
-If you go to tools, and click on “side by side comparison” for better comparison between maps. 
-(IMAGE)
-
-School districts data
-[https://www.waynecounty.com/departments/technology/gis-data.aspx](https://www.waynecounty.com/departments/technology/gis-data.aspx)
+## How to use EJScreen?
 
 
-We will now download a shapefile from Wayne County, the most populous county in Michigan [source]. The page has different datasets under the label “GIS Data”, including “Comission Districts”, “Municipal Boundaries”, etc. Please click on the one labeled “Zip Codes”. A zip file will immediately download. Once it is done downloading, unzip the contents into a folder.
+To begin, click on the EJScreen link here: https://www.epa.gov/ejscreen. In that page, along with resources on how to use EJScreen, you will see a blue, bold text labeled “Launch the EJScreen Tool.” You can also go straight to the mapper using this link: https://ejscreen.epa.gov/mapper/.
 
-Next, go to tools, add shapefile, select shapefile
+Once you click the link, you'll be directed to a Welcome screen. Here, you'll find an introduction, resource links, and a video overview of the tool. We recommend exploring these resources before proceeding. After that, close the Welcome dialog to continue.
+
+You can use the search bar to explore a region. For this lesson, we will be focusing on Detroit, Michigan. 
+
+
+
+
+
+
+
+
+
+Type 'Metro Detroit' in the search bar to focus in on the metropolitan region of Detroit. Alternatively, you can use latitude and longitude coordinates. You can also zoom in or out of a region by clicking on the “+” or “-” icons on the bottom right. 
+
+
+We can start exploring maps by noticing the Widget toolbar. Hovering your cursor over each icon will show the name of each tab. From right to left to right, the icons are ‘Maps’, ‘Places’, ‘Reports’, and ‘Tools.’ Clicking each icon will display a dropdown list of indicators to choose from. For now, we will focus on the ‘Maps’ icon.
+
+
+
+
+
+
+Now, click on the Socioeconomic Indicators icon. Clicking that will expose seven types of socioeconomic indicators, and two indexes that can be explored. Click on People of Color, and your mapper should look like this. We will be mapping People of Color compared to the US. One can also compare it to just the state. To better view the map, one can click on the ‘<’ on the Map widget.
+
+
+Notice the ‘Map Contents’ on the upper right. In statistics, a percentile is a score that shows how a particular score compares to other scores in a dataset. For example, people of color in the 95-100 percentile in a block group means that 95-100% of people living in that area are non-white. You can learn more about how EJScreen uses percentiles here https://www.epa.gov/ejscreen/how-interpret-ejscreen-data. 
+
+
+You can hide the Map Contents by clicking on the  sign. Noice the symbols in the Map Contents. To the right of that is the  sign has the layer turned on; clicking on it turns it off. The  allows you to view the metadata. On the opposite side, is an  sign, which allows you to set the transparency of the map. A pop up with a sliding scale will appear when that is clicked. Clicking on removes the layer. Selecting provides a description of the index. Clicking minimizes the Map Contents pane, to expand it one can simply click on it again (this time the arrows will be pointing downwards).
+[info box] Metadata describes a dataset. Providing metadata aligns well with the FAIR (Findability, Accessibility, Interoperability, and Reusability) principle, helping users understand what the data means and how to use it. 
+
+One can generate reports and charts given an area of interest. Go to the ‘Reports’ tab. One option to select an area of interest is by drawing a polygon. Click on ‘Draw an Area’.
+
+
+Your cursor should turn into a crosshair. You can now click on the map and start drawing your polygon. Move your cursor over to where you want the next point of the polygon to be. To form the final polygon, just connect to the first point you made, and the polygon will turn into a transparent green. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+A pop-up will appear where you can name your study area, add a buffer, download reports, and explore charts. Name it 'Detroit Study Area' to proceed.
+
+Clicking on EJScreen Community Report will open up a PDF file with detailed information about the study area. Let us explore this PDF. On the right side, you can find information about other characteristics of the community of interest, such as low income residents, the education level of residents, and the gender breakdown of the community. Right below Community Information is Breakdown By Race, which shows the percent of each race in this area. You will also find the percentage of age brackets, and limited English speaking breakdown.
+
+On the left side of the document, there is be a map showing the study area, including the legend from the Map Contents tab. Centering the map or zooming in or out on the Mapper will result in a different view on the report. This view will also highlight the languages spoken at home. 
+
+Page 2 of the report presents bar graphs comparing EJ indexes at state and national levels. Review these graphs for differences in environmental factors like drinking water non-compliance and wastewater discharge.  Note: Although the graph does not include wastewater discharge, the table below shows values for each index from left to right. 
+
+Let's compare this report to one generated outside of Detroit. Try to pick an area that shows a lower percentile of people of color, or less red, like Sterling Heights or Westland. What differences do you see? Are the EJ indexes higher or lower?
+
+
+One can also view other reports, and download excel data. Lets compare the bar graphs in a red population of Detroit and a region in Sterling Heights. Delete the original polygon and create new ones within those regions.
+
+Click on a polygon and select ‘Explore Charts.’ A pop up will open, showing tabs for Environmental Justice Indexes, Environmental Burden Indicators, Socioeconomic Indicators, and Supplemental Indexes. Placing the cursor over each bar will show the exact percentile for each index. You can also unselect and select indexes of your choosing. For now, let's keep all of them selected. We will also only focus on the USA percentile. Environmental Justice Indexes, Environmental Burden Indicators, and Supplemental Indexes focus on the same environmental indexes. Selecting the Socioeconomic indicators will list different types of indexes focusing on socioeconomic factors.
+
+
+One can also explore the Socioeconomic (ACS) Report, which includes data from the US Census Bureau American Community Survey (ACS). 
+Select Get Data Table, and a tabular view of the data should pop up. This will include all the categories, selected variables, percentile in state and percentile in USA.
+
+
+
+Click on the save  icon to export the data, and an excel file in .csv format will automatically download.
+
+Explore the charts for Sterling Heights. 
+
+Notice the lower percentiles for the EJ Indexes. Is this data in line with what was seen in the generated report? Download the data for this as well. 
+
+Let's perform some basic data analysis!
+
+We can now use this data to create graphs on our own and better visually compare the indexes between separate regions. Let us compare the data for Sterling Heights and the region we selected in the metro area of Detroit. Save the files that were downloaded in a working directory, and rename them so that it makes sense. One file can be named ejscreen_detroit and the other ejscreen_sterlingheights. Open one of the csv files and take note of how the data is formatted. Under the main header that describes the EPA region, there should be 8 columns, each one with its own header (Category, Selected Variables, etc.) The Category column has the category of each index and indicator. The Selected Variables are the indexes for each category.  For the EJ Indexes category, you should see 13 indexes in the Selected Variable column. To work with these files, we will be using the pandas library, which allows us to handle and manipulate excel files as a dataframe. 
+
+
+Import the pandas and matplotlib libraries. Documentation for pandas can be found here https://pandas.pydata.org/docs/, and for matplotlib, here https://matplotlib.org/stable/users/getting_started/
+
+
+
 
 
 Congratulations! .... Now you should be able to:
