@@ -307,6 +307,10 @@ pd.set_option('display.max_colwidth', None)
 
 print(grouped)
 
+# Reset Pandas to default display options
+pd.reset_option("display.max_colwidth")
+
+
 ```
 
 From the table above, we can see how many and which countries are within the WHO AQG, or are within interim stages of air quality improvement. 
@@ -349,6 +353,7 @@ stats_results = calculate_country_stats(selected_countries, grdi_raster, pm25_ra
 Show the head of the table again:
 
 ```{python}
+
 stats_results.head()
 ```
 

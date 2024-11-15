@@ -30,8 +30,10 @@ website:
             url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html
           - text: "Lesson 2: Exploring ICIS-AIR, TRI, SVI, and Health Outcomes"
             url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-tri-icis-places.html
-          - text: "Lesson 3: GRDIv1 and PM.25"
-            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-grdiv1-pm25.html
+          - text: "Lesson 3: EJScreen: Environmental Justice Screening and Mapping Tool"
+            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-ejscreen.html
+          - text: "Lesson 4: Measuring Particulate Matter in countires and socioeconomic strata"
+            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m204-grdiv1-pm25.html
          
     tools:
       - icon: github
