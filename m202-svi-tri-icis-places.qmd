@@ -1,5 +1,5 @@
 ---
-title: "Exploring SVI, TRI, and Health Outcomes in Metro Detroit"
+title: "Exploring Air Quality, Social Vulnerability, and Health Outcomes in Metro Detroit"
 author: "Joshua Brinks"
 date: "September 4, 2024"
 df-print: paged
@@ -7,7 +7,8 @@ code-block-bg: true
 code-block-border-left: "#315c86"
 format: 
     html
-keep-ipynb: true
+keep-ipynb: True
+bibliography: svi-references.bib
 ---
 
 ## Overview
@@ -19,6 +20,7 @@ In this lesson, we will introduce you to 3 public health and air quality dataset
 
 This lesson uses the Python programming environment.
 :::
+
 ::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### Data Science Review
@@ -26,6 +28,7 @@ This lesson uses the Python programming environment.
 An Application Programming Interface (API) is a set of protocols, tools, and definitions that enable different software applications to communicate with each other. It acts as an intermediary, allowing one application to request specific data or actions from another application or service without needing access to its entire codebase. APIs define the methods and data formats that applications can use to request and exchange information, typically through specific *endpoints* (URLs) that accept requests and return responses in standardized formats like JSON. They are crucial for integrating external services, accessing databases, and enabling communication between different parts of larger open science software systems.
 :::
 :::
+
 ## Learning Objectives
 
 After completing this lesson, you should be able to:
@@ -39,21 +42,21 @@ After completing this lesson, you should be able to:
 -   Perform raster math to create specialized indexes.
 -   Perform spatial correlation analysis.
 
-::: {.callout-warning}
+::: callout-warning
 ## Preface: A Note on Data Interpretation and Ethical Considerations
 
 This lesson is designed to introduce you to various environmental, public health, and socioeconomic datasets, and to provide you with the tools to analyze and visualize this information; however, it is crucial to approach this material with an understanding of its sensitive nature and potential implications.
 
 The topics of environmental justice, institutional racism, socioeconomic conditions, and pollution are complex and multifaceted. The data and analyses presented in this lesson are not intended to draw definitive conclusions or suggest scientific evidence of cause and effect relationships. Rather, they are meant to equip you with the skills to investigate data and perform analyses that could be applied to your local communities.
 
-As you work through this lesson, remember that correlation does not imply causation. The patterns you may observe in the data could be influenced by factors not represented in  these datasets. Approach your findings with caution, and consider the broader historical, social, and economic contexts that shape environmental and health outcomes in different communities.
+As you work through this lesson, remember that correlation does not imply [causation](https://www.coursera.org/articles/correlation-vs-causation). The patterns you may observe in the data could be influenced by factors not represented in these datasets. Approach your findings with caution, and consider the broader historical, social, and economic contexts that shape environmental and health outcomes in different communities.
 
 This lesson will empower you with data literacy and analytical skills. We encourage you to use these tools and skills responsibly. Consider the ethical implications of your analyses and the potential impact on the communities represented in the data. When drawing insights or making decisions based on such analyses, it’s crucial to involve community stakeholders, consider multiple perspectives, and seek additional expertise when necessary.
 :::
 
 ## Introduction
 
-In many urban areas, air quality issues disproportionately affect low-income communities and communities of color. This disparity is a key focus of environmental justice efforts. In cities like Detroit, Chicago, and Cleveland industrial facilities, highways, and other pollution sources are often concentrated in disadvantaged neighborhoods. Detroit has a history of industrial pollution and is working to address air quality issues in areas like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic. Similarly, Chicago has seen community efforts to address air pollution in areas like the Southeast Side, where residents have fought against polluting industries and advocated for stricter regulations.
+In many urban areas, air quality issues disproportionately affect low-income communities and communities of color [@tessum2021]. This disparity is a key focus of environmental justice efforts. In cities like Detroit, Chicago, and Cleveland industrial facilities, highways, and other pollution sources are often concentrated in disadvantaged neighborhoods. Detroit has a history of industrial pollution and is working to address air quality issues in areas like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic. Similarly, Chicago has seen community efforts to address air pollution in areas like the Southeast Side, where residents have fought against polluting industries and advocated for stricter regulations.
 
 The EPA is the primary federal agency responsible for environmental protection in the United States. It sets and enforces air quality standards, including the National Ambient Air Quality Standards (NAAQS) for six criteria pollutants. The EPA also maintains the AirNow system, which provides real-time air quality data to the public. While primarily focused on public health, the CDC plays a crucial role in understanding the health impacts of air pollution. It conducts research on the relationships between air quality and various health outcomes, and provides guidance on protecting public health from environmental hazards.
 
@@ -82,8 +85,7 @@ The Clear the Air Coalition, a new environmental justice advocacy group in Michi
 
 [![Clear the Air Coalition](https://npr.brightspotcdn.com/dims4/default/42a4f01/2147483647/strip/true/crop/960x720+0+0/resize/1760x1320!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F78%2F01%2F1711cf6e442dbe579d452c0fc6f6%2Fclearair.jpg)](https://www.michiganpublic.org/environment-climate-change/2024-05-02/new-environmental-justice-coalition-aims-to-change-state-law-pressure-egle)
 
-The Michigan Department of Environment, Great Lakes, and Energy (EGLE) emphasizes its commitment to protecting underserved communities and notes improvements in air quality over recent decades, but Coalition members argue that the current approach is insufficient. They call for regulators to consider the combined effects of multiple pollution sources in marginalized areas and to give local governments more power to reject new polluting facilities in already burdened communities. 
-
+The Michigan Department of Environment, Great Lakes, and Energy (EGLE) emphasizes its commitment to protecting underserved communities and notes improvements in air quality over recent decades, but Coalition members argue that the current approach is insufficient. They call for regulators to consider the combined effects of multiple pollution sources in marginalized areas and to give local governments more power to reject new polluting facilities in already burdened communities.
 :::
 
 The Michigan EGLE and the Office of the Environmental Justice Public Advocate are two of the more active state departments aiming to address issues of the environment, public health, and social justice. Here are some of the projects enacted in greater Detroit area:
@@ -111,22 +113,22 @@ We'll begin with the ICIS-AIR dataset, then move on to the TRI Facility dataset,
 
 This lesson uses the following Python modules:
 
-- [`pandas`](https://pandas.pydata.org/): Essential for data manipulation and analysis.
-- [`geopandas`](https://geopandas.org/): Extends pandas functionality to handle geospatial data.
-- [`matplotlib`](https://matplotlib.org/): Used for creating static, animated, and interactive visualizations.
-- [`numpy`](https://numpy.org/): Provides support for large, multi-dimensional arrays and matrices, along with mathematical functions to operate on these arrays.
-- [`requests`](https://docs.python-requests.org/en/latest/): Allows you to send HTTP requests and interact with APIs easily.
-- [`contextily`](https://contextily.readthedocs.io/en/latest/): Adds basemaps to your plots, enhancing the visual context of your geospatial data.
-- [`pygris`](https://pygris.readthedocs.io/en/latest/): Simplifies the process of working with US Census Bureau TIGER/Line shapefiles.
-- [`rasterio`](https://rasterio.readthedocs.io/en/latest/): Reads and writes geospatial raster datasets.
-- [`xarray`](https://xarray.pydata.org/): Introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
-- [`shapely`](https://shapely.readthedocs.io/en/latest/): Manipulation and analysis of geometric objects in the Cartesian plane.
-- [`scipy`](https://www.scipy.org/): Used for scientific and technical computing, particularly the `stats` and `interpolate` submodules.
-- [`rioxarray`](https://corteva.github.io/rioxarray/stable/): Extends xarray to make it easier to handle geospatial raster data.
-- [`time`](https://docs.python.org/3/library/time.html): Provides various time-related functions (part of Python's standard library).
-- [`tabulate`](https://pypi.org/project/tabulate/): Used for creating nicely formatted tables in various output formats.
-- [`pysal`](https://pysal.org/): A library of spatial analysis functions.
-- [`splot`](https://splot.readthedocs.io/en/latest/): Provides statistical plots for spatial analysis.
+-   [`pandas`](https://pandas.pydata.org/): Essential for data manipulation and analysis.
+-   [`geopandas`](https://geopandas.org/): Extends pandas functionality to handle geospatial data.
+-   [`matplotlib`](https://matplotlib.org/): Used for creating static, animated, and interactive visualizations.
+-   [`numpy`](https://numpy.org/): Provides support for large, multi-dimensional arrays and matrices, along with mathematical functions to operate on these arrays.
+-   [`requests`](https://docs.python-requests.org/en/latest/): Allows you to send HTTP requests and interact with APIs easily.
+-   [`contextily`](https://contextily.readthedocs.io/en/latest/): Adds basemaps to your plots, enhancing the visual context of your geospatial data.
+-   [`pygris`](https://pygris.readthedocs.io/en/latest/): Simplifies the process of working with US Census Bureau TIGER/Line shapefiles.
+-   [`rasterio`](https://rasterio.readthedocs.io/en/latest/): Reads and writes geospatial raster datasets.
+-   [`xarray`](https://xarray.pydata.org/): Introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
+-   [`shapely`](https://shapely.readthedocs.io/en/latest/): Manipulation and analysis of geometric objects in the Cartesian plane.
+-   [`scipy`](https://www.scipy.org/): Used for scientific and technical computing, particularly the `stats` and `interpolate` submodules.
+-   [`rioxarray`](https://corteva.github.io/rioxarray/stable/): Extends xarray to make it easier to handle geospatial raster data.
+-   [`time`](https://docs.python.org/3/library/time.html): Provides various time-related functions (part of Python's standard library).
+-   [`tabulate`](https://pypi.org/project/tabulate/): Used for creating nicely formatted tables in various output formats.
+-   [`pysal`](https://pysal.org/): A library of spatial analysis functions.
+-   [`splot`](https://splot.readthedocs.io/en/latest/): Provides statistical plots for spatial analysis.
 
 If you'd like to learn more about the functions used in this lesson, you can refer to the documentation on their respective websites.
 
@@ -258,8 +260,6 @@ params = {
 }
 ```
 
-
-
 Now we define 2 functions that will carry out the first 2 steps; 1) identifying the facilities in our search and 2) retrieve the facility data.
 
 ```{python}
@@ -334,28 +334,27 @@ There are over three thousand facilities in the ICIS-AIR Michigan dataset. Here 
 
 #### Key Columns in the ICIS-AIR ECHO API Dataset
 
-| **Key Column**        | **Description**                                                                                   |
-|-----------------------|---------------------------------------------------------------------------------------------------|
-| AIRName               | The name of the facility                                                                          |
-| SourceID              | A unique identifier for the air pollution source                                                  |
-| AIRStreet, AIRCity, AIRState, AIRZip | Address components of the facility                                                 |
-| RegistryID            | A unique identifier for the facility in the EPA’s registry                                        |
-| AIRCounty             | The county where the facility is located                                                          |
-| AIREPARegion          | The EPA region responsible for the facility                                                       |
-| AIRNAICS              | North American Industry Classification System code(s) for the facility                            |
-| FacLat, FacLong       | Latitude and longitude coordinates of the facility                                                |
-| AIRPrograms           | Air quality programs applicable to the facility                                                   |
-| AIRStatus             | Current operational status of the facility                                                        |
-| AIRUniverse           | Categorization of the facility within air quality regulation                                      |
-| AIRComplStatus        | Current compliance status under the Clean Air Act                                                 |
-| AIRHpvStatus          | High Priority Violator status                                                                     |
-| AIRQtrsWithViol       | Number of quarters with violations                                                                |
-| AIRLastViolDate       | Date of the most recent violation                                                                 |
-| AIREvalCnt            | Count of evaluations conducted                                                                    |
-| AIRLastEvalDate       | Date of the most recent evaluation                                                                |
-| AIRFceCnt             | Count of Full Compliance Evaluations                                                              |
-| AIRLastFceDate        | Date of the last Full Compliance Evaluation                                                       |
-
+| **Key Column**                       | **Description**                                                        |
+|--------------------------------------|------------------------------------------------------------------------|
+| AIRName                              | The name of the facility                                               |
+| SourceID                             | A unique identifier for the air pollution source                       |
+| AIRStreet, AIRCity, AIRState, AIRZip | Address components of the facility                                     |
+| RegistryID                           | A unique identifier for the facility in the EPA’s registry             |
+| AIRCounty                            | The county where the facility is located                               |
+| AIREPARegion                         | The EPA region responsible for the facility                            |
+| AIRNAICS                             | North American Industry Classification System code(s) for the facility |
+| FacLat, FacLong                      | Latitude and longitude coordinates of the facility                     |
+| AIRPrograms                          | Air quality programs applicable to the facility                        |
+| AIRStatus                            | Current operational status of the facility                             |
+| AIRUniverse                          | Categorization of the facility within air quality regulation           |
+| AIRComplStatus                       | Current compliance status under the Clean Air Act                      |
+| AIRHpvStatus                         | High Priority Violator status                                          |
+| AIRQtrsWithViol                      | Number of quarters with violations                                     |
+| AIRLastViolDate                      | Date of the most recent violation                                      |
+| AIREvalCnt                           | Count of evaluations conducted                                         |
+| AIRLastEvalDate                      | Date of the most recent evaluation                                     |
+| AIRFceCnt                            | Count of Full Compliance Evaluations                                   |
+| AIRLastFceDate                       | Date of the last Full Compliance Evaluation                            |
 
 These columns provide information about each facility's location, operational characteristics, compliance history, and regulatory oversight under the Clean Air Act. It includes information on violations, evaluations, and compliance status that assess a facility's environmental performance and regulatory compliance.
 
@@ -525,15 +524,15 @@ ICIS-AIR is a powerful tool for communities and policy-makers to identify regula
 
 Next, we’ll take a look at facilities required to report to the Toxic Release Inventory (TRI).
 
-
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
+
 Which of the following best describes the ICIS-AIR database?
 
-a) A database of air quality measurements from monitoring stations
-b) A comprehensive database of air quality compliance and enforcement data
-c) A public health database tracking respiratory illnesses
-d) A database of weather patterns affecting air quality
+a)  A database of air quality measurements from monitoring stations
+b)  A comprehensive database of air quality compliance and enforcement data
+c)  A public health database tracking respiratory illnesses
+d)  A database of weather patterns affecting air quality
 :::
 
 ### Toxic Release Inventory
@@ -658,7 +657,7 @@ print(f"Number of facilities fetched: {len(tri_df)}")
 # tri_df.head()
 ```
 
-Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have coordinate  values.
+Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have coordinate values.
 
 We'll check and remove those without.
 
@@ -676,7 +675,7 @@ tri_df_clean['pref_latitude'] = pd.to_numeric(tri_df_clean['pref_latitude'], err
 tri_df_clean['pref_longitude'] = pd.to_numeric(tri_df_clean['pref_longitude'], errors='coerce')
 ```
 
-Ouch! We lost roughly 300 records due to missing coordinate information (789 vs. 478). If this were an important analysis for policy-making or scientific research we would take the time to geocode the listed addresses into latitude/longitude coordinates, but for the purposes of this exercise we’ll move on.
+Ouch! We lost roughly 300 records due to missing coordinate information (789 vs. 478). If this were an important analysis for policy-making or scientific research we would take the time to [geocode](https://www.mapbox.com/insights/geocoding) the listed addresses into latitude/longitude coordinates, but for the purposes of this exercise we’ll move on.
 
 In my personal investigations of this data, I noticed that some longitude coordinates were not negative, but had an absolute value (e.g. 83.25) that made sense for the Detroit metro area, therefore we will flip the sign on these records.
 
@@ -775,16 +774,17 @@ TRI is made up of numerous tables containing a wealth of information regarding t
 
 Navigating the TRI Envirofacts interface can be overwhelming at times. Multiple tables can be queried with a single URL, however, for a proper join to be carried out both tables must contain at least one column in common. In most cases this can be accomplished using TRI_FACILITY_ID. That said, air pollution release data (column name [AIR_TOTAL_RELEASE](https://enviro.epa.gov/enviro/ef_metadata_html.tri_page?p_column_name=air_total_release)) is only found in the [TRI_FORM_R](https://enviro.epa.gov/enviro/ef_metadata_html.ef_metadata_table?p_table_name=TRI_FORM_R&p_topic=TRI) table, which does not contain the FACILITY_ID column.
 
-You can querry the V_TRI_FORM_R_EZ using the API even though it's not a documented table listed in the API website. This form contains facility information and AIR_TOTAL_RELEASE reporting, but it only goes until 2021. To get the most recent data (2023) you would have to manually download the individual tables with separate calls perform the joins, or use the [custom form search web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). We'll demonstrate a quick API call for the V_TRI_FORM_R_EZ, but move forward with the most recent data available in the custom form search web portal.
+You can querry the V_TRI_FORM_R\_EZ using the API even though it's not a documented table listed in the API website. This form contains facility information and AIR_TOTAL_RELEASE reporting, but it only goes until 2021. To get the most recent data (2023) you would have to manually download the individual tables with separate calls perform the joins, or use the [custom form search web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). We'll demonstrate a quick API call for the V_TRI_FORM_R\_EZ, but move forward with the most recent data available in the custom form search web portal.
 
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
+
 What is the primary purpose of the Toxic Release Inventory (TRI)?
 
-a) To track emissions of greenhouse gases
-b) To monitor compliance with the Clean Air Act
-c) To provide data on toxic chemical releases from industrial facilities
-d) To record air quality index values for major cities
+a)  To track emissions of greenhouse gases
+b)  To monitor compliance with the Clean Air Act
+c)  To provide data on toxic chemical releases from industrial facilities
+d)  To record air quality index values for major cities
 :::
 
 ### Toxic Release Inventory: Form R
@@ -802,7 +802,7 @@ url = "https://data.epa.gov/efservice/V_TRI_FORM_R_EZ/REPORTING_YEAR/2021/AIR_TO
 ```
 
 -   Base url: https://data.epa.gov/efservice/
--   The table we're requesting: V_TRI_FORM_R_EZ/
+-   The table we're requesting: V_TRI_FORM_R\_EZ/
 -   For just 2021: REPORTING_YEAR/2021/
 -   Only facilities that report some air release: AIR_TOTAL_RELEASE/\>/0/
 -   Just Michigan: STATE_ABBR/MI/
@@ -835,7 +835,6 @@ tri_form_r = tri_form_r[keeps]
 ```
 
 This works well but we can get more recent data that is already filtered using the [web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). The user selects location, years of interest, and columns of interests. The portal serves up your requested dataset in an Amazon S3 cloud storage. We can import the dataset directly from the address they provide.
-
 
 ```{python}
 # Read a secondary TRI Form R CSV file directly from the URL
@@ -900,7 +899,7 @@ gdf_tri_form_r = gpd.GeoDataFrame(
 )
 ```
 
-Let’s check the distribution of the air release data for outliers. 
+Let’s check the distribution of the air release data for outliers.
 
 ```{python}
 
@@ -998,10 +997,10 @@ The point source air release data provides a good snapshot of the locations and 
 
 What key information does Form R of the Toxic Release Inventory provide?
 
-a) Facility names and locations only
-b) Chemical storage capacities of facilities
-c) Detailed data on chemical releases, including air releases
-d) Employee health records related to chemical exposure
+a)  Facility names and locations only
+b)  Chemical storage capacities of facilities
+c)  Detailed data on chemical releases, including air releases
+d)  Employee health records related to chemical exposure
 :::
 
 ### Social Vulnerability Index
@@ -1012,7 +1011,7 @@ The raster format allows for more detailed spatial analysis and integration with
 
 SEDAC, as part of NASA’s Earth Observing System Data and Information System (EOSDIS), hosts this dataset along with other socioeconomic and environmental data, facilitating interdisciplinary research on human-environment interactions. The SVI raster dataset’s high resolution and comprehensive coverage make it a powerful tool for assessing environmental equity and informing policy decisions at various geographic scales.
 
-The SVI dataset is free to users with a NASA  Earth Data account. The Earth Data account is free and gives you access to all SEDAC data as well as a wide range of NASA Earth science data. It’s a valuable resource for researchers, students, and anyone interested in environmental and socioeconomic data.
+The SVI dataset is free to users with a NASA Earth Data account. The Earth Data account is free and gives you access to all SEDAC data as well as a wide range of NASA Earth science data. It’s a valuable resource for researchers, students, and anyone interested in environmental and socioeconomic data.
 
 If you don’t already have an Earth Data account you can follow these steps to download the SVI dataset on your local computer:
 
@@ -1020,7 +1019,7 @@ If you don’t already have an Earth Data account you can follow these steps to 
 2.  Fill out the registration form with the required information, including your name, email address, and a password. Create a username.
 3.  Verify your email. NASA will send a verification email to the address you provided. Click on the link in this email to confirm your account.
 4.  Once your account is verified, log in to Earth Data using your username and password.
-5.  Visit the [SEDAC](https://sedac.ciesin.columbia.edu/) website and search for the U.S. Social Vulnerability Index Grids, v1.01 dataset by entering “SVI” in the search bar. 
+5.  Visit the [SEDAC](https://sedac.ciesin.columbia.edu/) website and search for the U.S. Social Vulnerability Index Grids, v1.01 dataset by entering “SVI” in the search bar.
 6.  Download the 2020 WGS84 SVI grids; enter your Earth Data credentials to log in when prompted.
 
 #### Data Processing
@@ -1140,10 +1139,10 @@ This provides an excellent look at demographic trends in the Detroit metro area.
 
 What does the Social Vulnerability Index (SVI) primarily measure?
 
-a) Air pollution levels in different communities
-b) Economic growth rates of different regions
-c) Communities' capacity to prepare for and respond to hazards
-d) Population density in urban areas
+a)  Air pollution levels in different communities
+b)  Economic growth rates of different regions
+c)  Communities' capacity to prepare for and respond to hazards
+d)  Population density in urban areas
 :::
 
 ### Integrating TRI and SVI
@@ -1153,7 +1152,6 @@ There are numerous ways to assess the relationships between the SVI and TRI data
 To begin we need to rasterize the air release point data. We will create an empty raster grid and “fill” the cells with the sum of the air release values from any points that are overlapped by the cells.
 
 Start by getting the bounds from our boundary object, specify the desired resolution, and set up the transform.
-
 
 ```{python}
 from rasterio.transform import from_origin
@@ -1432,10 +1430,10 @@ As the input layers suggest, the most vulnerable and polluted areas are along th
 
 What was the main purpose of combining the TRI and SVI data in this analysis?
 
-a) To calculate total pollution levels for each county
-b) To identify areas with both high air releases and high social vulnerability
-c) To determine the most populous areas in Detroit
-d) To predict future industrial development zones
+a)  To calculate total pollution levels for each county
+b)  To identify areas with both high air releases and high social vulnerability
+c)  To determine the most populous areas in Detroit
+d)  To predict future industrial development zones
 :::
 
 ### CDC PLACES
@@ -1550,7 +1548,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-If you hadn't already noticed while inspecting the object we returned from the API, the census tract data are actually centroid points--not census tract boundaries. 
+If you hadn't already noticed while inspecting the object we returned from the API, the census tract data are actually centroid points--not census tract boundaries.
 
 We created a choropleth map showing asthma prevalence across the Detroit metro area. With the `YlOrRd` colormap darker red indicates higher asthma prevalence.
 
@@ -1570,7 +1568,7 @@ print(gdf_asthma['countyname'].value_counts())
 
 Wow. Some census tracts along the river front and central downtown area have adult asthma prevalence of nearly 20%! I’m not an epidemiologist, but that seems extremely high; especially when you compare to the outer suburbs and more affluent areas in the Royal Oak-Ferndale area. However, in light of our exploration of TRI and ICIS-AIR data it might not be surprising to see elevated asthma rates in these areas.
 
-Given that we've mostly been working with and creating raster data in the previous sections, it might be easier to draw systematic comparisons between pollution and health outcomes if the CDC data is also in a raster format. 
+Given that we've mostly been working with and creating raster data in the previous sections, it might be easier to draw systematic comparisons between pollution and health outcomes if the CDC data is also in a raster format.
 
 #### Interpolate a Surface w/ IDW
 
@@ -1599,6 +1597,7 @@ X, Y, Z = X[mask], Y[mask], Z[mask]
 ::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### Data Science Review
+
 Inverse Distance Weighting (IDW) is a spatial interpolation method used to estimate values at unknown locations based on known values at nearby points. The fundamental principle of IDW is that points closer to the location being estimated have more influence than those farther away. IDW calculates the estimated value as a weighted average of nearby known values, with weights inversely proportional to the distance between the known point and the estimation location. IDW is popular in geographic information systems (GIS) and environmental sciences due to its simplicity and effectiveness in creating continuous surfaces from point data, such as elevation, temperature, or pollution levels. While IDW has advantages like preserving local variation and working well with evenly distributed points, it also has limitations; including potential "bull's-eye" patterns around data points, inability to account for spatial trends or barriers, and sensitivity to outliers and clustering of input points.
 :::
 :::
@@ -1621,7 +1620,7 @@ grid_y = np.arange(y_min, y_max, grid_resolution)
 grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
 ```
 
-Now we're ready to interpolate the surface. 
+Now we're ready to interpolate the surface.
 
 ```{python}
 # Perform interpolation using Inverse Distance Weighting (IDW)
@@ -1780,6 +1779,7 @@ df = gpd.GeoDataFrame(
 ::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### Statistics Review
+
 A p-value, or probability value, is a statistical concept used to determine the significance of results in hypothesis testing. It represents the probability of obtaining results at least as extreme as the observed results, assuming that the null hypothesis is true. In simpler terms, it measures the strength of evidence against the null hypothesis. P-values range from 0 to 1, with lower values indicating stronger evidence against the null hypothesis. Typically, a p-value below a predetermined threshold (often 0.05) is considered statistically significant, suggesting that the observed results are unlikely to have occurred by chance alone. However, it's important to note that while p-values can indicate the strength of evidence against the null hypothesis, they do not prove or disprove hypotheses, nor do they measure the size or importance of an effect. They should be interpreted in conjunction with other factors such as effect size, sample size, and practical significance.
 :::
 :::
@@ -1830,7 +1830,7 @@ ax.set_title("Moran Scatter Plot: Air Release")
 plt.show()
 ```
 
-When evaluating Moran's I for single variables we are assessing how clustered like values are, i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is lower and we can the same feature as before in that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution. 
+When evaluating Moran's I for single variables we are assessing how clustered like values are, i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is lower and we can the same feature as before in that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution.
 
 ```{python}
 # Calculate Moran's I statistic for spatial autocorrelation in asthma prevalence values
@@ -1859,7 +1859,7 @@ ax.set_title("Moran Scatter Plot: Asthma Prevalence")
 plt.show()
 ```
 
-Asthma prevalence has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.  
+Asthma prevalence has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.
 
 ```{python}
 # Calculate Bivariate Moran's I to examine spatial correlation between air release and asthma prevalence
@@ -1890,23 +1890,24 @@ plt.show()
 
 Similar to the Pearson analysis, when we analyze their combined spatial dependence the relationship is not as strong; largely due to the high levels of 0 air release values. That said, the relationship is positive and it is statistically significant (p-value 0.001).
 
-This could be due to several factors that went unaccounted for in our simple analysis. 
+This could be due to several factors that went unaccounted for in our simple analysis.
 
-- Our choice of size/resolution when creating our summed air release raster.
-- The impacts of TRI air releases could be much more widespread than the 5km resolution we specified.
-- We only analyze TRI regulated facilities and their emissions; we do not have data from unregulated facilities
-- We did not account for traffic density or other sources of particulate matter emissions.
-- We did not control for socioeconomic status, preventative healthcare access, and a whole host of other confounding variables.
-- There is no underlying relationship. This is unlikely, based on large amounts of peer reviewed literature, but a possibility nonetheless.
+-   Our choice of size/resolution when creating our summed air release raster.
+-   The impacts of TRI air releases could be much more widespread than the 5km resolution we specified.
+-   We only analyze TRI regulated facilities and their emissions; we do not have data from unregulated facilities
+-   We did not account for traffic density or other sources of particulate matter emissions.
+-   We did not control for socioeconomic status, preventative healthcare access, and a whole host of other confounding variables.
+-   There is no underlying relationship. This is unlikely, based on large amounts of peer reviewed literature, but a possibility nonetheless.
 
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
+
 What type of data does the CDC PLACES dataset provide?
 
-a) Real-time air quality measurements
-b) Estimates of various health indicators at local levels
-c) Hospital admission rates for air pollution-related illnesses
-d) Locations of healthcare facilities in each county
+a)  Real-time air quality measurements
+b)  Estimates of various health indicators at local levels
+c)  Hospital admission rates for air pollution-related illnesses
+d)  Locations of healthcare facilities in each county
 :::
 
 ## Conclusion
@@ -1917,17 +1918,17 @@ This lesson provided a comprehensive exploration of four environmental and publi
 
 Congratulations! In this lesson you:
 
-- Accessed and processed data from multiple EPA and CDC APIs, including ICIS-AIR, TRI, and PLACES datasets
-- Created and manipulated geospatial objects using libraries such as **GeoPandas** and **rasterio**
-- Visualized point data on maps using **Matplotlib** and **Contextily**
-- Performed data cleaning and preprocessing, including handling missing coordinates and outliers
-- Created choropleth maps to visualize health outcomes data at the census tract level
-- Utilized Inverse Distance Weighting (IDW) interpolation to create continuous surfaces from point data
-- Integrated multiple datasets to create a composite index (Air Release Vulnerability Index)
-- Analyzed spatial patterns of air pollution, social vulnerability, and health outcomes
-- Applied raster math and resampling techniques to align and compare different spatial datasets
-- Interpreted results in the context of environmental justice and public health concerns
-- Performed Pearson and Moran’s I correlation analyses
+-   Accessed and processed data from multiple EPA and CDC APIs, including ICIS-AIR, TRI, and PLACES datasets
+-   Created and manipulated geospatial objects using libraries such as **GeoPandas** and **rasterio**
+-   Visualized point data on maps using **Matplotlib** and **Contextily**
+-   Performed data cleaning and preprocessing, including handling missing coordinates and outliers
+-   Created choropleth maps to visualize health outcomes data at the census tract level
+-   Utilized Inverse Distance Weighting (IDW) interpolation to create continuous surfaces from point data
+-   Integrated multiple datasets to create a composite index (Air Release Vulnerability Index)
+-   Analyzed spatial patterns of air pollution, social vulnerability, and health outcomes
+-   Applied raster math and resampling techniques to align and compare different spatial datasets
+-   Interpreted results in the context of environmental justice and public health concerns
+-   Performed Pearson and Moran’s I correlation analyses
 
 ## Lesson 3
 
