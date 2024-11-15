@@ -140,15 +140,134 @@ We can now use this data to create graphs on our own and better visually compare
 Import the pandas and matplotlib libraries. Documentation for pandas can be found here https://pandas.pydata.org/docs/, and for matplotlib, here https://matplotlib.org/stable/users/getting_started/
 
 
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+```
+
+In order to use the data that you just downloaded as a CSV file, you have to tell the computer to read the CSV. The pandas read_csv() function reads CSV files. You can specify if the data has a header by adding header = 1, otherwise it treats the column names as part of the data. By specifying the header, it is extracting the column names we noticed in the CSV file and treating them as the header. Reading these files will now turn the csv files into a dataframe. 
+
+```{python}
+df_detroit = pd.read_csv(r'C:\Users\efamutim\Downloads\ejscreen\ejscreen_detroit.csv', header = 1)
+```
+
+Printing out the shape of the dataframe lets one see the number of rows and columns the data has. It is important to know the dimensions of your data before performing any analysis on it, to ensure that you will be correctly manipulating the data. You can also print just the dataframe variable for Sterling Heights and/or Detroit. The output looks like the contents in the CSV file. 
+
+```{python}
+print(df_detroit.shape)
+
+#Read in Sterling Heights csv file.
+df_sterlingheights = pd.read_csv(r'C:\Users\efamutim\Downloads\ejscreen\ejscreen_sterlingheights.csv', header = 1)
+
+#Print the dataframe to examine the contents.
+print(df_sterlingheights)
+```
+
+We are going to merge the dataframes using the pandas merge() function. The merge function combines dataframes using a chosen parameter. For this case, we will be merging using the ‘#’, ‘Category’, and ‘Selected Variables’ column. The ‘on’ parameter chooses which column both dataframes will join on; the columns must be found in both dataframes. Since the ‘#’, ‘Category’, and ‘Selected Variables’ columns are the same in both dataframes, we will merge on those columns, meaning that the final dataframe will only have one of each of those columns. The rest of the columns will double, and the numbers of rows will remain the same. The ‘suffixes’ parameter allows you to add a suffix to the columns to help identify which column belongs to which dataset. Since the ‘Value’, ‘State Avg.’, %ile in State, USA Avg., and %ile in USA differ between the two datasets, those column headers will carry the suffixes.
 
 
+```{python}
+#Suffix ‘_dt’ for Detroit; ‘_sh’ for Sterling Heights.
+df_merge = pd.merge(df_detroit, df_sterlingheights, on = ('#', 'Category', 'Selected Variables'), suffixes = ('_dt', '_sh'))
+print(df_merge)
+```
+Extract the 'EJ Index' rows from the ‘Category’ columns, the corresponding '%ile in State' values and the ‘Selected Variables’ for the Detroit and Sterling Heights.
+
+```{python}
+#Extracting only the rows that have ‘EJ Index’ as the category from the merged dataframe, and turning it into a new dataframe called ‘ej_index_df’ that only has that category. The rest of the variables will be extracted from this dataframe.
+ej_index_df = df_merge[(df_merge['Category'] == 'EJ Index')]
+
+#Extracting the '%ile in State' for Detroit and Sterling Heights.
+ej_index_detroit = ej_index_df['%ile in State_dt']
+ej_index_sterlingheights = ej_index_df['%ile in State_sh']
+
+#Extracting the ‘Selected Variables.’
+selected_variables = ej_index_df['Selected Variables']
+```
+
+Notice how each of the indexes in the selected variables dataframe starts with ‘EJ Index for’ before the name of the index. When we plot this, the x axis will have the label of ‘EJ Index’, so having it before each index seems redundant. We can remove the first three words by using the .split() function. We will create a function that removes the first three words of each of the indexes in the selected_variables dataframe, and then returns the remaining words. Each selected variable is a string, which in this case, is a sequence of words. The .split() function, without specifying any parameters, splits the string into individual words. The .join() function then combines the separate words back into a string.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+A function is a unit of code that performs a specific task. Its main advantage is that it can be reused, making code more efficient. def() is the keyword used to define the function, and is placed before the name of the function. What goes in the parentheses is the optional parameters, which are the input values. Sometimes, a function ends with ‘return’, which outputs a specific value from the function. 
+:::
+
+```{python}
+def remove_first_three_words(text):
+	#Splitting the string in between spaces.
+	words = text.split()
+	#Returning a new string that excludes the first three words.
+	return ' '.join(words[3:])
+
+#Applying the function to the selected_variables dataframe.
+selected_variables = selected_variables.apply(remove_first_three_words)
+```
+A bar graph can now be created using the information that was extracted. The ‘index’ variable is storing a sequence of indices from 0 to the length of selected_variables minus 1. The len() function calculates the size of the selected_variables dataframe, which is 13 since there are 13 indexes. The range() function then creates a sequence of numbers starting from 0 to minus 1 of the length of selected variables.
+```{python}
+#Configuring size of bar graph.
+plt.figure(figsize=(12, 8))
+bar_width = 0.35
+
+#Creating sequence of numbers from 0 to 12 for plotting the 13 indexes as labels.
+index = range(len(selected_variables))
+```
+plt.bar(index, ej_index_detroit, bar_width, label='Detroit') plots a series of bars at the x-positions specified by index and sets the height according to the ej_index_detroit values, with each bar having a width defined by the bar_width variable.
+The second line, plt.bar([i + bar_width for i in index], ej_index_sterlingheights, bar_width, label='Sterling Heights'), plots another series of bars that are shifted to the right by bar_width per each index value to position them next to the Detroit bars. Using only ‘index’ without the adjustment overlaps the bars instead. A similar thing is done to plot the x ticks in the plt.xticks([i + bar_width/2 for i in index], selected_variables, rotation=45, ha='right') line, where selected_variables is used as the labels at a 45 degree angle, and ensures that the ticks and labels are positioned between the Detroit and Sterling Heights bars.
+
+```{python}
+plt.bar(index, ej_index_detroit, bar_width, label='Detroit')
+
+plt.bar([i + bar_width for i in index], ej_index_sterlingheights, bar_width, label='Sterling Heights')
+
+#Labeling the x-axis and y-axis.
+plt.xlabel('EJ Index')
+plt.ylabel('%ile in State')
+plt.title('Comparison of EJ Index (%ile in State) between Detroit and Sterling Heights')
+plt.xticks([i + bar_width/2 for i in index], selected_variables, rotation=45, ha='right')
+
+#Adding a legend
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+```
+What conclusions can you draw from looking at the resulting bar graph?
+
+
+Next, we can start mapping other indexes. Let's increase our study area. Go back to the mapper and zoom out so that you can see the metro area of Detroit, and the surrounding area, up to around Sterling Heights. Delete the polygons that were created by selecting them and choosing “Delete this site.”
+
+We are going to do some side by side map comparisons of other indexes. Go to tools and select ‘Side by Side Map Comparisons.’ That will take you to a different web page which should show a left and right hand side of the map. At the top, on the right hand side, click on “Map Data”. A tab similar to the mapper should appear. Select Threshold map for the theme of the map, choose EJ Indexes as type of Index, and Compare to US for location. Keep the lower and upper bounds the same. Select ‘Particulate Matter 2.5’. Then click on ‘Update Map’.
+For the right hand side, select ‘More’ for the theme of the map, choose Health Disparities as the service, and Asthma as the Layer.
+
+
+-The result should look similar to this:
+
+
+Expand the Legend to further understand the data. Do you see a correlation between the data? Play around with the comparisons. Try choosing People of Color while keeping asthma. 
+
+You can also create reports based on boundaries. Under Tools, select Boundaries. The Map Contents will show you several types of boundaries you can add to your maps, like zip codes, counties, etc. You can generate reports based on these boundaries, and boundaries you want to import, as well.
+
+
+We can add a shapefile to the Mapper. Head on to the Wayne County datapage [https://www.waynecounty.com/departments/technology/gis-data.aspx]. The page has different datasets under the label “GIS Data”, including “Commission Districts”, “Municipal Boundaries”, etc. Please click on the one labeled “School Districts”. A zip file will immediately download. Once it is done downloading, unzip the contents into a folder.
+
+Next, go to Tools, select Add Shapefile, and then select Add File.
+
+
+Now, you can generate reports for each school district. What conclusions do you think you can come to by comparing school districts that overlay high percentiles of certain indexes or indicators, in Detroit and other counties?
+
+
+Feel free to explore the EJScreen more. There are many other things you can do with this helpful tool. If you ever want to come back to your work, you can save it as a session. In Tools, select Save Session, and add a name to it. Select save, and then under Actions, select ‘Save to File.’ Your session will be downloaded as a .json, which can then be added back in a later time by selecting ‘Load from file’ and choosing the .json file from your folder. For more information, please check out the EJScreen User Guide. https://ejscreen.epa.gov/mapper/help/ejscreen_help.pdf
+
+
+##Conclusion
 
 Congratulations! .... Now you should be able to:
 
--   Test test...
+-   Map different types of indices and understand percentiles on the Map Contents.
+-   Interpret the results of the Community Report and understand demographic and indices information for a specific area.
+-   Generate charts and download the charts as an excel file to use for simple data analysis.
+-   Create a side by side comparison of health disparities and socioeconomic indexes.
+-   Upload a shapefile to the EJScreen Mapper. 
 
 ## Continue to Lesson 4
-
-In this lesson, we explored ....
 
 [Lesson 3](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m204-grdiv1-pm25.html){.btn .btn-primary .btn role="button"}
