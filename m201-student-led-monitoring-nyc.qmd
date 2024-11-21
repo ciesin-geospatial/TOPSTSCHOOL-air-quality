@@ -16,13 +16,19 @@ After completing this lesson, you should be able to:
 
 ## Introduction
 
-Pollution represents a critical threat to environmental health [@manisalidis2020; @WHO2021;\@mananga2023], characterized by the introduction of harmful substances into the environment in quantities that disrupt natural processes and negatively affect living organisms and ecosystems. Among the various forms of pollution, air pollution stands out due to its widespread impact on both health and the environment. Air, primarily composed of nitrogen and oxygen, can become a vehicle for a variety of pollutants—including gases like carbon monoxide and sulfur dioxide, particulate matter, and even hazardous liquids and solids like heavy metals and plastic debris [@Nathanson2024]. These pollutants can have immediate or long-term consequences, compromising air quality, water resources, soil health, and biodiversity, which ultimately jeopardizes the well-being of both ecosystems and human populations.
+Pollution represents a critical threat to environmental health [@manisalidis2020; @WHO2021; @mananga2023], characterized by the introduction of harmful substances into the environment in quantities that disrupt natural processes and negatively affect living organisms and ecosystems. Among the various forms of pollution, air pollution stands out due to its widespread impact on both health and the environment. Air, primarily composed of nitrogen and oxygen, can become a vehicle for a variety of pollutants—including gases like carbon monoxide and sulfur dioxide, particulate matter, and even hazardous liquids and solids like heavy metals and plastic debris [@Nathanson2024]. These pollutants can have immediate or long-term consequences, compromising air quality, water resources, soil health, and biodiversity, which ultimately jeopardizes the well-being of both ecosystems and human populations.
 
 ### What is Air?
 
 Air is essential to our existence, yet we often underestimate its potential to harm us through the pollutants it carries, which can negatively affect health and environmental quality. Composed primarily of about 78% nitrogen and 21% oxygen, air also contains trace amounts of other gases like carbon dioxide, neon, and hydrogen. Beyond gases, air is filled with tiny particles known as aerosols. These include non-living substances such as dust and soot, as well as living organisms called **bioaerosols**, which can travel long distances through wind, rain, or even a sneeze. Some of these particles fall under the category of particulate matter (PM), PM0.1 PM2.5 and PM10, which are small enough to be inhaled and can significantly impact health. While some aerosols occur naturally, others—like smoke from vehicles and power plants—contribute to air pollution (NASA, 2016).
 
 #### Particulate Matter Size Table
+| Name                      | Aerodynamic Diameter       | Abbreviation |
+|---------------------------|----------------------------|--------------|
+| Coarse Particles          | 2.5μm <= x < 10μm         | PM<sub>10</sub> |
+| Fine Particles            | 0.01μm <= x < 2.5μm       | PM<sub>2.5</sub> |
+| Ultra Fine Particles (UFP)| x < 0.01μm                | PM<sub>0.1</sub> |
+
 
 Since the onset of industrialization and urbanization, human activities have significantly contributed to rising levels of air pollution. Multiple studies [@gallagher2022; @mananga2023] have established a link between anthropogenic activities and particulate matter concentration, which is associated with adverse health effects related to local air pollution. In fact, New York City, one of the most urbanized metropolitan areas, has stated that by 2050, the city aims to reduce GreenHouse Gases (GHG) by 80% compared to 2005 levels. Like many other metropolitan areas, New York City is experiencing ongoing consequences of climate change driven by fossil fuels and GHG. This change has led to increased average temperatures, resulting in more intense heat waves, severe storms, and disturbances to ecological systems. These events contribute to the degradation of air quality, the environment, and human health.
 
