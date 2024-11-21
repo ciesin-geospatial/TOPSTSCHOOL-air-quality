@@ -1,6 +1,7 @@
 ---
 title: "Welcome SCHOOL Module 2: Air Quality"
 format: html
+contributor: "Dhruvil Prajapati"
 ---
 
 <img src="https://raw.githubusercontent.com/ciesin-geospatial/TOPSTSCHOOL/main/images/TOPSTSCHOOL-updated-logo02.png" align="right" height="200" style="padding-left: 15px; padding-bottom: 15px;"/>
@@ -11,7 +12,10 @@ The Science Core Heuristics for Open Science Outcomes in Learning (SCHOOL) is pa
 
 This SCHOOL module on the theme of "Air Quality and Health" explores how particulates in the air impact humans and how they are affected by the changes in air quality. The module consists of three use cases that cover examples of ...... and .... such as .....
 
-Each use case uses one or more datasets to walk users through lessons in accessing and analyzing data, and further adapting the code to perform their analyses including data cleaning, processing to subset to an area of interest, and creating visualizations to share what they have learned with their communities.
+
+This TOPS SCHOOL module provides a foundationanl understanding of the complex interplay between air quality, public health, and environmental justice. We will explore how we can use spatial data for the study of air pollution, the sources and types of pollutants, and their impacts on vulnerable communities. You will gain critical insights into how environmental factors shape health outcomes. As you engage with the lessons, you will develop a comprehensive understanding of key concepts, including the composition of air, the significance of social vulnerability, and the tools available for analyzing environmental data. Ultimately, these lessons will empower you to contribute meaningfully to discussions and actions pertaining  to air quality and environmental justice.
+
+The following lessons examine how poor air quality impacts human health. Each lesson uses one or more datasets to walk users through accessing and analyzing data, and further adapting the code to perform their analyses including: data cleaning, processing to subset to an area of interest, and creating visualizations to share what they have learned with their communities, explore the relationships with variables such as extreme temperatures, demographic and  socioeconomic factors, environmental injustice, and environmental disasters.
 
 **This module is designed to provide undergraduate students and early-career researchers with an introduction to the data science “life cycle” and  sample code describing how Open Science principles can be effectively applied to earth sciences, particularly in the context of air pollution and its impact on health.**
 
@@ -19,14 +23,14 @@ Teaching earth science topics and coding skills in depth is beyond the scope of 
 
 Module 2: Air Quality datasets and use cases cover:
 
--   **Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York:** Examining the relationship between two environmental hazards -- hazardous air quality and temperature -- and socioeconomic characteristics of New York State (NYS) schools.
-    -   [Lesson 1: Acquiring, Pre-Processing, and Visualizing Student-Monitored Data for New York City (NYC) Schools](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html) 
--   **Social Vulnerability Index (SVI) Social Determinants of Health:** Exploring social determinants of health within the USA with the SVI.
-    -   [Lesson 2: Exploring the Social Vulnerability Index (SVI) Social Determinants of Health](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-tri-icis-places.html)
--   **EJScreen: Environmental Justice Screening and Mapping Tool:** EJScreen is the Environmental justice mapping and screening tool that helps users understand the environmental and demographic characteristics of a specific area.
-    -   [Lesson 3: Exploring EJScreen: Environmental Justice Screening and Mapping Tool](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-ejscreen.html)
--   **Global Gridded Relative Deprivation Index Version 1 (GRDIv1), and the Global (GL) Annual PM2.5 Grids from MODIS, MISR and SeaWiFS Aerosol Optical Depth:** Analyzing the global relationships between socioeconomic vulnerability and particulate matter concentrations over years. 
-    -   [Lesson 4:  Global Gridded Relative Deprivation Index Version 1 (GRDIv1) and the Global Annual PM2.5 Grids](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m204-grdiv1-pm25.html)
+-   **Acquiring, Pre-Processing, and Visualizing Student-Monitored Data for New York City schools:** This lesson will emphasize the relationship between hazardous air quality, extreme temperatures, and socioeconomic characteristics of different New York City school environments.
+    -   [Lesson 1: Acquiring, Pre-Processing, and Visualizing Student-Monitored Data for New York City schools](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html) 
+-  **Exploring Air Quality, Social Vulnerability, and Health Outcomes in Metro Detroit:** Participants will investigate how the SVI highlights areas at greater risk for adverse health outcomes due to environmental hazards. This lesson will examine the connections between socioeconomic status, health disparities, and environmental injustice.
+    -   [Lesson 2: Exploring Air Quality, Social Vulnerability, and Health Outcomes in Metro Detroit](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m202-svi-tri-icis-places.html)
+-   **Examining the Environmental Justice Screening and Mapping Tool (EJScreen)** to analyze the environmental and demographic characteristics of specific areas. Students will learn to use EJScreen to identify regions disproportionately affected by pollution and to assess the intersection of environmental hazards with community demographics. This lesson will focus on how data can empower communities in advocating for their rights.
+    -   [Lesson 3: Examining the Environmental Justice Screening and Mapping Tool (EJScreen)](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-ejscreen.html)
+-   **Particulate Matter Across Socioeconomic Strata of Countries:** Analyzing the Global Gridded Relative Deprivation Index Version 1 (GRDIv1) and annual PM2.5 grids to explore global relationships between socioeconomic vulnerability and particulate matter concentrations over time. This lesson will provide insights into how air quality varies across different regions and its implications for public health, focusing on both local and global contexts.
+    -   [Lesson 4: Particulate Matter Across Socioeconomic Strata of Countries](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m204-grdiv1-pm25.html)
 
 ::: {style="text-align: right;"}
 [Start Lesson 1](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html){.btn .btn-primary .btn role="button"}
