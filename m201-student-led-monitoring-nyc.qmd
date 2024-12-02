@@ -2,6 +2,7 @@
 title: "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York"
 format: html
 bibliography: air-intro-references.bib
+author: "Dhruvil Prajapati"
 ---
 
 ## Overview

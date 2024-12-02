@@ -39,13 +39,11 @@ After completing this lesson, you should be able to:
 -   Create maps joining geolocated points and basemaps.
 -   Create maps with graduated point symbols to visualize point source pollution releases.
 -   Interpolate a raster surface from point spatial data.
--   Perform raster math to create specialized indexes.
+-   Perform raster math to create specialized environmental and socio-economic indexes.
 -   Perform spatial correlation analysis.
 
 ::: callout-warning
 ## Preface: A Note on Data Interpretation and Ethical Considerations
-
-This lesson is designed to introduce you to various environmental, public health, and socioeconomic datasets, and to provide you with the tools to analyze and visualize this information; however, it is crucial to approach this material with an understanding of its sensitive nature and potential implications.
 
 The topics of environmental justice, institutional racism, socioeconomic conditions, and pollution are complex and multifaceted. The data and analyses presented in this lesson are not intended to draw definitive conclusions or suggest scientific evidence of cause and effect relationships. Rather, they are meant to equip you with the skills to investigate data and perform analyses that could be applied to your local communities.
 
@@ -56,24 +54,25 @@ This lesson will empower you with data literacy and analytical skills. We encour
 
 ## Introduction
 
-In many urban areas, air quality issues disproportionately affect low-income communities and communities of color [@tessum2021]. This disparity is a key focus of environmental justice efforts. In cities like Detroit, Chicago, and Cleveland industrial facilities, highways, and other pollution sources are often concentrated in disadvantaged neighborhoods. Detroit has a history of industrial pollution and is working to address air quality issues in areas like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic. Similarly, Chicago has seen community efforts to address air pollution in areas like the Southeast Side, where residents have fought against polluting industries and advocated for stricter regulations.
+In many urban areas, air quality issues disproportionately affect low-income communities and communities of color [@tessum2021; @liu2021]. This disparity is a key focus of environmental justice efforts. In cities like Detroit and Chicago, industrial facilities, highways, and other pollution sources are often concentrated in disadvantaged neighborhoods. Detroit has a history of industrial pollution and is working to address air quality issues in areas with relatively lower socioeconomic status like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic [@rector2017; @air_quality_michigan; @restum2022; @hartig2024; @safta2024]. Similarly, Chicago has seen community efforts to address air pollution in areas like the Southeast Side, where residents have fought against polluting industries and advocated for stricter regulations [@gordon2022; @nature_conservancy_2021; @illgner2022].
 
-The EPA is the primary federal agency responsible for environmental protection in the United States. It sets and enforces air quality standards, including the National Ambient Air Quality Standards (NAAQS) for six criteria pollutants. The EPA also maintains the AirNow system, which provides real-time air quality data to the public. While primarily focused on public health, the CDC plays a crucial role in understanding the health impacts of air pollution. It conducts research on the relationships between air quality and various health outcomes, and provides guidance on protecting public health from environmental hazards.
+The EPA is the primary federal agency responsible for environmental protection in the United States. It sets and enforces air quality standards, including the [National Ambient Air Quality Standards (NAAQS)](https://www.epa.gov/criteria-air-pollutants/naaqs-table) for six criteria pollutants. The EPA also maintains the [AirNow](https://www.airnow.gov/about-airnow/) system, which provides real-time air quality data to the public. While primarily focused on public health, the CDC plays a crucial role in understanding the health impacts of air pollution. It conducts research on the relationships between air quality and various health outcomes, and provides guidance on protecting public health from environmental hazards [@cdc2024].
 
-In response to these challenges, community-driven science initiatives have emerged. These efforts involve local residents in collecting data on air quality and other environmental factors, often using low-cost sensors and mobile monitoring techniques. This approach helps fill gaps in official monitoring networks and empowers communities to advocate for themselves. Open data is crucial for community-driven solutions in several ways:
+In response to these challenges, community-driven science initiatives have emerged. These efforts involve local residents in collecting data on air quality and other environmental factors, often using low-cost sensors and mobile monitoring techniques [@morawska2018; @lu2022; @park2021; @su2024]. This approach helps fill gaps in official monitoring networks and empowers communities to advocate for themselves. Open data is crucial for community-driven solutions in several ways:
 
 -   Transparency: Open data allows communities to verify official reports and hold authorities accountable.
 -   Accessibility: When air quality data is freely available, communities can use it to inform local decision-making and advocacy efforts.
 -   Innovation: Open data enables researchers, activists, and tech developers to create new tools and analyses that can benefit communities.
 -   Collaboration: Open data facilitates collaboration between communities, scientists, and policymakers, leading to more effective solutions.
 
-While the EPA and CDC provide federal networks of open-access datasets like the Air Quality System (AQS), TRI, ICIS-AIR, and Population Level Analysis and Community Estimates (PLACES) collections, community driven data collection is a large part of driving change in traditionally underrepresented communities. In Chicago, the Array of Things project has installed sensors throughout the city, providing open data on various environmental factors including air quality, while Detroit's Community Air Monitoring Project uses low-cost sensors to collect and share air quality data in areas underserved by official monitoring stations.
+While the EPA and CDC provide federal networks of open-access datasets like the Air Quality System (AQS), TRI, ICIS-AIR, and Population Level Analysis and Community Estimates (PLACES) collections, community driven data collection is a large part of driving change in traditionally underrepresented communities. In Chicago, the [Array of Things](https://arrayofthings.github.io/) project has installed sensors throughout the city, providing open data on various environmental factors including air quality, while Detroit's [Community Air Monitoring Project](https://www.michigan.gov/-/media/Project/Websites/egle/Documents/Reports/AQD/monitoring/2018-04-27-48217-air-monitoring-project.pdf?rev=33ae4f2a312149219bcdf9f25a538cca) uses low-cost sensors to collect and share air quality data in areas underserved by official monitoring stations.
 
 With access to open data, communities can:
 
 -   Identify local air quality hotspots that may be missed by sparse official monitoring networks.
+-   Detect inconsistencies or errors in federal air quality data, ensuring more accurate and localized environmental assessments.
 -   Correlate air quality data with health outcomes to strengthen advocacy efforts.
--   Develop targeted interventions, such as promoting indoor air filtration on high-pollution days.
+-   Develop targeted interventions, such as promoting indoor air filtration on high-pollution days [@maestas2018].
 -   Create custom alerts and information systems tailored to local needs.
 
 Although open data provides many benefits, challenges still remain. These include: 1) ensuring data quality and consistency, especially when integrating data from various sources; 2) addressing the "digital divide" to ensure all community members can access and use the data; 3) balancing the need for detailed local data with privacy concerns; and 4) building capacity within communities to effectively use and interpret complex environmental data.
@@ -81,14 +80,14 @@ Although open data provides many benefits, challenges still remain. These includ
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### EJ in the News
 
-The Clear the Air Coalition, a new environmental justice advocacy group in Michigan, is calling for stronger protection of vulnerable communities from pollution. Launched in Detroit, the coalition argues that state regulators focus too much on technical compliance with environmental laws rather than public health. They claim the current permitting process favors polluters and fails to consider the cumulative impacts of pollution on overburdened communities. The group seeks changes in state law and a shift in mindset from environmental regulators.
+The [Clear the Air Coalition](https://cleartheairmi.org/), a new environmental justice advocacy group in Michigan, is calling for stronger protection of vulnerable communities from pollution. Launched in Detroit, the coalition argues that state regulators focus too much on technical compliance with environmental laws rather than public health. They claim the current permitting process favors polluters and fails to consider the cumulative impacts of pollution on overburdened communities. The group seeks changes in state law and a shift in mindset from environmental regulators.
 
 [![Clear the Air Coalition](https://npr.brightspotcdn.com/dims4/default/42a4f01/2147483647/strip/true/crop/960x720+0+0/resize/1760x1320!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F78%2F01%2F1711cf6e442dbe579d452c0fc6f6%2Fclearair.jpg)](https://www.michiganpublic.org/environment-climate-change/2024-05-02/new-environmental-justice-coalition-aims-to-change-state-law-pressure-egle)
 
-The Michigan Department of Environment, Great Lakes, and Energy (EGLE) emphasizes its commitment to protecting underserved communities and notes improvements in air quality over recent decades, but Coalition members argue that the current approach is insufficient. They call for regulators to consider the combined effects of multiple pollution sources in marginalized areas and to give local governments more power to reject new polluting facilities in already burdened communities.
+The [Michigan Department of Environment, Great Lakes, and Energy (EGLE)](https://www.michigan.gov/egle/) emphasizes its commitment to protecting underserved communities and notes improvements in air quality over recent decades, but Coalition members argue that the current approach is insufficient. They call for regulators to consider the combined effects of multiple pollution sources in marginalized areas and to give local governments more power to reject new polluting facilities in already burdened communities.
 :::
 
-The Michigan EGLE and the Office of the Environmental Justice Public Advocate are two of the more active state departments aiming to address issues of the environment, public health, and social justice. Here are some of the projects enacted in greater Detroit area:
+The Michigan EGLE and the Office of the [Environmental Justice Public Advocate](https://www.michigan.gov/egle/about/organization/environmental-justice) are two of the more active state departments aiming to address issues of the environment, public health, and social justice. Here are some of the projects enacted in greater Detroit area:
 
 -   [Detroit Environmental Agenda](https://detroitenv.org/): This community-led initiative works closely with EGLE to address environmental concerns in Detroit. It focuses on issues like air quality, water quality, and waste management.
 -   [48217 Community Air Monitoring Project](https://www.michigan.gov/-/media/Project/Websites/egle/Documents/Reports/AQD/monitoring/2018-04-27-48217-air-monitoring-project.pdf): Named after the zip code of a heavily industrialized area in Southwest Detroit, this project involves community members working with EGLE to monitor air quality using low-cost sensors.
@@ -104,7 +103,7 @@ Air quality issues in urban areas disproportionately affect low-income communiti
 
 ## Data Analysis and Exercises
 
-To better understand and address these complex issues, we'll work through a series of coding and data science exercises. These hands-on activities will allow users to explore some of the open datasets and tools that are available to community members and stakeholders that offer practical insights into air quality, public health, and social vulnerability.
+To better understand and address these complex issues of air pollution, public health impacts, and environmental inequities, we’ll work through a series of coding and data science exercises. These hands-on activities will allow users to explore some of the open datasets and tools that are available to community members and stakeholders that offer practical insights into air quality, public health, and social vulnerability.
 
 We'll begin with the ICIS-AIR dataset, then move on to the TRI Facility dataset, and finally work our way down to TRI Form A. After exploring these 3 air pollution datasets, we will take a look at the CDC PLACES health outcomes data and perform some simple analysis integrating the pollution and health outcomes data.
 
@@ -136,7 +135,7 @@ The `pandas` module is essential for data manipulation and analysis, while `geop
 
 The `requests` module allows you to send HTTP requests and interact with APIs easily. `contextily` adds basemaps to your plots, enhancing the visual context of your geospatial data. `pygris` simplifies the process of working with US Census Bureau TIGER/Line shapefiles.
 
-`rasterio` and `xarray` are used for working with geospatial raster data. `rasterio` reads and writes geospatial raster datasets, while `xarray` introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
+`rasterio` and `xarray` are used for working with geospatial raster data (spatial data format used to represent geographic information as a grid of cells or pixels). `rasterio` reads and writes geospatial raster datasets, while `xarray` introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
 
 `shapely` is used for manipulation and analysis of geometric objects. `scipy` provides additional tools for scientific computing, including statistical functions and interpolation methods. `rioxarray` combines the functionality of rasterio and xarray for easier handling of geospatial raster data.
 
@@ -147,7 +146,7 @@ Make sure these modules are installed before you begin working with the code in 
 
 ### ICIS Air
 
-ICIS-AIR (Integrated Compliance Information System for Air) is a comprehensive database maintained by the U.S. Environmental Protection Agency (EPA) that focuses specifically on air quality compliance and enforcement data. It tracks information related to stationary sources of air pollution, including their compliance with various Clean Air Act regulations, permit data, and enforcement actions. While ICIS-AIR and the Toxic Release Inventory (TRI) are separate systems, they have significant overlap in their coverage of industrial facilities and air emissions. Many facilities that report to TRI also have data in ICIS-AIR, providing complementary information.
+[ICIS-AIR (Integrated Compliance Information System for Air)](https://www.epa.gov/enviro/icis-air-overview) is a comprehensive database maintained by the U.S. Environmental Protection Agency (EPA) that focuses specifically on air quality compliance and enforcement data. It tracks information related to stationary sources of air pollution, including their compliance with various Clean Air Act regulations, permit data, and enforcement actions. While ICIS-AIR and the [Toxic Release Inventory (TRI)](https://www.epa.gov/toxics-release-inventory-tri-program) are separate systems, they have significant overlap in their coverage of industrial facilities and air emissions. Many facilities that report to TRI also have data in ICIS-AIR, providing complementary information.
 
 Where TRI focuses on the quantities of specific toxic chemicals released into the air, ICIS-AIR offers a broader picture of a facility's overall air quality compliance status, including non-toxic pollutants regulated under the Clean Air Act. Together, these systems provide a more comprehensive view of industrial air pollution sources, enabling researchers, regulators, and the public to assess both the types and quantities of air pollutants emitted (from TRI) and the regulatory compliance status of the emitting facilities (from ICIS-AIR).
 
@@ -232,9 +231,9 @@ This looks correct, and we'll use this boundary object repeatedly throughout our
 
 #### Querying the API
 
-The EPA's Enforcement and Compliance History Online (ECHO) website serves as a comprehensive portal for environmental compliance and enforcement data. It includes the ECHO Data Service, which provides programmatic access to EPA data through RESTful APIs. Among these is the ICIS-AIR API, which specifically offers access to air quality compliance and enforcement data. This API allows users to retrieve detailed information about stationary sources of air pollution, including facility details, permit data, emissions reports, and compliance status.
+The EPA's [Enforcement and Compliance History Online (ECHO)](https://echo.epa.gov/) website serves as a comprehensive portal for environmental compliance and enforcement data. It includes the ECHO Data Service, which provides programmatic access to EPA data through [RESTful](https://echo.epa.gov/tools/web-services) APIs. Among these is the ICIS-AIR API, which specifically offers access to air quality compliance and enforcement data. This API allows users to retrieve detailed information about stationary sources of air pollution, including facility details, permit data, emissions reports, and compliance status.
 
-The ECHO API requires that users follow a multi-step workflow to acquire data via the [Facility Air API](https://echo.epa.gov/tools/web-services/facility-search-air):
+The ECHO API requires that users follow a multi-step workflow to acquire data via the [Facility Search Air API](https://echo.epa.gov/tools/web-services/facility-search-air):
 
 1.  Use get_facilities to validate parameters, get summary statistics, and obtain a query_id (QID), valid for about 30 minutes.
 2.  Use get_qid with the obtained QID to paginate through facility results.
