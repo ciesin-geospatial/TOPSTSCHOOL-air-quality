@@ -38,23 +38,47 @@ Knowledge Check What is the importance of EJScreen? Helping environmental and so
 
 To begin, click on the EJScreen link here: https://www.epa.gov/ejscreen. In that page, along with resources on how to use EJScreen, you will see a blue, bold text labeled “Launch the EJScreen Tool.” You can also go straight to the mapper using this link: https://ejscreen.epa.gov/mapper/.
 
-Once you click the link, you'll be directed to a Welcome screen. Here, you'll find an introduction, resource links, and a video overview of the tool. We recommend exploring these resources before proceeding. After that, close the Welcome dialog to continue.
+![](docs/m203-ej-images/image9.png)Once you click the link, you'll be directed to a Welcome screen. Here, you'll find an introduction, resource links, and a video overview of the tool. We recommend exploring these resources before proceeding. After that, close the Welcome dialog to continue.
+
+![](docs/m203-ej-images/image13.png){fig-align="center"}
 
 You can use the search bar to explore a region. For this lesson, we will be focusing on Detroit, Michigan.
 
+![]()![](docs/m203-ej-images/image15.png)
+
 Type 'Metro Detroit' in the search bar to focus in on the metropolitan region of Detroit. Alternatively, you can use latitude and longitude coordinates. You can also zoom in or out of a region by clicking on the “+” or “-” icons on the bottom right.
+
+![](docs/m203-ej-images/image11.png){fig-align="center"}
 
 We can start exploring maps by noticing the Widget toolbar. Hovering your cursor over each icon will show the name of each tab. From right to left to right, the icons are ‘Maps’, ‘Places’, ‘Reports’, and ‘Tools.’ Clicking each icon will display a dropdown list of indicators to choose from. For now, we will focus on the ‘Maps’ icon.
 
+![](docs/m203-ej-images/image28.gif){fig-align="center"}
+
 Now, click on the Socioeconomic Indicators icon. Clicking that will expose seven types of socioeconomic indicators, and two indexes that can be explored. Click on People of Color, and your mapper should look like this. We will be mapping People of Color compared to the US. One can also compare it to just the state. To better view the map, one can click on the ‘\<’ on the Map widget.
 
-Notice the ‘Map Contents’ on the upper right. In statistics, a percentile is a score that shows how a particular score compares to other scores in a dataset. For example, people of color in the 95-100 percentile in a block group means that 95-100% of people living in that area are non-white. You can learn more about how EJScreen uses percentiles here https://www.epa.gov/ejscreen/how-interpret-ejscreen-data.
+![](docs/m203-ej-images/image2.png){fig-align="center"}
 
-You can hide the Map Contents by clicking on the sign. Noice the symbols in the Map Contents. To the right of that is the sign has the layer turned on; clicking on it turns it off. The allows you to view the metadata. On the opposite side, is an sign, which allows you to set the transparency of the map. A pop up with a sliding scale will appear when that is clicked. Clicking on removes the layer. Selecting provides a description of the index. Clicking minimizes the Map Contents pane, to expand it one can simply click on it again (this time the arrows will be pointing downwards). \[info box\] Metadata describes a dataset. Providing metadata aligns well with the FAIR (Findability, Accessibility, Interoperability, and Reusability) principle, helping users understand what the data means and how to use it.
+Notice the ‘Map Contents’ on the upper right. In statistics, a percentile is a score that shows how a particular score compares to other scores in a dataset. For example, people of color in the 95-100 percentile in a block group means that 95-100% of people living in that area are non-white. You can learn more about how EJScreen uses percentiles here <https://www.epa.gov/ejscreen/how-interpret-ejscreen-data>.
+
+![](docs/m203-ej-images/image5.png){fig-align="center"}
+
+You can hide the Map Contents by clicking on the sign. Noice the symbols in the Map Contents. To the right of that is the sign has the layer turned on; clicking on it turns it off. The allows you to view the metadata. On the opposite side, is an sign, which allows you to set the transparency of the map. A pop up with a sliding scale will appear when that is clicked. Clicking on removes the layer. Selecting provides a description of the index. Clicking minimizes the Map Contents pane, to expand it one can simply click on it again (this time the arrows will be pointing downwards).
+
+::: callout-note
+## FAIR Standards and Metadata
+
+Metadata is structured information that describes a dataset. It is often thought of as "data about data," allowing users to understand the format, content, quality, temporality, and many more characteristics of data. Providing metadata is important for the FAIR (Findability, Accessibility, Interoperability, and Reusability) principles, helping users find and understand data.
+:::
+
+![](docs/m203-ej-images/image26.png){fig-align="center"}
 
 One can generate reports and charts given an area of interest. Go to the ‘Reports’ tab. One option to select an area of interest is by drawing a polygon. Click on ‘Draw an Area’.
 
+![](docs/m203-ej-images/image12.png){fig-align="center"}
+
 Your cursor should turn into a crosshair. You can now click on the map and start drawing your polygon. Move your cursor over to where you want the next point of the polygon to be. To form the final polygon, just connect to the first point you made, and the polygon will turn into a transparent green.
+
+![](docs/m203-ej-images/image33.gif){fig-align="center"}
 
 A pop-up will appear where you can name your study area, add a buffer, download reports, and explore charts. Name it 'Detroit Study Area' to proceed.
 
