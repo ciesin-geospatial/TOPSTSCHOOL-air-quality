@@ -1,7 +1,8 @@
 ---
 title: "EJSreen exploratory"
 format: html
-author: "Elaine Famutimi"
+author: "Elaine Famutimi and Camilla Green"
+date: "December 3, 2024"
 ---
 
 ## Overview
@@ -32,19 +33,35 @@ The concept of environmental justice gained prominence in the 1980s and 1990s wh
 
 EJScreen is important in empowering communities. Access to EJScreen helps communities understand the specific environmental challenges they face, such as pollution levels or exposure to hazardous substances. By providing this data, the tool empowers residents to advocate for their health, safety, and well-being. According to the EPA, EJScreen allows communities to participate more effectively in public discussions, regulatory processes, and decision-making, backed by concrete data to support their concerns and needs. Environmental justice focuses on ensuring that no group of people, particularly minority and low-income communities, bears a disproportionate share of environmental burdens.\[https://www.epa.gov/ejscreen/what-ejscreen\] Environmental and social justice organizations often rely on data to build and support their campaigns. EJScreen provides this kind of data, which can highlight environmental injustices and help NGOs propose solutions and mobilize public support. Many NGOs also use these tools to strengthen their grant applications, demonstrating the specific needs of the communities they serve. This is especially important for organizations advocating for low-income and minority populations, who are often disproportionately impacted by environmental hazards. Policymakers require accurate data to create effective and equitable regulations. EJScreen helps identify areas of concern, prioritize actions, and design policies that better protect vulnerable populations. For example, the EPA uses this tool to inform regulatory actions, compliance monitoring, and enforcement activities.\[https://www.epa.gov/environmentaljustice\]. By making environmental data accessible to the public, EJScreen also promotes transparency and helps hold governments and industries accountable for their environmental impact. This public accessibility allows for trust and collaboration between communities, regulatory agencies, and policymakers, which is crucial for successfully implementing environmental policies \[https://www.epa.gov/environmentaljustice/national-environmental-justice-advisory-council\]. Environmental issues often require collaborative solutions involving multiple stakeholders, such as government agencies, NGOs, businesses, and community groups. EJScreen provides a common platform for discussing and addressing these challenges, which fosters more effective partnerships and solutions. EJScreen’s development reflects the EPA's commitment to enhancing the accessibility of environmental data, promoting transparency, and addressing environmental justice concerns by equipping all stakeholders with the tools needed to assess and respond to environmental health disparities.
 
-Knowledge Check What is the importance of EJScreen? Helping environmental and social justice organizations support their campaigns Providing policymakers with data to create effective regulations Empowering residents to advocate for their health and safety Providing a common platform for collaborative solutions between multiple stakeholders All of the above
+::: callout-note
+## Knowledge Check
+
+What is the importance of EJScreen?
+
+-   Helping environmental and social justice organizations support their campaigns
+
+-    Providing policymakers with data to create effective regulations
+
+-   Empowering residents to advocate for their health and safety
+
+-   Providing a common platform for collaborative solutions between multiple stakeholders
+
+-    All of the above
+:::
 
 ## How to use EJScreen?
 
 To begin, click on the EJScreen link here: https://www.epa.gov/ejscreen. In that page, along with resources on how to use EJScreen, you will see a blue, bold text labeled “Launch the EJScreen Tool.” You can also go straight to the mapper using this link: https://ejscreen.epa.gov/mapper/.
 
-![](docs/m203-ej-images/image9.png)Once you click the link, you'll be directed to a Welcome screen. Here, you'll find an introduction, resource links, and a video overview of the tool. We recommend exploring these resources before proceeding. After that, close the Welcome dialog to continue.
+![](docs/m203-ej-images/image9.png){fig-align="center"}
+
+Once you click the link, you'll be directed to a Welcome screen. Here, you'll find an introduction, resource links, and a video overview of the tool. We recommend exploring these resources before proceeding. After that, close the Welcome dialog to continue.
 
 ![](docs/m203-ej-images/image13.png){fig-align="center"}
 
 You can use the search bar to explore a region. For this lesson, we will be focusing on Detroit, Michigan.
 
-![]()![](docs/m203-ej-images/image15.png)
+![]()![](docs/m203-ej-images/image15.png){width="689"}
 
 Type 'Metro Detroit' in the search bar to focus in on the metropolitan region of Detroit. Alternatively, you can use latitude and longitude coordinates. You can also zoom in or out of a region by clicking on the “+” or “-” icons on the bottom right.
 
@@ -82,23 +99,43 @@ Your cursor should turn into a crosshair. You can now click on the map and start
 
 A pop-up will appear where you can name your study area, add a buffer, download reports, and explore charts. Name it 'Detroit Study Area' to proceed.
 
+![](docs/m203-ej-images/image31.png){fig-align="center"}
+
 Clicking on EJScreen Community Report will open up a PDF file with detailed information about the study area. Let us explore this PDF. On the right side, you can find information about other characteristics of the community of interest, such as low income residents, the education level of residents, and the gender breakdown of the community. Right below Community Information is Breakdown By Race, which shows the percent of each race in this area. You will also find the percentage of age brackets, and limited English speaking breakdown.
+
+![](docs/m203-ej-images/image3.png){fig-align="center"}
 
 On the left side of the document, there is be a map showing the study area, including the legend from the Map Contents tab. Centering the map or zooming in or out on the Mapper will result in a different view on the report. This view will also highlight the languages spoken at home.
 
+![](docs/m203-ej-images/image25.png){fig-align="center"}
+
 Page 2 of the report presents bar graphs comparing EJ indexes at state and national levels. Review these graphs for differences in environmental factors like drinking water non-compliance and wastewater discharge. Note: Although the graph does not include wastewater discharge, the table below shows values for each index from left to right.
+
+![](docs/m203-ej-images/image8.png){fig-align="center"}
+
+![](docs/m203-ej-images/image27.png){fig-align="center"}
+
+![](docs/m203-ej-images/image4.png){fig-align="center"}
 
 Let's compare this report to one generated outside of Detroit. Try to pick an area that shows a lower percentile of people of color, or less red, like Sterling Heights or Westland. What differences do you see? Are the EJ indexes higher or lower?
 
 One can also view other reports, and download excel data. Lets compare the bar graphs in a red population of Detroit and a region in Sterling Heights. Delete the original polygon and create new ones within those regions.
 
+![](docs/m203-ej-images/image24.png){fig-align="center"}
+
 Click on a polygon and select ‘Explore Charts.’ A pop up will open, showing tabs for Environmental Justice Indexes, Environmental Burden Indicators, Socioeconomic Indicators, and Supplemental Indexes. Placing the cursor over each bar will show the exact percentile for each index. You can also unselect and select indexes of your choosing. For now, let's keep all of them selected. We will also only focus on the USA percentile. Environmental Justice Indexes, Environmental Burden Indicators, and Supplemental Indexes focus on the same environmental indexes. Selecting the Socioeconomic indicators will list different types of indexes focusing on socioeconomic factors.
+
+![](docs/m203-ej-images/image7.png){fig-align="center"}
 
 One can also explore the Socioeconomic (ACS) Report, which includes data from the US Census Bureau American Community Survey (ACS). Select Get Data Table, and a tabular view of the data should pop up. This will include all the categories, selected variables, percentile in state and percentile in USA.
 
-Click on the save icon to export the data, and an excel file in .csv format will automatically download.
+![](docs/m203-ej-images/image16.png){fig-align="center"}
+
+Click on the save icon![](docs/m203-ej-images/image22.png) to export the data, and an excel file in .csv format will automatically download.
 
 Explore the charts for Sterling Heights.
+
+![](docs/m203-ej-images/image14.png){fig-align="center"}
 
 Notice the lower percentiles for the EJ Indexes. Is this data in line with what was seen in the generated report? Download the data for this as well.
 
@@ -155,7 +192,7 @@ selected_variables = ej_index_df['Selected Variables']
 
 Notice how each of the indexes in the selected variables dataframe starts with ‘EJ Index for’ before the name of the index. When we plot this, the x axis will have the label of ‘EJ Index’, so having it before each index seems redundant. We can remove the first three words by using the .split() function. We will create a function that removes the first three words of each of the indexes in the selected_variables dataframe, and then returns the remaining words. Each selected variable is a string, which in this case, is a sequence of words. The .split() function, without specifying any parameters, splits the string into individual words. The .join() function then combines the separate words back into a string.
 
-::: {.callout-tip style="color: #5a7a2b;"}
+::: callout-note
 A function is a unit of code that performs a specific task. Its main advantage is that it can be reused, making code more efficient. def() is the keyword used to define the function, and is placed before the name of the function. What goes in the parentheses is the optional parameters, which are the input values. Sometimes, a function ends with ‘return’, which outputs a specific value from the function.
 :::
 
@@ -205,9 +242,17 @@ What conclusions can you draw from looking at the resulting bar graph?
 
 Next, we can start mapping other indexes. Let's increase our study area. Go back to the mapper and zoom out so that you can see the metro area of Detroit, and the surrounding area, up to around Sterling Heights. Delete the polygons that were created by selecting them and choosing “Delete this site.”
 
-We are going to do some side by side map comparisons of other indexes. Go to tools and select ‘Side by Side Map Comparisons.’ That will take you to a different web page which should show a left and right hand side of the map. At the top, on the right hand side, click on “Map Data”. A tab similar to the mapper should appear. Select Threshold map for the theme of the map, choose EJ Indexes as type of Index, and Compare to US for location. Keep the lower and upper bounds the same. Select ‘Particulate Matter 2.5’. Then click on ‘Update Map’. For the right hand side, select ‘More’ for the theme of the map, choose Health Disparities as the service, and Asthma as the Layer.
+We are going to do some side by side map comparisons of other indexes. Go to tools and select ‘Side by Side Map Comparisons.’ That will take you to a different web page which should show a left and right hand side of the map. At the top, on the right hand side, click on “Map Data”. A tab similar to the mapper should appear. Select Threshold map for the theme of the map, choose EJ Indexes as type of Index, and Compare to US for location. Keep the lower and upper bounds the same. Select ‘Particulate Matter 2.5’. Then click on ‘Update Map’.
 
--The result should look similar to this:
+![](docs/m203-ej-images/image34.png){fig-align="center"}
+
+For the right hand side, select ‘More’ for the theme of the map, choose Health Disparities as the service, and Asthma as the Layer.
+
+![](docs/m203-ej-images/image32.png){fig-align="center"}
+
+The result should look similar to this:
+
+![](docs/m203-ej-images/image29.png){fig-align="center"}
 
 Expand the Legend to further understand the data. Do you see a correlation between the data? Play around with the comparisons. Try choosing People of Color while keeping asthma.
 
@@ -217,13 +262,17 @@ We can add a shapefile to the Mapper. Head on to the Wayne County datapage \[htt
 
 Next, go to Tools, select Add Shapefile, and then select Add File.
 
+![](docs/m203-ej-images/image6.png){fig-align="center"}
+
 Now, you can generate reports for each school district. What conclusions do you think you can come to by comparing school districts that overlay high percentiles of certain indexes or indicators, in Detroit and other counties?
 
-Feel free to explore the EJScreen more. There are many other things you can do with this helpful tool. If you ever want to come back to your work, you can save it as a session. In Tools, select Save Session, and add a name to it. Select save, and then under Actions, select ‘Save to File.’ Your session will be downloaded as a .json, which can then be added back in a later time by selecting ‘Load from file’ and choosing the .json file from your folder. For more information, please check out the EJScreen User Guide. https://ejscreen.epa.gov/mapper/help/ejscreen_help.pdf
+![](docs/m203-ej-images/image21.png){fig-align="center"}
 
-##Conclusion
+Feel free to explore EJScreen more. There are many additional analyses you can perform with this helpful tool. If you ever want to come back to your work, you can save it as a session. In Tools, select Save Session, and add a name to it. Select save, and then under Actions, select ‘Save to File.’ Your session will be downloaded as a .json, which can then be added back in a later time by selecting ‘Load from file’ and choosing the .json file from your folder. For more information, please check out the EJScreen User Guide: https://ejscreen.epa.gov/mapper/help/ejscreen_help.pdf
 
-Congratulations! .... Now you should be able to:
+## Conclusion
+
+Congratulations! Now you should be able to:
 
 -   Map different types of indices and understand percentiles on the Map Contents.
 -   Interpret the results of the Community Report and understand demographic and indices information for a specific area.
