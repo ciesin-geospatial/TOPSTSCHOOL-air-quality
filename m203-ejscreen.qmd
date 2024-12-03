@@ -1,5 +1,5 @@
 ---
-title: "EJSreen exploratory"
+title: "EJScreen: Environmental Justice Screening and Mapping Tool"
 format: html
 author: "Elaine Famutimi and Camilla Green"
 date: "December 3, 2024"
