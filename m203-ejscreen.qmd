@@ -13,11 +13,12 @@ In this lesson, we will learn how to use EJScreen, the Environmental Justice Scr
 
 After completing this lesson, you should be able to:
 
--   Create a polygon of an area of interest.
--   Generate community reports and explore charts of an area of interest or boundary.
+-   Select and visualize Maps and Places available in EJScreen.
+-   Use the tools tab to create a report for the area of interest by drawing a polygon.
+-   Review and interpret the report outputs.
+-   Use the Tools section to upload census tract shapefile.
 -   Create bar graphs comparing separate regions from EJScreen generated graphs on Python.
 -   Interpret and compare different types of indexes.
--   Access and add a shapefile to the EJScreen mapper.
 
 ## Introduction
 
