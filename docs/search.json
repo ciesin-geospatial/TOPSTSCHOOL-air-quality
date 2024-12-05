@@ -389,14 +389,14 @@
     "href": "m203-ejscreen.html",
     "title": "EJScreen: Environmental Justice Screening and Mapping Tool",
     "section": "",
-    "text": "In this lesson, we will learn how to use EJScreen, the Environmental Justice Screening and Mapping Tool developed by the Environmental Protection Agency. This tool allows one to map different types of indices with the option of generating reports and side by side comparisons. We will be focusing on Detroit, Michigan and surrounding areas, with a focus on racism and health."
+    "text": "This lesson introduces EJSCREEN, the EPA’s mapping tool that integrates environmental and demographic data into a consistent national framework. It enables users to visualize and analyze environmental burdens alongside socioeconomic indicators. The lesson demonstrates features of the tool, including mapping features, generating community reports, and comparing EJ indexes. A school district shapefile from Wayne County is then uploaded to EJScreen, which has boundaries based on school county.\nThe lesson also includes a Python component. Specifically, students will learn how to create bar graphs comparing separate regions using EJScreen-generated data in Python. While the lesson primarily focuses on using the web-based EJScreen tool, the Python portion enhances the analysis capabilities by allowing users to create custom visualizations of the data obtained from EJScreen reports. Participants learn to extract meaningful insights by leveraging EJScreen’s datasets and integrating Python for tasks like querying data and generating custom charts. This approach bridges technical and environmental sciences, fostering practical skills in analyzing equity and environmental health issues using programming."
   },
   {
     "objectID": "m203-ejscreen.html#learning-objectives",
     "href": "m203-ejscreen.html#learning-objectives",
     "title": "EJScreen: Environmental Justice Screening and Mapping Tool",
     "section": "Learning Objectives",
-    "text": "Learning Objectives\nAfter completing this lesson, you should be able to:\n\nCreate a polygon of an area of interest.\nGenerate community reports and explore charts of an area of interest or boundary.\nCreate bar graphs comparing separate regions from EJScreen generated graphs on Python.\nInterpret and compare different types of indexes.\nAccess and add a shapefile to the EJScreen mapper."
+    "text": "Learning Objectives\nAfter completing this lesson, you should be able to:\n\nSelect and visualize Maps and Places available in EJScreen.\nUse the tools tab to create a report for the area of interest by drawing a polygon.\nReview and interpret the report outputs.\nUse the Tools section to upload census tract shapefile.\nCreate bar graphs comparing separate regions from EJScreen generated graphs on Python.\nInterpret and compare different types of indexes."
   },
   {
     "objectID": "m203-ejscreen.html#introduction",
@@ -487,7 +487,7 @@
     "href": "m203-ejscreen.html#overview",
     "title": "EJScreen: Environmental Justice Screening and Mapping Tool",
     "section": "",
-    "text": "In this lesson, we will learn how to use EJScreen, the Environmental Justice Screening and Mapping Tool developed by the Environmental Protection Agency. This tool allows one to map different types of indices with the option of generating reports and side by side comparisons. We will be focusing on Detroit, Michigan and surrounding areas, with a focus on racism and health."
+    "text": "This lesson introduces EJSCREEN, the EPA’s mapping tool that integrates environmental and demographic data into a consistent national framework. It enables users to visualize and analyze environmental burdens alongside socioeconomic indicators. The lesson demonstrates features of the tool, including mapping features, generating community reports, and comparing EJ indexes. A school district shapefile from Wayne County is then uploaded to EJScreen, which has boundaries based on school county.\nThe lesson also includes a Python component. Specifically, students will learn how to create bar graphs comparing separate regions using EJScreen-generated data in Python. While the lesson primarily focuses on using the web-based EJScreen tool, the Python portion enhances the analysis capabilities by allowing users to create custom visualizations of the data obtained from EJScreen reports. Participants learn to extract meaningful insights by leveraging EJScreen’s datasets and integrating Python for tasks like querying data and generating custom charts. This approach bridges technical and environmental sciences, fostering practical skills in analyzing equity and environmental health issues using programming."
   },
   {
     "objectID": "m203-ejscreen.html#how-to-use-ejscreen",
