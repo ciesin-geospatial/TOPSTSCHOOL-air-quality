@@ -156,7 +156,7 @@ import matplotlib.pyplot as plt
 In order to use the data that you just downloaded as a CSV file, you have to tell the computer to read the CSV. The pandas read_csv() function reads CSV files. You can specify if the data has a header by adding header = 1, otherwise it treats the column names as part of the data. By specifying the header, it is extracting the column names we noticed in the CSV file and treating them as the header. Reading these files will now turn the csv files into a dataframe.
 
 ```{python}
-df_detroit = pd.read_csv(r'/Users/camillapaige/Documents/code/TOPSTSCHOOL-air-quality/docs/ejscreen_detroit.csv', header = 1)
+df_detroit = pd.read_csv(r'data\\ejscreen_detroit.csv', header = 1)
 ```
 
 Printing out the shape of the dataframe lets one see the number of rows and columns the data has. It is important to know the dimensions of your data before performing any analysis on it, to ensure that you will be correctly manipulating the data. You can also print just the dataframe variable for Sterling Heights and/or Detroit. The output looks like the contents in the CSV file.
@@ -165,7 +165,7 @@ Printing out the shape of the dataframe lets one see the number of rows and colu
 print(df_detroit.shape)
 
 #Read in Sterling Heights csv file.
-df_sterlingheights = pd.read_csv(r'/Users/camillapaige/Documents/code/TOPSTSCHOOL-air-quality/docs/ejscreen_sterlingheights.csv', header = 1)
+df_sterlingheights = pd.read_csv(r'data\\ejscreen_sterlingheights.csv', header = 1)
 
 #Print the dataframe to examine the contents.
 print(df_sterlingheights)

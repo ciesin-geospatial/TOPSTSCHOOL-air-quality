@@ -28,3 +28,6 @@ data/svi/svi_2020_tract_overall_wgs84_nopop.tif
 data/svi/svi_2020_tract_overall_wgs84.tif
 data/svi/svi_2020_tract_socioeconomic_wgs84_nopop.tif
 data/svi/svi_2020_tract_socioeconomic_wgs84.tif
+data/povmap-grdi-v1/povmap-grdi-v1.tif
+data/povmap-grdi-v1/povmap-grdi-v1.tif.aux.xml
+data/povmap-grdi-v1/povmap-grdi-v1.tif.ovr
