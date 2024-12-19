@@ -1,19 +1,44 @@
-# Get the rocker image we want
-# FROM ubuntu:20.04
-FROM rocker/binder
+# Base image
+FROM jupyterhub/singleuser
 
-# Python Environment
-## python and pip
+# Copy the repository into the image
+ADD . /AIR_QUALITY
+
+# Use root user for installations
 USER root
-RUN apt-get update
 
-## python geospatial
-RUN pip install geopandas pyproj shapely xarray rioxarray 
-RUN pip install rasterio netcdf4 h5netcdf dask bottleneck nc-time-axis
-RUN pip install numpy pandas matplotlib 
-RUN pip install requests
+# Install system dependencies for Python and Quarto
+RUN apt-get update && apt-get install -y \
+    libkrb5-dev \
+    build-essential \
+    curl \
+    pandoc \
+    libcurl4-openssl-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Juan
-RUN pip install rasterstats pygadm plotly
+# Install Quarto CLI
+RUN curl -LO https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.340/quarto-1.3.340-linux-amd64.deb \
+    && dpkg -i quarto-1.3.340-linux-amd64.deb \
+    && rm quarto-1.3.340-linux-amd64.deb
 
-CMD ["/init"]
+# Install Python packages
+RUN pip install --no-cache-dir \
+    quarto \
+    jupyterlab-quarto \
+    geopandas pyproj shapely xarray rioxarray \
+    rasterio netcdf4 h5netcdf dask bottleneck nc-time-axis \
+    numpy pandas matplotlib requests \
+    rasterstats pygadm plotly pygris contextily tabulate \
+    scipy pysal splot gssapi arcgis jupyterlab
+
+# Enable JupyterLab extension for Quarto
+RUN jupyter labextension enable jupyterlab-quarto
+
+# Expose necessary ports
+EXPOSE 8888 4200
+
+# Set the working directory
+WORKDIR /AIR_QUALITY
+
+# Start JupyterLab
+ENTRYPOINT ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--NotebookApp.token=''", "--allow-root", "--no-browser"]
