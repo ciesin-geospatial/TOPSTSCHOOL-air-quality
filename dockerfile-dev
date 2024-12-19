@@ -1,5 +1,8 @@
 # Base image
-FROM rocker/binder:latest
+FROM jupyterhub/singleuser
+
+# Copy the repository into the image
+ADD . /AIR_QUALITY
 
 # Use root user for installations
 USER root
@@ -31,5 +34,11 @@ RUN pip install --no-cache-dir \
 # Enable JupyterLab extension for Quarto
 RUN jupyter labextension enable jupyterlab-quarto
 
+# Expose necessary ports
+EXPOSE 8888 4200
+
+# Set the working directory
+WORKDIR /AIR_QUALITY
+
 # Start JupyterLab
-CMD ["/init"]
+ENTRYPOINT ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--NotebookApp.token=''", "--allow-root", "--no-browser"]
