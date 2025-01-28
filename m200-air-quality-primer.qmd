@@ -5,7 +5,7 @@ bibliography: air-intro-references.bib
 author: "Dhruvil Prajapati"
 ---
 
-## Introduction
+## Introduction  
 
 Pollution represents a critical threat to environmental health [@manisalidis2020; @WHO2021; @mananga2023], characterized by the introduction of harmful substances into the environment in quantities that disrupt natural processes and negatively affect living organisms and ecosystems. Among the various forms of pollution, air pollution stands out due to its widespread impact on both health and the environment. Air, primarily composed of nitrogen and oxygen, can become a vehicle for a variety of pollutants—including gases like carbon monoxide and sulfur dioxide, particulate matter, and even hazardous liquids and solids like heavy metals and plastic debris [@Nathanson2024]. These pollutants can have immediate or long-term consequences, compromising air quality, water resources, soil health, and biodiversity, which ultimately jeopardizes the well-being of both ecosystems and human populations.
   
