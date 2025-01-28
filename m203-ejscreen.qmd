@@ -52,9 +52,9 @@ What is the importance of EJScreen?
 -   All of the above
 :::
 
-## How to use EJScreen?
+## How to access EJScreen:
 
-To begin, click on the EJScreen link here: https://www.epa.gov/ejscreen. In that page, along with resources on how to use EJScreen, you will see a blue, bold text labeled “Launch the EJScreen Tool.” You can also go straight to the mapper using this link: https://ejscreen.epa.gov/mapper/.
+To begin, click on the EJScreen link here: https://www.epa.gov/ejscreen. On that page, along with resources on how to use EJScreen, you will see a blue, bold text labeled “Launch the EJScreen Tool.” You can also go straight to the mapper using this link: https://ejscreen.epa.gov/mapper/.
 
 ![](docs/m203-ej-images/image9.png){fig-align="center"}
 
@@ -122,6 +122,20 @@ Page 2 of the report presents bar graphs comparing EJ indexes at state and natio
 
 Let's compare this report to one generated outside of Detroit. Try to pick an area that shows a lower percentile of people of color, or less red, like Sterling Heights or Westland. What differences do you see? Are the EJ indexes higher or lower?
 
+## Importing Image Layers from ESRI Living Atlas into EJScreen
+
+You can also access and visualize demographic and environmental data from other sources, including Map Services. The first step to incorporating external data into EJScreen is to access the ESRI Living Atlas, which contains a variety of publicly available datasets. Users can search for relevant layers by entering keywords related to their area of interest, such as air pollution, heat vulnerability, or land use. Each layer in the Living Atlas comes with detailed metadata and a "Service URL" (often referred to as the REST URL). This URL is essential for linking the data to other mapping tools like EJScreen.
+
+Navigate to https://livingatlas.arcgis.com/en/home/
+
+Search for 'TEMPO NO2' https://gis.earthdata.nasa.gov/portal/home/item.html?id=0252904123a74e74a7cff652d52a5b19[![](images/image27-01.png)](https://gis.earthdata.nasa.gov/portal/home/item.html?id=0252904123a74e74a7cff652d52a5b19)
+
+Once you have identified a relevant layer and copied its Service URL in the bottom right of the page, you can add it to EJScreen The EJScreen interface includes an option to "AddMaps & Data" then select "Add Map Services" where you will paste the copied URL. This action imports the chosen geospatial layer into your EJSCREEN map. Depending on the type of layer, you may be able to customize its display, such as adjusting transparency, color, or symbology, to better integrate it with the existing EJSCREEN data.
+
+After the Living Atlas layer is successfully added, it can be used in combination with EJScreen's built-in indicators. This allows for deeper analysis by overlaying environmental justice data with external geospatial information, such as pollution levels or land use patterns. By integrating both datasets, users can gain a more comprehensive view of the factors influencing environmental justice in a particular area. Another resource for EJI by CDC: https://www.atsdr.cdc.gov/place-health/php/eji/eji-explorer.html To learn more about TEMPO: Air Quality Monitoring from Space by NASA using TEMPO, check out this StoryMap: https://storymaps.arcgis.com/stories/01e82aefbc8b4d7a951fe089c818bc0c
+
+## Using the "Explore Charts" Function to Generate Data for Analysis
+
 One can also view other reports, and download excel data. Lets compare the bar graphs in a red population of Detroit and a region in Sterling Heights. Delete the original polygon and create new ones within those regions.
 
 ![](docs/m203-ej-images/image24.png){fig-align="center"}
@@ -156,7 +170,7 @@ import matplotlib.pyplot as plt
 In order to use the data that you just downloaded as a CSV file, you have to tell the computer to read the CSV. The pandas read_csv() function reads CSV files. You can specify if the data has a header by adding header = 1, otherwise it treats the column names as part of the data. By specifying the header, it is extracting the column names we noticed in the CSV file and treating them as the header. Reading these files will now turn the csv files into a dataframe.
 
 ```{python}
-df_detroit = pd.read_csv(r'data\\ejscreen_detroit.csv', header = 1)
+df_detroit = pd.read_csv(r'data/ejscreen_detroit.csv', header = 1)
 ```
 
 Printing out the shape of the dataframe lets one see the number of rows and columns the data has. It is important to know the dimensions of your data before performing any analysis on it, to ensure that you will be correctly manipulating the data. You can also print just the dataframe variable for Sterling Heights and/or Detroit. The output looks like the contents in the CSV file.
@@ -165,7 +179,7 @@ Printing out the shape of the dataframe lets one see the number of rows and colu
 print(df_detroit.shape)
 
 #Read in Sterling Heights csv file.
-df_sterlingheights = pd.read_csv(r'data\\ejscreen_sterlingheights.csv', header = 1)
+df_sterlingheights = pd.read_csv(r'data/ejscreen_sterlingheights.csv', header = 1)
 
 #Print the dataframe to examine the contents.
 print(df_sterlingheights)
