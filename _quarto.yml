@@ -26,6 +26,8 @@ website:
         url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/index.html
       - text: "Lessons"
         menu:
+          - text: "Introduction to Air Quality"
+            url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m200-air-quality-primer.html
           - text: "Lesson 1: Student-Led Monitoring"
             url: https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m201-student-led-monitoring-nyc.html
           - text: "Lesson 2: Exploring ICIS-AIR, TRI, SVI, and Health Outcomes"
