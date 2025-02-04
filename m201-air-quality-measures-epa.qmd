@@ -9,15 +9,15 @@ The EPA AirData Air Quality Monitors data is available to download here: <https:
 
 Some information about the interactive map viewer is provided when the page is opened for the first time. Once you have reviewed the information provided about how to navigate the platform, select "OK."
 
-![](images/Untitled 8.png){fig-align="center"}
+![](images/EPA-Map-Open-page.png){fig-align="center"}
 
-To focus on a specific area, click into the Search bar in the top left corner of the page and enter "South Bronx" (or your location, if you're interested in what air quality data is locally.) ![](images/Screenshot 2025-02-04 at 11.34.05 AM.png)
+To focus on a specific area, click into the Search bar in the top left corner of the page and enter "South Bronx" (or your location, if you're interested in what air quality data is locally.) ![](images/EPA-Map-searchbar.png)
 
-Open the layers available by clicking the left-most icon in the right header:![](images/Screenshot 2025-02-04 at 11.31.06 AM.png)
+Open the layers available by clicking the left-most icon in the right header:![](images/EPA-Map-Select-Layer.png)
 
 Now you can browse all of the different layers available in the viewer. Scroll to find PM2.5 - Active and PM2.5 Chemical Speciation Network - Active and click the check boxes to turn the layers on. If you select the arrow to the left of the check boxes, the symbology for these layers will appear, so you can see that each PM2.5 sensor location is marked with a yellow pinpoint on the map, and each PM2.5 Speciation sensor is marked with a yellow flag with "CSN" printed in tiny letters.
 
-![](images/Untitled 7.png){fig-align="center"}
+![](images/EPA-Map-selectlayer.png){fig-align="center"}
 
 Now you can see the PM2.5 sensor locations in the South Bronx. Click on one of the sensor locations on the map to see the pop-up appear. The pop-up window allows you to see data about the sensor site and download the available data.
 
