@@ -5,7 +5,7 @@ format: html
 
 ## Introduction
 
-The EPA AirData Air Quality Monitors data is available to download here: <https://epa.maps.arcgis.com/apps/webappviewer>
+The EPA AirData Air Quality Monitors data is available to download here: <https://epa.maps.arcgis.com/apps/webappviewer/index.html?id=5f239fd3e72f424f98ef3d5def547eb5>
 
 Some information about the interactive map viewer is provided when the page is opened for the first time. Once you have reviewed the information provided about how to navigate the platform, select "OK."
 
