@@ -9,7 +9,7 @@ bibliography: pm25-grdi-references.bib
 
 In this lesson, you will use NASA socioeconomic and environmental Earthdata available at NASA [Socioeconomic Data and Applications Center](https://earthdata.nasa.gov/centers/sedac-daac) (SEDAC) to examine air quality by measuring concentrations of **particulate matter (PM)** data in different country-level administrative areas. We will focus on countries not meeting international health guidelines, and we will compare the PM concentration between areas with different levels of socioeconomic deprivation, a proxy for poverty, to determine if there is a correlation between exposure to air pollutants and poverty.
 
-This lesson walks through the process of calculating and visualizing zonal statistics for a set of countries using spatial raster data, with a focus on PM2.5 concentrations  and socioeconomic vulnerability characterized by the **Global Gridded Relative Deprivation Index (GRDI)**, tailored to different socioeconomic areas within each country. We will subset the GRDI and PM2.5 raster data for each country and compute relevant zonal statistics such as mean, median, and various percentiles for PM2.5 concentrations. These statistics are stored as a **GeoDataFrame**, a data table format that can store spatial data, which is later used to create a [choropleth map](https://data.europa.eu/apps/data-visualisation-guide/choropleth-maps) that visualizes specific PM2.5 concentration metrics across countries. The lesson includes a detailed analysis of PM2.5 concentrations within different GRDI quartiles for selected countries. This involves clipping the raster data to each country's geometry, filtering the data based on the GRDI quartiles, and calculating the mean PM2.5 levels for each quartile. The results are then visualized using customized plots to highlight the relationship between air quality and socioeconomic metrics across the selected countries.
+This lesson walks through the process of calculating and visualizing zonal statistics for a set of countries using spatial raster data, with a focus on PM2.5 concentrations and socioeconomic vulnerability characterized by the **Global Gridded Relative Deprivation Index (GRDI)**, tailored to different socioeconomic areas within each country. We will subset the GRDI and PM2.5 raster data for each country and compute relevant zonal statistics such as mean, median, and various percentiles for PM2.5 concentrations. These statistics are stored as a **GeoDataFrame**, a data table format that can store spatial data, which is later used to create a [choropleth map](https://data.europa.eu/apps/data-visualisation-guide/choropleth-maps) that visualizes specific PM2.5 concentration metrics across countries. The lesson includes a detailed analysis of PM2.5 concentrations within different GRDI quartiles for selected countries. This involves clipping the raster data to each country's geometry, filtering the data based on the GRDI quartiles, and calculating the mean PM2.5 levels for each quartile. The results are then visualized using customized plots to highlight the relationship between air quality and socioeconomic metrics across the selected countries.
 
 ## Learning Objectives
 
@@ -29,7 +29,11 @@ As we have learned from previous lessons in this module, air quality is an impor
 
 ### Background
 
-Air pollution is now recognized as the single biggest environmental threat to human health. Air pollution affects different aspects of health and impacts everyone in low, middle, and high-income countries alike. It is estimated that pollution is responsible for 9 million deaths per year [@fuller2022]. The burden of disease attributable to air pollution is now on a par with other major global health risks such as unhealthy diet and tobacco smoking [@who2021; @who2022]. Air pollution also places risks upon several of the United Nations’ 2023 Sustainable Development Goals (SDGs), including SDG 3 (Good health and well-being), SDG 11 (Sustainable Communities), and SDG 15 (Life on Land), among others [@un_sdgs_2024]. Monitoring air quality is crucial for tracking the well-being of people around the world and for the advancement of global sustainable development policies that address these environmental and social risks.
+![Haze over eastern China](https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001269/GSFC_20171208_Archive_e001269~orig.jpg){style="object-fit: cover;  object-position:  left top; float: left; margin: 10px;" fig-align="center" height="300"} [^1] 
+
+[^1]: Image Credit: [NASA GSFC](https://images.nasa.gov/details/GSFC_20171208_Archive_e001269)
+
+Air pollution is now recognized as the single biggest environmental threat to human health. Air pollution affects different aspects of health and impacts everyone in low, middle, and high-income countries alike. It is estimated that pollution is responsible for 9 million deaths per year [@fuller2022]. The burden of disease attributable to air pollution is now on a par with other major global health risks such as unhealthy diet and tobacco smoking [@who2021; @who2022]. Air pollution also places risks upon several of the United Nations’ [Sustainable Development Goals (SDGs)](https://sdgs.un.org/goals), including SDG 3 (Good health and well-being), SDG 11 (Sustainable Communities), and SDG 15 (Life on Land), among others [@un_sdgs_2024]. Monitoring air quality is crucial for tracking the well-being of people around the world and for the advancement of global sustainable development policies that address these environmental and social risks.
 
 Particulate matter (PM₂.₅ and PM₁₀) can penetrate deep into the lungs and bloodstream, leading to respiratory and cardiovascular problems and being associated with conditions such as heart disease and lung cancer. [@who2022]. Benefits from improved air quality include prevention of air pollution-related premature deaths, chronic diseases, damages to ecosystems and crops, as well as the economic benefits for human health from air quality improvement [@calvin2023]. The United Nations Intergovernmental Panel on Climate Change’s (IPCC) latest Climate report acknowledges the largest adaptation gaps exist in projects that manage complex dynamics between air quality and climate risks, and that reductions in greenhouse gas (GHG) emissions would lead to improvements in air quality within a few years [@calvin2023]. Progress has been made to improve air quality, particularly in high-income countries, however; 99% of the world’s population is living in places where the World Health Organization’s (WHO’s) air quality guidelines are not being met [@who2021; @who2022].
 
@@ -39,41 +43,19 @@ We focus on PM2.5 because we will be working with the SEDAC Global Annual PM2.5 
 
 Table 1. WHO Recommended AQG levels and interim targets
 
-<table style="border-collapse: collapse; width: 100%;">
-  <tr style="border: 1px solid black;">
-    <th rowspan="2" style="border: 1px solid black; padding: 8px;">Pollutant</th>
-    <th rowspan="2" style="border: 1px solid black; padding: 8px;">Averaging Time</th>
-    <th colspan="4" style="border: 1px solid black; padding: 8px;">Interim Target</th>
-    <th rowspan="2" style="border: 1px solid black; padding: 8px;">AQG Level</th>
-  </tr>
-  <tr style="border: 1px solid black;">
-    <th style="padding: 8px;">1</th>
-    <th style="padding: 8px;">2</th>
-    <th style="padding: 8px;">3</th>
-    <th style="padding: 8px;">4</th>
-  </tr>
-  <tr style="border: 1px solid black;">
-    <td rowspan="2" style="border: 1px solid black; padding: 8px;">PM2.5, µg/m³</td>
-    <td style="border: 1px solid black; padding: 8px;">Annual</td>
-    <td style="border: 1px solid black; padding: 8px;">35</td>
-    <td style="border: 1px solid black; padding: 8px;">25</td>
-    <td style="border: 1px solid black; padding: 8px;">15</td>
-    <td style="border: 1px solid black; padding: 8px;">10</td>
-    <td style="border: 1px solid black; padding: 8px;">5</td>
-  </tr>
-  <tr style="border: 1px solid black;">
-    <td style="border: 1px solid black; padding: 8px;">24-hour*</td>
-    <td style="border: 1px solid black; padding: 8px;">75</td>
-    <td style="border: 1px solid black; padding: 8px;">50</td>
-    <td style="border: 1px solid black; padding: 8px;">37.5</td>
-    <td style="border: 1px solid black; padding: 8px;">25</td>
-    <td style="border: 1px solid black; padding: 8px;">15</td>
-  </tr>
-</table>
++--------------+----------------+----------------+-----------+
+| Pollutant    | Averaging Time | Interim Target | AQG Level |
++==============+================+================+===========+
+| 1            | 2              | 3              | 4         |
++--------------+----------------+----------------+-----------+
+| PM2.5, µg/m³ | Annual         | 35             | 25        |
++--------------+----------------+----------------+-----------+
+| 24-hour\*    | 75             | 50             | 37.5      |
++--------------+----------------+----------------+-----------+
 
 \*99th percentile (i.e. 3-4 exceedance days per year).
 
-Inequality, political instability, and increased cost of living are some of the causes preventing significant progress to reduce poverty and meet the SDGs. This continued environmental inequality can also be seen in the significant majority (89%) of premature deaths attributed to air pollution, which occur in low- and middle- income countries (World Health Organization, 2022). In an account of 110 countries, 1.1 billion people (18%) are considered to live in “acute” multidimensional poverty, with half living in Sub-Saharan Africa and a third living in South Asia (UNDP (United Nations Development Programme), 2023). Studies have shown that persons with lower socioeconomic status disproportionately experience higher concentrations of pollutants (Flanagan et al., 2019). The level of poverty experienced by vulnerable communities can compound the risks posed by pollution leading to worsening well being and health outcomes.
+Inequality, political instability, and increased cost of living are some of the causes preventing significant progress to reduce poverty and meet the SDGs. This continued environmental inequality can also be seen in the significant majority (89%) of premature deaths attributed to air pollution, which occur in low- and middle- income countries [@who2022]. In an account of 110 countries, 1.1 billion people (18%) are considered to live in “acute” multidimensional poverty, with half living in Sub-Saharan Africa and a third living in South Asia [@UNDP2023]. Studies have shown that persons with lower socioeconomic status disproportionately experience higher concentrations of pollutants [@Flanagan2019]. The level of poverty experienced by vulnerable communities can compound the risks posed by pollution leading to worsening well being and health outcomes.
 
 ## Data Collection and Integration
 
@@ -103,7 +85,7 @@ Load the GRDIv1 and PM2.5 data from local sources:
 
 ```{python}
 # Load rasters
-grdi_path = r"Z:\Sedac\GRDI\data\povmap-grdi-v1-geotiff\final data\povmap-grdi-v1.tif"
+grdi_path = r"data\povmap-grdi-v1\povmap-grdi-v1.tif"
 pm25_path = r"data\sdei-global-annual-gwr-pm2-5-modis-misr-seawifs-aod-v4-gl-03-2019-geotiff\sdei-global-annual-gwr-pm2-5-modis-misr-seawifs-aod-v4-gl-03-2019.tif"
 
 ```
@@ -128,7 +110,8 @@ grdi_raster = grdi_raster.rio.reproject_match(pm25_raster,resampling=Resampling.
 
 ## Previewing Spatial Data in a Plot
 
-Once the data rasters have been resampled to the same resolution, we can quickly plot them to view the data we are working with on a map. 
+Once the data rasters have been resampled to the same resolution, we can quickly plot them to view the data we are working with on a map.
+
 ```{python}
 # Plotting the rasters
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 20))
@@ -177,7 +160,6 @@ country_sample
 ## Zonal Statistics for Each Administrative Area
 
 `rasterstats` has a funcion `zonal_stats()` which allows you to use vectors to summarize raster data. We summarize GRDIv1 data to calculate the following statistics: count, minimum, mean, max, median, standard deviation, range, and percentiles 20, 40, 60, and 80.
-
 
 We can **define a custom function** that can allow us to use the zonal statistics process multiple times. A custom function can be created using the `def FUNCTION_NAME(PARAMETER1, PARAMETER2):` fuction to define what the fucntion will do.
 
@@ -274,7 +256,6 @@ Let's put our defined function to use:
 stats_results = calculate_country_stats(country_sample, grdi_raster, pm25_raster)
 ```
 
-
 Let's use the `.head()` method from Pandas to check the top of our table
 
 ```{python}
@@ -285,7 +266,7 @@ So far, we have collected the overall average PM2.5 for the countries. Based on 
 
 ```{python}
 stats_results = stats_results[stats_results["PM25_Mean"] >= 5.0]
-stats_results
+print(len(stats_results))
 ```
 
 ```{python}
@@ -313,7 +294,7 @@ pd.reset_option("display.max_colwidth")
 
 ```
 
-From the table above, we can see how many and which countries are within the WHO AQG, or are within interim stages of air quality improvement. 
+From the table above, we can see how many and which countries are within the WHO AQG, or are within interim stages of air quality improvement.
 
 Below, choose an attribute, or column, to display it in a map plot. In this case, I'm choosing the PM2.5 Mean.
 
@@ -470,7 +451,6 @@ for index, row in stats_results.iloc[:].iterrows():
     stats_results.at[index, 'PM25_Q5'] = pm25_countryQ5v
 ```
 
-
 ## Plot Results of Mean PM2.5 in Socieceonomic Deprivation Quartiles per country
 
 Similarly, we create a list of tuples of how we want to display the data, and create a figure based on the tuples. This plot would show each country in the y axis and the Log of Mean PM2.5 values in each country's GRDI quarties.
@@ -533,10 +513,10 @@ With this shapely plot, We can examine differences between countries and PM2.5 v
 
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
-1.  Which countries did you identify to be over the WHO AQG values? 
-2.  Which countries have higher contentrations of air pollution in lower socioecomnomic strata? 
-3.  Which are the opposite?
 
+1.  Which countries did you identify to be over the WHO AQG values?
+2.  Which countries have higher contentrations of air pollution in lower socioecomnomic strata?
+3.  Which are the opposite?
 :::
 
 Congratulations! .... Now you should be able to:
@@ -548,7 +528,6 @@ Congratulations! .... Now you should be able to:
 -   Create maps to visualize spatial data distribution.
 -   Resample spatial data to harmonize the compare socioeconomic data with environmental data.
 -   Summarize spatial data in tables to analyze how air quality differs across different socioeconomic conditions in administrative areas around the world.
-
 
 ## Module 2: Air Quality Home
 
