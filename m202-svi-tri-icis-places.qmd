@@ -21,13 +21,13 @@ In this lesson, we will introduce you to 3 public health and air quality dataset
 This lesson uses the Python programming environment.
 :::
 
-::: column-margin
+:::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### Data Science Review
 
 An Application Programming Interface (API) is a set of protocols, tools, and definitions that enable different software applications to communicate with each other. It acts as an intermediary, allowing one application to request specific data or actions from another application or service without needing access to its entire codebase. APIs define the methods and data formats that applications can use to request and exchange information, typically through specific *endpoints* (URLs) that accept requests and return responses in standardized formats like JSON. They are crucial for integrating external services, accessing databases, and enabling communication between different parts of larger open science software systems.
 :::
-:::
+::::
 
 ## Learning Objectives
 
@@ -101,14 +101,9 @@ These are just a few examples that demonstrate the ongoing collaboration between
 
 Air quality issues in urban areas disproportionately affect low-income communities and communities of color, making it a critical focus for environmental justice efforts. Federal agencies like the EPA and CDC play crucial roles in setting standards and conducting research, but community-driven science initiatives have emerged as powerful tools for local action. Open data is key to these efforts, enabling transparency, accessibility, innovation, and collaboration. Cities like Detroit and Chicago are at the forefront of these initiatives, with projects that empower residents to monitor and advocate for better air quality. While challenges remain, particularly in data management and accessibility, the collaboration between community groups, local governments, and state agencies like Michigan's EGLE demonstrates a promising path forward.
 
-## Data Analysis and Exercises
-
 To better understand and address these complex issues of air pollution, public health impacts, and environmental inequities, we’ll work through a series of coding and data science exercises. These hands-on activities will allow users to explore some of the open datasets and tools that are available to community members and stakeholders that offer practical insights into air quality, public health, and social vulnerability.
 
-We'll begin with the ICIS-AIR dataset, then move on to the TRI Facility dataset, and finally work our way down to TRI Form A. After exploring these 3 air pollution datasets, we will take a look at the CDC PLACES health outcomes data and perform some simple analysis integrating the pollution and health outcomes data.
-
-::: {.callout-tip style="color: #5a7a2b;"}
-#### Data Science Review
+## Required Python Modules
 
 This lesson uses the following Python modules:
 
@@ -129,6 +124,9 @@ This lesson uses the following Python modules:
 -   [`pysal`](https://pysal.org/): A library of spatial analysis functions.
 -   [`splot`](https://splot.readthedocs.io/en/latest/): Provides statistical plots for spatial analysis.
 
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Data Science Review
+
 If you'd like to learn more about the functions used in this lesson, you can refer to the documentation on their respective websites.
 
 The `pandas` module is essential for data manipulation and analysis, while `geopandas` extends its functionality to handle geospatial data (spatial data format used to represent geographic information as a grid of cells or pixels). `matplotlib` is used for creating static, animated, and interactive visualizations. `numpy` provides support for large, multi-dimensional arrays and matrices, along with a collection of mathematical functions to operate on these arrays.
@@ -144,15 +142,17 @@ The `requests` module allows you to send HTTP requests and interact with APIs ea
 Make sure these modules are installed before you begin working with the code in this document.
 :::
 
-### ICIS Air
+## ICIS Air
+
+We'll begin with the ICIS-AIR dataset, then move on to the TRI Facility dataset, and finally work our way down to TRI Form A. After exploring these 3 air pollution datasets, we will take a look at the CDC PLACES health outcomes data and perform some simple analysis integrating the pollution and health outcomes data.
 
 [ICIS-AIR (Integrated Compliance Information System for Air)](https://www.epa.gov/enviro/icis-air-overview) is a comprehensive database maintained by the U.S. Environmental Protection Agency (EPA) that focuses specifically on air quality compliance and enforcement data. It tracks information related to stationary sources of air pollution, including their compliance with various Clean Air Act regulations, permit data, and enforcement actions. While ICIS-AIR and the [Toxic Release Inventory (TRI)](https://www.epa.gov/toxics-release-inventory-tri-program) are separate systems, they have significant overlap in their coverage of industrial facilities and air emissions. Many facilities that report to TRI also have data in ICIS-AIR, providing complementary information.
 
 Where TRI focuses on the quantities of specific toxic chemicals released into the air, ICIS-AIR offers a broader picture of a facility's overall air quality compliance status, including non-toxic pollutants regulated under the Clean Air Act. Together, these systems provide a more comprehensive view of industrial air pollution sources, enabling researchers, regulators, and the public to assess both the types and quantities of air pollutants emitted (from TRI) and the regulatory compliance status of the emitting facilities (from ICIS-AIR).
 
-#### Data Processing
+### Data Processing
 
-##### Defining Our Study Area
+#### Defining Our Study Area
 
 Before we can query the API for ICIS-AIR regulated facilities in the greater Detroit area, we need to create a spatial object that defines our study area and that we can use throughout this analysis. The U.S. Census Bureau defines the Detroit, MI Metropolitan Statistical Area (MSA) as including 6 counties (Wayne, Macomb, Oakland, Lapeer, Livingston, and St. Clair), but for this lesson we will focus on the core 3 counties (Wayne, Macomb, and Oakland); both population and air emissions related facilities are sparser in the outer counties.
 
@@ -229,7 +229,7 @@ plt.show()
 
 This looks correct, and we'll use this boundary object repeatedly throughout our analysis.
 
-#### Querying the API
+### Querying the API
 
 The EPA's [Enforcement and Compliance History Online (ECHO)](https://echo.epa.gov/) website serves as a comprehensive portal for environmental compliance and enforcement data. It includes the ECHO Data Service, which provides programmatic access to EPA data through [RESTful](https://echo.epa.gov/tools/web-services) APIs. Among these is the ICIS-AIR API, which specifically offers access to air quality compliance and enforcement data. This API allows users to retrieve detailed information about stationary sources of air pollution, including facility details, permit data, emissions reports, and compliance status.
 
@@ -331,29 +331,29 @@ else:
 
 There are over three thousand facilities in the ICIS-AIR Michigan dataset. Here are the descriptions for some key columns.
 
-#### Key Columns in the [ICIS-AIR ECHO API Dataset](https://echo.epa.gov/help/facility-search/air-search-results-help)
+### Key Columns in the [ICIS-AIR ECHO API Dataset](https://echo.epa.gov/help/facility-search/air-search-results-help)
 
-| **Key Column**                       | **Description**                                                        |
-|--------------------------------------|------------------------------------------------------------------------|
-| AIRName                              | The name of the facility                                               |
-| SourceID                             | A unique identifier for the air pollution source                       |
-| AIRStreet, AIRCity, AIRState, AIRZip | Address components of the facility                                     |
-| RegistryID                           | A unique identifier for the facility in the EPA’s registry             |
-| AIRCounty                            | The county where the facility is located                               |
-| AIREPARegion                         | The EPA region responsible for the facility                            |
-| AIRNAICS                             | North American Industry Classification System code(s) for the facility |
-| FacLat, FacLong                      | Latitude and longitude coordinates of the facility                     |
-| AIRPrograms                          | Air quality programs applicable to the facility                        |
-| AIRStatus                            | Current operational status of the facility                             |
-| AIRUniverse                          | Categorization of the facility within air quality regulation           |
-| AIRComplStatus                       | Current compliance status under the Clean Air Act                      |
-| AIRHpvStatus                         | High Priority Violator status                                          |
-| AIRQtrsWithViol                      | Number of quarters with violations                                     |
-| AIRLastViolDate                      | Date of the most recent violation                                      |
-| AIREvalCnt                           | Count of evaluations conducted                                         |
-| AIRLastEvalDate                      | Date of the most recent evaluation                                     |
-| AIRFceCnt                            | Count of Full Compliance Evaluations                                   |
-| AIRLastFceDate                       | Date of the last Full Compliance Evaluation                            |
+| **Key Column** | **Description** |
+|----|----|
+| AIRName | The name of the facility |
+| SourceID | A unique identifier for the air pollution source |
+| AIRStreet, AIRCity, AIRState, AIRZip | Address components of the facility |
+| RegistryID | A unique identifier for the facility in the EPA’s registry |
+| AIRCounty | The county where the facility is located |
+| AIREPARegion | The EPA region responsible for the facility |
+| AIRNAICS | North American Industry Classification System code(s) for the facility |
+| FacLat, FacLong | Latitude and longitude coordinates of the facility |
+| AIRPrograms | Air quality programs applicable to the facility |
+| AIRStatus | Current operational status of the facility |
+| AIRUniverse | Categorization of the facility within air quality regulation |
+| AIRComplStatus | Current compliance status under the Clean Air Act |
+| AIRHpvStatus | High Priority Violator status |
+| AIRQtrsWithViol | Number of quarters with violations |
+| AIRLastViolDate | Date of the most recent violation |
+| AIREvalCnt | Count of evaluations conducted |
+| AIRLastEvalDate | Date of the most recent evaluation |
+| AIRFceCnt | Count of Full Compliance Evaluations |
+| AIRLastFceDate | Date of the last Full Compliance Evaluation |
 
 These columns provide information about each facility's location, operational characteristics, compliance history, and regulatory oversight under the Clean Air Act. It includes information on violations, evaluations, and compliance status that assess a facility's environmental performance and regulatory compliance.
 
@@ -523,7 +523,6 @@ ICIS-AIR is a powerful tool for communities and policy-makers to identify regula
 
 Next, we’ll take a look at facilities required to report to the TRI.
 
-
 ::: {.callout-tip style="color: #9f0b64;"}
 #### Knowledge Check
 
@@ -535,7 +534,7 @@ c)  A public health database tracking respiratory illnesses
 d)  A database of weather patterns affecting air quality
 :::
 
-### Toxic Release Inventory
+## Toxic Release Inventory
 
 The [Toxic Release Inventory (TRI)](https://www.epa.gov/toxics-release-inventory-tri-program) is a crucial resource in understanding and addressing air quality issues in the United States. Established under the Emergency Planning and Community Right-to-Know Act of 1986, the TRI is a publicly accessible database maintained by the Environmental Protection Agency (EPA). It requires certain industrial facilities to report annually on their releases of toxic chemicals into the environment, including air emissions. The TRI provides valuable data on over 770 chemicals and chemical categories, offering insights into the types and quantities of pollutants released into the air by various industries. This information is vital to researchers, policymakers, and community advocates in assessing local air quality, identifying potential health risks, and developing targeted strategies to reduce toxic air emissions. By making this data publicly available, the TRI plays an important role in promoting transparency and supporting environmental justice initiatives focused on improving air quality in communities across the nation.
 
@@ -576,7 +575,7 @@ The Toxics Release Inventory (TRI) and the Integrated Compliance Information Sys
     -   ICIS-AIR: While national, implementation can vary more by state or local air quality management district
 :::
 
-#### Envirofacts API
+### Envirofacts API
 
 [EnviroFacts](https://www.google.com/url?q=https://enviro.epa.gov/&sa=D&source=docs&ust=1733163481208997&usg=AOvVaw0dJjyDJg-FG1iSnwyCuuaH) is a comprehensive online database and information system maintained by the U.S. Environmental Protection Agency (EPA). It serves as a centralized hub for accessing a wide range of environmental data collected by the EPA and other federal agencies. EnviroFacts integrates information from multiple EPA databases, covering various aspects of environmental health, including air quality, water quality, hazardous waste, and toxic releases. One of the key components of EnviroFacts is the Toxic Release Inventory (TRI) data. Through EnviroFacts, users can easily access and query TRI information, allowing them to investigate toxic chemical releases and waste management activities in their local areas. The integration of TRI data within the broader EnviroFacts system enables researchers, policymakers, and community members to contextualize toxic release information alongside other environmental indicators.
 
@@ -590,7 +589,7 @@ Envirofacts is available as a [web based search and data platform](https://envir
 The agreement, described as "groundbreaking" by the [Sierra Club](https://www.sierraclub.org/), introduces several new measures. EGLE will conduct environmental justice and cumulative impact analyses for future licensing decisions, potentially denying licenses that would have an unlawful impact on human health and the environment. The settlement also includes provisions for improved community engagement, such as better translation services, public input processes, and the installation of air monitors around U.S. Ecology North. Additionally, the state will work with local residents to conduct a community health assessment. While some details remain to be clarified, environmental advocates view this as a significant step towards advancing environmental justice in Michigan.
 :::
 
-#### Querying the API
+### Querying the API
 
 We'll continue to use the Detroit metro boundary we created earlier. We assigned them the names `detroit_metro` and `detroit_metro_bm` (projected to mercator to match **b**ase**m**aps for plotting).
 
@@ -635,7 +634,7 @@ for county in counties:
 
 ```
 
-#### Processing the Data
+### Processing the Data
 
 The TRI data comes in json format. This format can be confusing to interpret, because each record (traditionally a row in a table) is viewed with columns structured vertically. Let’s look at the first record.
 
@@ -715,7 +714,7 @@ print(f"Number of facilities after removing longitude outliers: {len(tri_df_clea
 
 Thankfully we only lost 2 more records from outliers.
 
-#### Visualizing the Data
+### Visualizing the Data
 
 The data has been cleaned up a bit so now lets create a spatial point object from the data with **geopandas** and use **matplotlib** to plot the values on top of a basemap of Detroit we'll acquire using **contextily** and our original Wayne, Macomb, and Oakland counties boundary.
 
@@ -787,7 +786,7 @@ c)  To provide data on toxic chemical releases from industrial facilities
 d)  To record air quality index values for major cities
 :::
 
-### Toxic Release Inventory: Form R
+## Toxic Release Inventory: Form R
 
 We can make the query to Envirofacts. Let's break down the call.
 
@@ -802,7 +801,7 @@ url = "https://data.epa.gov/efservice/V_TRI_FORM_R_EZ/REPORTING_YEAR/2021/AIR_TO
 ```
 
 -   Base url: https://data.epa.gov/efservice/
--   The table we're requesting: V_TRI_FORM_R\_EZ/
+-   The table we're requesting: V_TRI_FORM_R_EZ/
 -   For just 2021: REPORTING_YEAR/2021/
 -   Only facilities that report some air release: AIR_TOTAL_RELEASE/\>/0/
 -   Just Michigan: STATE_ABBR/MI/
@@ -1003,7 +1002,7 @@ c)  Detailed data on chemical releases, including air releases
 d)  Employee health records related to chemical exposure
 :::
 
-### Social Vulnerability Index
+## Social Vulnerability Index
 
 NASA's [U.S. Social Vulnerability Index Grids (SVI), v1.01](https://sedac.ciesin.columbia.edu/data/set/usgrid-us-social-vulnerability-index-rev01) raster dataset, available through the NASA [Socioeconomic Data and Applications Center (SEDAC)](https://earthdata.nasa.gov/centers/sedac-daac), is a high-resolution geospatial resource that quantifies social vulnerability across the United States. This dataset is based on the CDC's Social Vulnerability Index but is presented in a raster format, providing continuous coverage at a 250-meter resolution. The SVI incorporates various socioeconomic and demographic factors such as poverty, lack of vehicle access, crowded housing, and minority status to assess communities' capacity to prepare for, respond to, and recover from hazards, including environmental threats like poor air quality.
 
@@ -1022,7 +1021,7 @@ If you don’t already have an Earth Data account you can follow these steps to 
 5.  Visit the [SEDAC](https://sedac.ciesin.columbia.edu/) website and search for the U.S. Social Vulnerability Index Grids, v1.01 dataset by entering “SVI” in the search bar.
 6.  Download the 2020 WGS84 SVI grids; enter your Earth Data credentials to log in when prompted.
 
-#### Data Processing
+### Data Processing
 
 Once you’ve downloaded the dataset to your working directory, you can proceed with the analysis.
 
@@ -1145,7 +1144,7 @@ c)  Communities' capacity to prepare for and respond to hazards
 d)  Population density in urban areas
 :::
 
-### Integrating TRI and SVI
+## Integrating TRI and SVI
 
 There are numerous ways to assess the relationships between the SVI and TRI data. For this lesson we’ll identify areas where air releases and vulnerability are highest together by creating a new rasterized index that combines both layers.
 
@@ -1280,7 +1279,7 @@ print(f"Maximum cell value in raster: {air_release_raster_da.max().values:,.2f}"
 
 The raster looks as expected with the highest values in locations where our previous map had the largest circles. We overlaid the points to see the sources of the values. The cell resolution is set to 5000m. This was selected so we can evaluate the map and the process we used to create the raster, but any value could be set depending on the intended use.
 
-#### Air Release Vulnerability Index
+### Air Release Vulnerability Index
 
 Now that we've created our air release raster layer we can combine it with the SVI raster to create a new index identifying areas with the highest combination of air releases and vulnerability.
 
@@ -1436,7 +1435,7 @@ c)  To determine the most populous areas in Detroit
 d)  To predict future industrial development zones
 :::
 
-### CDC PLACES
+## CDC PLACES
 
 The CDC [Population Level Analysis and Community Estimates (PLACES)](https://www.cdc.gov/places/index.html) dataset is a collaboration between the [Centers for Disease Control and Prevention (CDC)](https://www.cdc.gov/index.html), the [Robert Wood Johnson Foundation](https://www.rwjf.org/), and the [CDC Foundation](https://www.cdcfoundation.org/). It provides model-based population-level analysis and community estimates of health indicators for all counties, places (incorporated and census designated places), census tracts, and ZIP Code Tabulation Areas (ZCTAs) across the United States. Some key points to consider when working with CDC PLACES:
 
@@ -1446,7 +1445,7 @@ The CDC [Population Level Analysis and Community Estimates (PLACES)](https://www
 4.  **Data Sources:**
     -   [Behavioral Risk Factor Surveillance System (BRFSS)](https://www.cdc.gov/brfss/index.html)
     -   [U.S. Census Bureau's American Community Survey (ACS)](https://www.census.gov/programs-surveys/acs)
-5.  **[Methodology:](https://www.cdc.gov/places/methodology/index.html)** Uses small area estimation methods for small geographic areas.
+5.  [**Methodology:**](https://www.cdc.gov/places/methodology/index.html) Uses small area estimation methods for small geographic areas.
 6.  **Health Measures Include:**
     -   Chronic diseases: e.g., asthma, COPD, heart disease, diabetes
     -   Health risk behaviors: e.g., smoking, physical inactivity, binge drinking
@@ -1576,7 +1575,6 @@ While the choropleth map provides a good overview, it can be affected by the var
 
 First, let’s prepare our data for interpolation by reprojecting to the basemap projection, extracting the coordinates and the asthma value, and masking the data for any asthma values that may be NA.
 
-
 ```{python}
 from scipy.interpolate import griddata
 from rasterio.transform import from_origin
@@ -1595,13 +1593,13 @@ mask = ~np.isnan(Z)
 X, Y, Z = X[mask], Y[mask], Z[mask]
 ```
 
-::: column-margin
+:::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### Data Science Review
 
 Inverse Distance Weighting (IDW) is a spatial interpolation method used to estimate values at unknown locations based on known values at nearby points. The fundamental principle of IDW is that points closer to the location being estimated have more influence than those farther away. IDW calculates the estimated value as a weighted average of nearby known values, with weights inversely proportional to the distance between the known point and the estimation location. IDW is popular in geographic information systems (GIS) and environmental sciences due to its simplicity and effectiveness in creating continuous surfaces from point data, such as elevation, temperature, or pollution levels. While IDW has advantages like preserving local variation and working well with evenly distributed points, it also has limitations; including potential "bull's-eye" patterns around data points, inability to account for spatial trends or barriers, and sensitivity to outliers and clustering of input points.
 :::
-:::
+::::
 
 Now let’s create the structure of the raster we’ll create. This is based on our desired resolution and the extent of our data.
 
@@ -1749,9 +1747,9 @@ plt.show()
 
 This paints a clearer picture. Although there is a modest positive correlation, there are numerous cells with 0 TRI Air Release and a wide variety of Asthma prevalence values, which negates any correlation we might be seeing at higher release levels. This is a simple pixel by pixel comparison of matching values. We can perform a more robust analysis accounting for the spatial structure using a global autocorrelation analysis and Moran’s I.
 
-Pearson’s correlation and Moran’s I are both measures of association, but they serve different purposes and account for different aspects of data. Pearson’s correlation measures the linear relationship between two variables without considering their spatial context. It simply looks at how two variables change together, regardless of where the data points are located in space. 
+Pearson’s correlation and Moran’s I are both measures of association, but they serve different purposes and account for different aspects of data. Pearson’s correlation measures the linear relationship between two variables without considering their spatial context. It simply looks at how two variables change together, regardless of where the data points are located in space.
 
-In contrast, Moran’s I is specifically designed for spatial data and measures spatial autocorrelation – the degree to which a variable is correlated with itself across geographic space. Moran’s I takes into account both the values of observations and their spatial relationships, typically using a spatial weights matrix. 
+In contrast, Moran’s I is specifically designed for spatial data and measures spatial autocorrelation – the degree to which a variable is correlated with itself across geographic space. Moran’s I takes into account both the values of observations and their spatial relationships, typically using a spatial weights matrix.
 
 While Pearson’s correlation can tell you if two variables are related overall, Moran’s I can reveal whether high or low values of a variable tend to cluster together in space, or if they’re randomly distributed. This makes Moran’s I particularly useful for analyzing geographical patterns and spatial dependencies, which are crucial in fields like environmental science, epidemiology, and urban planning.
 
@@ -1781,13 +1779,13 @@ df = gpd.GeoDataFrame(
 )
 ```
 
-::: column-margin
+:::: column-margin
 ::: {.callout-tip style="color: #5a7a2b;"}
 #### Statistics Review
 
 A p-value, or probability value, is a statistical concept used to determine the significance of results in hypothesis testing. It represents the probability of obtaining results at least as extreme as the observed results, assuming that the null hypothesis is true. In simpler terms, it measures the strength of evidence against the null hypothesis. P-values range from 0 to 1, with lower values indicating stronger evidence against the null hypothesis. Typically, a p-value below a predetermined threshold (often 0.05) is considered statistically significant, suggesting that the observed results are unlikely to have occurred by chance alone. However, it's important to note that while p-values can indicate the strength of evidence against the null hypothesis, they do not prove or disprove hypotheses, nor do they measure the size or importance of an effect. They should be interpreted in conjunction with other factors such as effect size, sample size, and practical significance.
 :::
-:::
+::::
 
 Check for missing values and create the spatial weights matrix that determines how wide of a net we want to cast as we search for a local dependence structure (you could change these values and see how it impacts the results). You can read more about settings for spatial autocorrelation and Moran's I analysis [here](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-statistics/spatial-autocorrelation.htm).
 

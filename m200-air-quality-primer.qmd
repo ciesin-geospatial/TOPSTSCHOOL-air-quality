@@ -23,7 +23,7 @@ Air is essential to our existence, yet we often underestimate its potential to h
 
 Since the onset of industrialization and urbanization, human activities have significantly contributed to rising levels of air pollution. Multiple studies [@gallagher2022; @mananga2023] have established a link between anthropogenic activities and particulate matter concentration, which is associated with adverse health effects related to local air pollution. In fact, New York City, one of the most urbanized metropolitan areas, has stated that by 2050, the city aims to reduce GreenHouse Gases (GHG) by 80% compared to 2005 levels. Like many other metropolitan areas, New York City is experiencing ongoing consequences of climate change driven by fossil fuels and GHG. This change has led to increased average temperatures, resulting in more intense heat waves, severe storms, and disturbances to ecological systems. These events contribute to the degradation of air quality, the environment, and human health.
 
-[A hair comparing different sizes of air particulates](https://www.epa.gov/sites/default/files/2016-09/pm2.5_scale_graphic-color_2.jpg){width="70%"}[^1]
+![A hair compared to different sizes of air particulates](https://www.epa.gov/sites/default/files/2016-09/pm2.5_scale_graphic-color_2.jpg){width="70%"}[^1]
 
 [^1]: Source: [EPA Particulate Matter (PM) Basics](https://www.epa.gov/pm-pollution/particulate-matter-pm-basics)
 
