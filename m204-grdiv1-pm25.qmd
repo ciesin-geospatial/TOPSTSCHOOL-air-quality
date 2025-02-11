@@ -3,6 +3,7 @@ title: "Particulate Matter Across Socioeconomic Strata of Countries"
 author: "Juan F. Martinez"
 format: html
 bibliography: pm25-grdi-references.bib
+html-table-processing: none
 ---
 
 ## Overview
@@ -29,7 +30,7 @@ As we have learned from previous lessons in this module, air quality is an impor
 
 ### Background
 
-![Haze over eastern China](https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001269/GSFC_20171208_Archive_e001269~orig.jpg){style="object-fit: cover;  object-position:  left top; float: left; margin: 10px;" fig-align="center" height="300"} [^1] 
+![Haze over eastern China](https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001269/GSFC_20171208_Archive_e001269~orig.jpg){style="object-fit: cover;  object-position:  left top; float: left; margin: 10px;" fig-align="center" height="300"} [^1]
 
 [^1]: Image Credit: [NASA GSFC](https://images.nasa.gov/details/GSFC_20171208_Archive_e001269)
 
@@ -41,19 +42,50 @@ The WHO Global Air Quality Guidelines, first introduced in 1987, recommends safe
 
 We focus on PM2.5 because we will be working with the SEDAC Global Annual PM2.5 annual data.
 
-Table 1. WHO Recommended AQG levels and interim targets
+```{=html}
+<table>
+  <caption>Table 1. WHO Recommended AQG levels and interim targets</caption>
+  <thead>
+    <tr>
+      <th>Pollutant</th>
+      <th>Averaging Time</th>
+      <th colspan="4"> Interim Target</th>
+      <th>AQG Level</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+        <td></td>
+        <td></td>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+        <td>4</td>
+        <td></td>
+    </tr>
+    <tr>
+        <th rowspan="2">PM2.5, µg/m³</th>
+        <td>Annual</td>
+        <td>35</td>
+        <td>25</td>
+        <td>15</td>
+        <td>10</td>
+        <td>5</td>
+    </tr>
+    <tr>
+        <td>24-hour</td>
+        <td>75</td>
+        <td>50</td>
+        <td>37.5</td>
+        <td>25</td>
+        <td>15</td>
+    </tr>
 
-+--------------+----------------+----------------+-----------+
-| Pollutant    | Averaging Time | Interim Target | AQG Level |
-+==============+================+================+===========+
-| 1            | 2              | 3              | 4         |
-+--------------+----------------+----------------+-----------+
-| PM2.5, µg/m³ | Annual         | 35             | 25        |
-+--------------+----------------+----------------+-----------+
-| 24-hour\*    | 75             | 50             | 37.5      |
-+--------------+----------------+----------------+-----------+
+  </tbody>
+</table>
 
 \*99th percentile (i.e. 3-4 exceedance days per year).
+```
 
 Inequality, political instability, and increased cost of living are some of the causes preventing significant progress to reduce poverty and meet the SDGs. This continued environmental inequality can also be seen in the significant majority (89%) of premature deaths attributed to air pollution, which occur in low- and middle- income countries [@who2022]. In an account of 110 countries, 1.1 billion people (18%) are considered to live in “acute” multidimensional poverty, with half living in Sub-Saharan Africa and a third living in South Asia [@UNDP2023]. Studies have shown that persons with lower socioeconomic status disproportionately experience higher concentrations of pollutants [@Flanagan2019]. The level of poverty experienced by vulnerable communities can compound the risks posed by pollution leading to worsening well being and health outcomes.
 
