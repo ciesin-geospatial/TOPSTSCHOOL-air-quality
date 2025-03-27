@@ -1,19 +1,46 @@
 ---
-title: "Enabling Student-led Air Quality and Extreme Temperature Monitoring in New York"
+title: "Assessing the Impact of the Palisades, NJ Fire on Urban Air Quality in New York City"
 format: html
 bibliography: air-intro-references.bib
-author: "Dhruvil Prajapati"
+author: "Kytt Macmanus, Greg Yetman, Camilla Green, Dhruvil Prajapati"
 ---
 
 ## Overview
 
-In this lesson, you will use....
+In this lesson, you will use... 
 
 ## Learning Objectives
 
 After completing this lesson, you should be able to:
 
 -   Determine...
+
+
+
+
+## NEW SECTION
+Urban Wildfires/ Palisades, NJ Fire:
+The wildfires in Palisades, New Jersey in November 2024 negatively affected air quality in New York City. Wildfire smoke, laden with fine particulate matter (PM2.5), traveled across state lines, contributing to elevated levels of air pollution in NYC. This phenomenon is consistent with broader trends observed in the U.S., where wildfire smoke has slowed or reversed progress toward cleaner air in many states1. Studies have shown that PM2.5 from wildfires can embed deep into the lungs and bloodstream, leading to health issues such as asthma attacks and heart problems. The impact of these fires on NYC's air quality was compounded by local emissions, a scenario supported by research indicating that interactions between urban pollution and wildfire smoke can increase ozone and particulate matter levels.
+
+The compounding effects of local emissions and wildfire smoke in urban areas like NYC pose substantial health risks. Research has demonstrated that wildfire smoke can carry contaminants hundreds of kilometers, leaving a toxic footprint in urban environments. This is particularly concerning as climate change is expected to increase the frequency and severity of wildfires, making them a dominant source of urban pollution. Academic studies highlight the need for new strategies to regulate air pollution from wildfires, as current policies often exempt such events as "exceptional" and do not account for their growing impact on air quality trends. In NYC, the combination of wildfire smoke and urban emissions resulted in hazardous air quality conditions, prompting health advisories and highlighting the need for more effective air quality management strategies.
+
+Measuring and Sensing Air Quality:
+
+
+
+
+In this lesson, you will learn about how the wildfire in Palisades, New Jersey in November of 2024 negatively impacted the air quality in the surrounding area, including New York City. You will learn how to download air quality data from PurpleAire and QuantAQ, and analyze the data to understand the effects of the wild fire on air quality measures like NO and CO. 
+
+Learning Objectives: 
+
+
+
+
+
+
+## OLD SECTION
+
+
 
 ## Introduction
 

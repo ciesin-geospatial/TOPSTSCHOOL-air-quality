@@ -19,7 +19,7 @@ Now you can browse all of the different layers available in the viewer. Scroll t
 
 ![](images/EPA-Map-selectlayer.png){fig-align="center"}
 
-Now you can see the PM2.5 sensor locations in the South Bronx. Click on one of the sensor locations on the map to see the pop-up appear. The pop-up window allows you to see data about the sensor site and download the available data.
+Now you can see the PM2.5 sensor locations in the South Bronx. Click on one of the sensor locations on the map to see the pop-up appear. The pop-up window allows you to see data about the sensor site, including the sample collection frequency and analysis method, and download the available data.
 
 ![](images/EPA-map-pop-up.png){fig-align="center"}
 
