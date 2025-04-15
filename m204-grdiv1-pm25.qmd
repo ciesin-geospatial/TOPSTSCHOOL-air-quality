@@ -43,6 +43,25 @@ The WHO Global Air Quality Guidelines, first introduced in 1987, recommends safe
 We focus on PM2.5 because we will be working with the SEDAC Global Annual PM2.5 annual data.
 
 ```{=html}
+<style>
+  table {
+    width: 80%; /* Adjusts table width */
+    margin: auto; /* Centers the table */
+    border-collapse: collapse; /* Ensures neat borders */
+    text-align: center; /* Centers text */
+    font-family: Arial, sans-serif; /* Improves readability */
+  }
+  th, td {
+    border: 1px solid black; /* Adds table borders */
+    padding: 8px; /* Adds spacing inside cells */
+  }
+  caption {
+    font-weight: bold;
+    margin-bottom: 8px; /* Adds spacing below caption */
+  }
+</style>
+
+
 <table>
   <caption>Table 1. WHO Recommended AQG levels and interim targets</caption>
   <thead>
