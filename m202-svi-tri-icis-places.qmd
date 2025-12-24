@@ -1,0 +1,1940 @@
+---
+title: "Exploring Air Quality, Social Vulnerability, and Health Outcomes in Metro Detroit"
+author: "Joshua Brinks"
+date: "September 4, 2024"
+df-print: paged
+code-block-bg: true
+code-block-border-left: "#315c86"
+format: 
+    html
+keep-ipynb: True
+bibliography: svi-references.bib
+---
+
+## Overview
+
+In this lesson, we will introduce you to 3 public health and air quality datasets: the United States [Environmental Protection Agency](https://www.epa.gov/)'s (EPA's) [Toxic Release Inventory](https://www.epa.gov/toxics-release-inventory-tri-program/tri-toolbox) (TRI), the EPA's [Integrated Compliance Information System for Air](https://www.epa.gov/enviro/icis-air-overview) (ICIS-AIR), and the U.S. [Centers For Diesease Control and Prevention's](https://www.cdc.gov/) (CDC's) [PLACES health outcomes](https://www.cdc.gov/places/index.html) dataset. You will learn how to form queries and retrieve each dataset from their respective API, process the returned object into a useable format, create visualizations and perform simple analysis. You will also use the CDC's [Social Vulnerability Index](https://sedac.ciesin.columbia.edu/data/set/usgrid-us-social-vulnerability-index-rev01) (SVI), available through NASA, to examine socioeconomic patterns in the greater Detroit metropolitan area and explore relationships with public health.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+## Programming Reminder
+
+This lesson uses the Python programming environment.
+:::
+
+:::: column-margin
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Data Science Review
+
+An Application Programming Interface (API) is a set of protocols, tools, and definitions that enable different software applications to communicate with each other. It acts as an intermediary, allowing one application to request specific data or actions from another application or service without needing access to its entire codebase. APIs define the methods and data formats that applications can use to request and exchange information, typically through specific *endpoints* (URLs) that accept requests and return responses in standardized formats like JSON. They are crucial for integrating external services, accessing databases, and enabling communication between different parts of larger open science software systems.
+:::
+::::
+
+## Learning Objectives
+
+After completing this lesson, you should be able to:
+
+-   Retrieve multiple public health datasets through the EPA and CDC's APIs.
+-   Create multipanel raster maps from multilayered SVI data.
+-   Geolocate tabular data using latitude and longitude.
+-   Create maps joining geolocated points and basemaps.
+-   Create maps with graduated point symbols to visualize point source pollution releases.
+-   Interpolate a raster surface from point spatial data.
+-   Perform raster math to create specialized environmental and socio-economic indexes.
+-   Perform spatial correlation analysis.
+
+::: callout-warning
+## Preface: A Note on Data Interpretation and Ethical Considerations
+
+The topics of environmental justice, institutional racism, socioeconomic conditions, and pollution are complex and multifaceted. The data and analyses presented in this lesson are not intended to draw definitive conclusions or suggest scientific evidence of cause and effect relationships. Rather, they are meant to equip you with the skills to investigate data and perform analyses that could be applied to your local communities.
+
+As you work through this lesson, remember that correlation does not imply [causation](https://www.coursera.org/articles/correlation-vs-causation). The patterns you may observe in the data could be influenced by factors not represented in these datasets. Approach your findings with caution, and consider the broader historical, social, and economic contexts that shape environmental and health outcomes in different communities.
+
+This lesson will empower you with data literacy and analytical skills. We encourage you to use these tools and skills responsibly. Consider the ethical implications of your analyses and the potential impact on the communities represented in the data. When drawing insights or making decisions based on such analyses, it’s crucial to involve community stakeholders, consider multiple perspectives, and seek additional expertise when necessary.
+:::
+
+## Introduction
+
+In many urban areas, air quality issues disproportionately affect low-income communities and communities of color [@tessum2021; @liu2021]. This disparity is a key focus of environmental justice efforts. In cities like Detroit and Chicago, industrial facilities, highways, and other pollution sources are often concentrated in disadvantaged neighborhoods. Detroit has a history of industrial pollution and is working to address air quality issues in areas with relatively lower socio-economic status like Southwest Detroit, where residents face higher exposure to pollutants from nearby industries and heavy truck traffic [@rector2017; @air_quality_michigan; @restum2022; @hartig2024; @safta2024]. Similarly, Chicago has seen community efforts to address air pollution in areas like the Southeast Side, where residents have fought against polluting industries and advocated for stricter regulations [@gordon2022; @nature_conservancy_2021; @illgner2022].
+
+The EPA is the primary federal agency responsible for environmental protection in the United States. It sets and enforces air quality standards, including the [National Ambient Air Quality Standards (NAAQS)](https://www.epa.gov/criteria-air-pollutants/naaqs-table) for six criteria pollutants. The EPA also maintains the [AirNow](https://www.airnow.gov/about-airnow/) system, which provides real-time air quality data to the public. While primarily focused on public health, the CDC plays a crucial role in understanding the health impacts of air pollution. It conducts research on the relationships between air quality and various health outcomes, and provides guidance on protecting public health from environmental hazards [@cdc2024].
+
+In response to these challenges, community-driven science initiatives have emerged. These efforts involve local residents in collecting data on air quality and other environmental factors, often using low-cost sensors and mobile monitoring techniques [@morawska2018; @lu2022; @park2021; @su2024]. This approach helps fill gaps in official monitoring networks and empowers communities to advocate for themselves. Open data is crucial for community-driven solutions in several ways:
+
+-   Transparency: Open data allows communities to verify official reports and hold authorities accountable.
+-   Accessibility: When air quality data is freely available, communities can use it to inform local decision-making and advocacy efforts.
+-   Innovation: Open data enables researchers, activists, and tech developers to create new tools and analyses that can benefit communities.
+-   Collaboration: Open data facilitates collaboration between communities, scientists, and policymakers, leading to more effective solutions.
+
+While the EPA and CDC provide federal networks of open-access datasets like the Air Quality System (AQS), TRI, ICIS-AIR, and Population Level Analysis and Community Estimates (PLACES) collections, community driven data collection is a large part of driving change in traditionally underrepresented communities. In Chicago, the [Array of Things](https://arrayofthings.github.io/) project has installed sensors throughout the city, providing open data on various environmental factors including air quality, while Detroit's [Community Air Monitoring Project](https://www.michigan.gov/-/media/Project/Websites/egle/Documents/Reports/AQD/monitoring/2018-04-27-48217-air-monitoring-project.pdf?rev=33ae4f2a312149219bcdf9f25a538cca) uses low-cost sensors to collect and share air quality data in areas underserved by official monitoring stations.
+
+With access to open data, communities can:
+
+-   Identify local air quality hotspots that may be missed by sparse official monitoring networks and potential discrepancies in available data.
+-   Detect inconsistencies or errors in federal air quality data, ensuring more accurate and localized environmental assessments.
+-   Correlate air quality data with health outcomes to strengthen advocacy efforts.
+-   Develop targeted interventions, such as promoting indoor air filtration on high-pollution days.
+-   Create custom alerts and information systems tailored to local needs.
+
+Although open data provides many benefits, challenges still remain. These include: 1) ensuring data quality and consistency, especially when integrating data from various sources; 2) addressing the "digital divide" to ensure all community members can access and use the data; 3) balancing the need for detailed local data with privacy concerns; and 4) building capacity within communities to effectively use and interpret complex environmental data.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+#### EJ in the News
+
+The [Clear the Air Coalition](https://cleartheairmi.org/), a new environmental justice advocacy group in Michigan, is calling for stronger protection of vulnerable communities from pollution. Launched in Detroit, the coalition argues that state regulators focus too much on technical compliance with environmental laws rather than public health. They claim the current permitting process favors polluters and fails to consider the cumulative impacts of pollution on overburdened communities. The group seeks changes in state law and a shift in mindset from environmental regulators.
+
+[![Clear the Air Coalition](https://npr.brightspotcdn.com/dims4/default/42a4f01/2147483647/strip/true/crop/960x720+0+0/resize/1760x1320!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F78%2F01%2F1711cf6e442dbe579d452c0fc6f6%2Fclearair.jpg)](https://www.michiganpublic.org/environment-climate-change/2024-05-02/new-environmental-justice-coalition-aims-to-change-state-law-pressure-egle)
+
+The [Michigan Department of Environment, Great Lakes, and Energy (EGLE)](https://www.michigan.gov/egle/) emphasizes its commitment to protecting underserved communities and notes improvements in air quality over recent decades, but Coalition members argue that the current approach is insufficient. They call for regulators to consider the combined effects of multiple pollution sources in marginalized areas and to give local governments more power to reject new polluting facilities in already burdened communities.
+:::
+
+The Michigan EGLE and the Office of the [Environmental Justice Public Advocate](https://www.michigan.gov/egle/about/organization/environmental-justice) are two of the more active state departments aiming to address issues of the environment, public health, and social justice. Here are some of the projects enacted in greater Detroit area:
+
+-   [Detroit Environmental Agenda](https://detroitenv.org/): This community-led initiative works closely with EGLE to address environmental concerns in Detroit. It focuses on issues like air quality, water quality, and waste management.
+-   [48217 Community Air Monitoring Project](https://www.michigan.gov/-/media/Project/Websites/egle/Documents/Reports/AQD/monitoring/2018-04-27-48217-air-monitoring-project.pdf): Named after the zip code of a heavily industrialized area in Southwest Detroit, this project involves community members working with EGLE to monitor air quality using low-cost sensors.
+-   [Detroit Climate Action Plan](https://detroitenvironmentaljustice.org/climate-action-plan/): Developed in partnership with EGLE, this plan addresses climate change impacts on the city, with a focus on vulnerable communities.
+-   [Delray Neighborhood Initiatives](https://detroitmi.gov/departments/planning-and-development-department/neighborhood-plans/central-design-region/delray): EGLE has been involved in efforts to address air quality concerns in the Delray neighborhood, which is impacted by industrial emissions and heavy truck traffic.
+-   [Green Door Initiative](https://www.greendoorinitiative.org/): This Detroit-based organization collaborates with EGLE on various environmental justice projects, including lead abatement and air quality improvement efforts.
+-   [Detroit River Sediment Cleanup](https://www.epa.gov/great-lakes-aocs/detroit-riverwalk-great-lakes-legacy-act-project-detroit-river-aoc): EGLE has been involved in efforts to clean up contaminated sediments in the Detroit River, which disproportionately affects nearby low-income communities.
+-   [Asthma Prevention Programs](https://getasthmahelp.org/asthma-collaborative-of-detroit.aspx): EGLE supports community-based asthma prevention programs in Detroit, recognizing the link between air quality and asthma rates in disadvantaged neighborhoods.
+
+These are just a few examples that demonstrate the ongoing collaboration between community groups, local government, and EGLE to address environmental justice concerns in Detroit.
+
+Air quality issues in urban areas disproportionately affect low-income communities and communities of color, making it a critical focus for environmental justice efforts. Federal agencies like the EPA and CDC play crucial roles in setting standards and conducting research, but community-driven science initiatives have emerged as powerful tools for local action. Open data is key to these efforts, enabling transparency, accessibility, innovation, and collaboration. Cities like Detroit and Chicago are at the forefront of these initiatives, with projects that empower residents to monitor and advocate for better air quality. While challenges remain, particularly in data management and accessibility, the collaboration between community groups, local governments, and state agencies like Michigan's EGLE demonstrates a promising path forward.
+
+To better understand and address these complex issues of air pollution, public health impacts, and environmental inequities, we’ll work through a series of coding and data science exercises. These hands-on activities will allow users to explore some of the open datasets and tools that are available to community members and stakeholders that offer practical insights into air quality, public health, and social vulnerability.
+
+## Required Python Modules
+
+This lesson uses the following Python modules:
+
+-   [`pandas`](https://pandas.pydata.org/): Essential for data manipulation and analysis.
+-   [`geopandas`](https://geopandas.org/): Extends pandas functionality to handle geospatial data.
+-   [`matplotlib`](https://matplotlib.org/): Used for creating static, animated, and interactive visualizations.
+-   [`numpy`](https://numpy.org/): Provides support for large, multi-dimensional arrays and matrices, along with mathematical functions to operate on these arrays.
+-   [`requests`](https://docs.python-requests.org/en/latest/): Allows you to send HTTP requests and interact with APIs easily.
+-   [`contextily`](https://contextily.readthedocs.io/en/latest/): Adds basemaps to your plots, enhancing the visual context of your geospatial data.
+-   [`pygris`](https://pygris.readthedocs.io/en/latest/): Simplifies the process of working with US Census Bureau TIGER/Line shapefiles.
+-   [`rasterio`](https://rasterio.readthedocs.io/en/latest/): Reads and writes geospatial raster datasets.
+-   [`xarray`](https://xarray.pydata.org/): Introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
+-   [`shapely`](https://shapely.readthedocs.io/en/latest/): Manipulation and analysis of geometric objects in the Cartesian plane.
+-   [`scipy`](https://www.scipy.org/): Used for scientific and technical computing, particularly the `stats` and `interpolate` submodules.
+-   [`rioxarray`](https://corteva.github.io/rioxarray/stable/): Extends xarray to make it easier to handle geospatial raster data.
+-   [`time`](https://docs.python.org/3/library/time.html): Provides various time-related functions (part of Python's standard library).
+-   [`tabulate`](https://pypi.org/project/tabulate/): Used for creating nicely formatted tables in various output formats.
+-   [`pysal`](https://pysal.org/): A library of spatial analysis functions.
+-   [`splot`](https://splot.readthedocs.io/en/latest/): Provides statistical plots for spatial analysis.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Data Science Review
+
+If you'd like to learn more about the functions used in this lesson, you can refer to the documentation on their respective websites.
+
+The `pandas` module is essential for data manipulation and analysis, while `geopandas` extends its functionality to handle geospatial data (spatial data format used to represent geographic information as a grid of cells or pixels). `matplotlib` is used for creating static, animated, and interactive visualizations. `numpy` provides support for large, multi-dimensional arrays and matrices, along with a collection of mathematical functions to operate on these arrays.
+
+The `requests` module allows you to send HTTP requests and interact with APIs easily. `contextily` adds basemaps to your plots, enhancing the visual context of your geospatial data. `pygris` simplifies the process of working with US Census Bureau TIGER/Line shapefiles.
+
+`rasterio` and `xarray` are used for working with geospatial raster data (spatial data format used to represent geographic information as a grid of cells or pixels). `rasterio` reads and writes geospatial raster datasets, while `xarray` introduces labels in the form of dimensions, coordinates, and attributes on top of raw NumPy-like arrays, making it easier to work with labeled multi-dimensional arrays.
+
+`shapely` is used for manipulation and analysis of geometric objects. `scipy` provides additional tools for scientific computing, including statistical functions and interpolation methods. `rioxarray` combines the functionality of rasterio and xarray for easier handling of geospatial raster data.
+
+`pysal` is a library for spatial analysis, providing tools for exploratory spatial data analysis. `splot` is a visualization module that works with pysal to create statistical plots for spatial analysis.
+
+Make sure these modules are installed before you begin working with the code in this document.
+:::
+
+## ICIS Air
+
+We'll begin with the ICIS-AIR dataset, then move on to the TRI Facility dataset, and finally work our way down to TRI Form A. After exploring these 3 air pollution datasets, we will take a look at the CDC PLACES health outcomes data and perform some simple analysis integrating the pollution and health outcomes data.
+
+[ICIS-AIR (Integrated Compliance Information System for Air)](https://www.epa.gov/enviro/icis-air-overview) is a comprehensive database maintained by the U.S. Environmental Protection Agency (EPA) that focuses specifically on air quality compliance and enforcement data. It tracks information related to stationary sources of air pollution, including their compliance with various Clean Air Act regulations, permit data, and enforcement actions. While ICIS-AIR and the [Toxic Release Inventory (TRI)](https://www.epa.gov/toxics-release-inventory-tri-program) are separate systems, they have significant overlap in their coverage of industrial facilities and air emissions. Many facilities that report to TRI also have data in ICIS-AIR, providing complementary information.
+
+Where TRI focuses on the quantities of specific toxic chemicals released into the air, ICIS-AIR offers a broader picture of a facility's overall air quality compliance status, including non-toxic pollutants regulated under the Clean Air Act. Together, these systems provide a more comprehensive view of industrial air pollution sources, enabling researchers, regulators, and the public to assess both the types and quantities of air pollutants emitted (from TRI) and the regulatory compliance status of the emitting facilities (from ICIS-AIR).
+
+### Data Processing
+
+#### Defining Our Study Area
+
+Before we can query the API for ICIS-AIR regulated facilities in the greater Detroit area, we need to create a spatial object that defines our study area and that we can use throughout this analysis. The U.S. Census Bureau defines the Detroit, MI Metropolitan Statistical Area (MSA) as including 6 counties (Wayne, Macomb, Oakland, Lapeer, Livingston, and St. Clair), but for this lesson we will focus on the core 3 counties (Wayne, Macomb, and Oakland); both population and air emissions related facilities are sparser in the outer counties.
+
+We can us **pygris** to get vector boundaries for the counties and dissolve them into a single boundary we can use for cropping data and restricting API searches.
+
+```{python}
+import geopandas as gpd
+import pandas as pd
+import pygris
+from shapely.geometry import box
+
+
+counties = ['Wayne', 'Oakland', 'Macomb']
+
+# Fetch the county boundaries for Michigan (MI) from the pygris dataset for the year 2022.
+# Then, filter the DataFrame to only include the counties in the Detroit metro area (Wayne, Oakland, Macomb).
+metro_counties = pygris.counties(state="MI", year=2022)
+detroit_metro = metro_counties[metro_counties['NAME'].isin(counties)]
+
+# Combine the geometries of the selected counties into a single polygon (dissolve by state code).
+detroit_metro = detroit_metro.dissolve(by='STATEFP')
+
+# Convert the dissolved geometries into a GeoDataFrame and ensure the coordinate reference system (CRS) is EPSG:4269.
+detroit_metro = gpd.GeoDataFrame(detroit_metro, geometry='geometry', crs='EPSG:4269')
+
+# Obtain the total bounding box for the Detroit metro area polygon.
+bbox = detroit_metro.total_bounds
+
+# Create a bounding box polygon from the bounding coordinates and store it in a GeoDataFrame with the same CRS.
+bbox_polygon = gpd.GeoDataFrame(
+    geometry=[box(*bbox)],
+    crs=detroit_metro.crs
+)
+```
+
+Let's verify this by overlaying it on a basemap.
+
+```{python}
+import matplotlib.pyplot as plt
+import contextily as ctx
+
+# Initialize a figure and axis with a 7x7 inch size for plotting.
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Reproject the Detroit metro area and bounding box to Web Mercator (EPSG:3857) to align with the basemap.
+detroit_metro_bm = detroit_metro.to_crs(epsg=3857)
+bbox_polygon_bm = bbox_polygon.to_crs(epsg=3857)
+
+# Plot the Detroit metro area with a light blue fill and dark blue edges at 30% opacity.
+detroit_metro_bm.plot(ax=ax, color='lightblue', edgecolor='darkblue', alpha=0.3)
+
+# Plot the boundary of the bounding box with a grey outline and a thicker line width.
+bbox_polygon_bm.boundary.plot(ax=ax, color='grey', linewidth=2)
+
+# Add a basemap from OpenStreetMap (Mapnik) to provide background geographic context.
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Adjust the map's visible area (extent) to fit the bounding box.
+ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
+ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
+
+# Remove axis lines and labels for a cleaner map visualization.
+ax.set_axis_off()
+
+# Add a title to the plot.
+plt.title("Detroit Metro Study Area", fontsize=16)
+
+# Optimize layout to ensure proper spacing around the plot.
+plt.tight_layout()
+
+# Display the final plot.
+plt.show()
+```
+
+This looks correct, and we'll use this boundary object repeatedly throughout our analysis.
+
+### Querying the API
+
+The EPA's [Enforcement and Compliance History Online (ECHO)](https://echo.epa.gov/) website serves as a comprehensive portal for environmental compliance and enforcement data. It includes the ECHO Data Service, which provides programmatic access to EPA data through [RESTful](https://echo.epa.gov/tools/web-services) APIs. Among these is the ICIS-AIR API, which specifically offers access to air quality compliance and enforcement data. This API allows users to retrieve detailed information about stationary sources of air pollution, including facility details, permit data, emissions reports, and compliance status.
+
+The ECHO API requires that users follow a multi-step workflow to acquire data via the [Facility Search Air API](https://echo.epa.gov/tools/web-services/facility-search-air):
+
+1.  Use get_facilities to validate parameters, get summary statistics, and obtain a query_id (QID), valid for about 30 minutes.
+2.  Use get_qid with the obtained QID to paginate through facility results.
+3.  Use get_map with the QID to visualize and navigate facility locations.
+4.  Use get_download with the QID to generate a CSV file of facility information.
+
+The get_facility_info endpoint operates independently, returning either clustered summary statistics or an array of individual facilities. This API structure allows for efficient querying, visualization, and extraction of air quality compliance data, making it a valuable resource for environmental analysis and research.
+
+We'll begin by querying this database for just Michigan facilities in the workflow detailed above. From there we'll subset with our list of counties.
+
+We start with the base url for the ECHO API and our parameter list.
+
+```{python}
+# Base URL for the ECHO ICIS-AIR API, which provides access to air quality and compliance data from the EPA.
+base_url = "https://echodata.epa.gov/echo/air_rest_services"
+
+# Query parameters for the API call:
+# - "output": Specifies the response format as JSON.
+# - "p_st": Filters results to include only the state of Michigan (MI).
+params = {
+    "output": "JSON",
+    "p_st": "MI"
+}
+```
+
+Now we define 2 functions that will carry out the first 2 steps; 1) identifying the facilities in our search and 2) retrieve the facility data.
+
+```{python}
+import requests
+
+# Define a function to query the ECHO ICIS-AIR API for facilities of interest in Michigan.
+# If successful, extract the Query ID (qid) and total number of facilities from the API response.
+def get_facilities():
+    response = requests.get(f"{base_url}.get_facilities", params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if 'Results' in data:
+            qid = data['Results']['QueryID'] # Unique Query ID to fetch detailed facility data.
+            print(f"Query ID: {qid}")
+            print(f"Total Facilities: {data['Results']['QueryRows']}")  # Number of facilities in the query result.
+            return qid
+    # Log an error if the API request fails or the data is incomplete.
+    print("Failed to get facilities and QID")
+    return None
+
+# Define a function to retrieve detailed facility data using the Query ID (qid).
+# Retrieves paginated data, adding all facility results to the all_facilities list.
+def get_facility_data(qid):
+    all_facilities = []
+    page = 1
+    while True:
+        # Query parameters include the Query ID and the page number for paginated results.
+        params = {"qid": qid, "pageno": page, "output": "JSON"}
+        response = requests.get(f"{base_url}.get_qid", params=params)
+        if response.status_code == 200:
+            data = response.json()
+            if 'Results' in data and 'Facilities' in data['Results']:
+                facilities = data['Results']['Facilities'] # List of facilities on the current page.
+                if not facilities:   # Break if no more facilities to retrieve.
+                    break
+                all_facilities.extend(facilities) # Add the facilities from the current page to the result list.
+                print(f"Retrieved page {page}")
+                page += 1
+            else:
+                break # Break if 'Results' or 'Facilities' key is missing.
+        else:
+            print(f"Failed to retrieve page {page}")  # Log an error if the API request fails for the current page.
+            break
+    return all_facilities
+```
+
+Now that we've defined the functions we can make a request to the API with our Detroit metro counties.
+
+```{python}
+# Step 1: Retrieve the Query ID (qid) by querying the API for ICIS-AIR facilities in Michigan.
+qid = get_facilities()
+
+if qid:
+    # Step 2: If the Query ID is retrieved, use it to get all relevant facility data.
+    print("Retrieving facility data...")
+    facilities = get_facility_data(qid)
+    
+    # Convert the list of facilities into a pandas DataFrame for easier data analysis and manipulation.
+    df_icis_air = pd.DataFrame(facilities)
+    
+    # Print the total number of facilities retrieved and display the column names in the dataset.
+    print(f"\nSuccessfully retrieved {len(df_icis_air)} ICIS-AIR facilities for Michigan")
+    print("\nColumns in the dataset:")
+    print(df_icis_air.columns)
+    
+else:
+    # If the Query ID is not retrieved, output an error message indicating the failure.
+    print("Failed to retrieve facility data")
+```
+
+There are over three thousand facilities in the ICIS-AIR Michigan dataset. Here are the descriptions for some key columns.
+
+### Key Columns in the [ICIS-AIR ECHO API Dataset](https://echo.epa.gov/help/facility-search/air-search-results-help)
+
+| **Key Column** | **Description** |
+|----|----|
+| AIRName | The name of the facility |
+| SourceID | A unique identifier for the air pollution source |
+| AIRStreet, AIRCity, AIRState, AIRZip | Address components of the facility |
+| RegistryID | A unique identifier for the facility in the EPA’s registry |
+| AIRCounty | The county where the facility is located |
+| AIREPARegion | The EPA region responsible for the facility |
+| AIRNAICS | North American Industry Classification System code(s) for the facility |
+| FacLat, FacLong | Latitude and longitude coordinates of the facility |
+| AIRPrograms | Air quality programs applicable to the facility |
+| AIRStatus | Current operational status of the facility |
+| AIRUniverse | Categorization of the facility within air quality regulation |
+| AIRComplStatus | Current compliance status under the Clean Air Act |
+| AIRHpvStatus | High Priority Violator status |
+| AIRQtrsWithViol | Number of quarters with violations |
+| AIRLastViolDate | Date of the most recent violation |
+| AIREvalCnt | Count of evaluations conducted |
+| AIRLastEvalDate | Date of the most recent evaluation |
+| AIRFceCnt | Count of Full Compliance Evaluations |
+| AIRLastFceDate | Date of the last Full Compliance Evaluation |
+
+These columns provide information about each facility's location, operational characteristics, compliance history, and regulatory oversight under the Clean Air Act. It includes information on violations, evaluations, and compliance status that assess a facility's environmental performance and regulatory compliance.
+
+We can check some basic information like how many facilities are in Detroit metro and the breakdown by our 3 counties.
+
+```{python}
+# Subset the DataFrame to include only the ICIS-AIR facilities located in the Detroit metro counties (Wayne, Oakland, Macomb).
+icis_air_detroit = df_icis_air[df_icis_air['AIRCounty'].isin(counties)]
+
+# Print a summary of the total number of ICIS-AIR facilities in Michigan and those specifically in the Detroit metro area.
+print(f"Total ICIS-AIR facilities in Michigan: {len(df_icis_air)}")
+print(f"ICIS-AIR facilities in Detroit metro area: {len(icis_air_detroit)}")
+
+# Display the count of ICIS-AIR facilities for each county within the Detroit metro area.
+print("\nFacilities per county:")
+print(icis_air_detroit['AIRCounty'].value_counts())
+```
+
+Next we should check for facilities with missing latitude or longitude coordinates.
+
+```{python}
+# Identify and count the records in the Detroit metro subset where latitude or longitude values are missing.
+missing_coords = icis_air_detroit[(icis_air_detroit['FacLat'].isnull()) | (icis_air_detroit['FacLong'].isnull())]
+print(f"Number of ICIS-AIR records with missing coordinates: {len(missing_coords)}")
+
+# Remove records with missing latitude or longitude from the dataset to ensure only facilities with valid coordinates remain.
+icis_air_detroit = icis_air_detroit.dropna(subset=['FacLat', 'FacLong'])
+```
+
+No missing records! That's great. As you'll find out later, you won't always be so lucky.
+
+Now we can create a spatial object, reproject it so it matches the basemap of Detroit, and make a map showing the location of all the ICIS-AIR facilities in Detroit metro. The existing dataset in our Python environment includes the latitude (FacLat) and longitude (FacLong) coordinates, but we need to convert this to an explicit spatial object with GeoPandas using the coordinates so we can perform spatial operations on this object like creating maps, creating surfaces, or finding nearby objects.
+
+```{python}
+# Convert the ICIS-AIR facilities data into a GeoDataFrame with valid point geometries (using longitude and latitude).
+gdf_icis_air = gpd.GeoDataFrame(
+    icis_air_detroit, 
+    geometry=gpd.points_from_xy(icis_air_detroit.FacLong, icis_air_detroit.FacLat),
+    crs="EPSG:4326" # Coordinate reference system set to WGS 84 (EPSG:4326)
+)
+
+# Reproject the ICIS-AIR facilities' GeoDataFrame to Web Mercator (EPSG:3857) for alignment with basemap data.
+gdf_icis_air_bm = gdf_icis_air.to_crs(epsg=3857)
+
+# Set up the plot with a 7x7 inch figure.
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Plot the Detroit metro area boundary and bounding box, using previously reprojected objects.
+detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
+
+# Plot the ICIS-AIR facilities as cyan markers, with transparency (alpha=0.5) and grey outlines.
+gdf_icis_air_bm.plot(ax=ax, color='cyan', markersize=50, alpha=0.5, label='ICIS-AIR Facilities', edgecolor = "grey")
+
+# Add an OpenStreetMap basemap for geographical context.
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Adjust the map's extent to fit the bounding box around the Detroit metro area.
+ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
+ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
+
+# Hide the axes to make the plot cleaner.
+ax.set_axis_off()
+
+# Add a legend to the plot to label the ICIS-AIR facilities.
+ax.legend()
+
+# Add a title and improve the layout of the plot.
+plt.title("Detroit Metro Area ICIS-AIR Facilities", fontsize=16)
+plt.tight_layout()
+plt.show()
+
+# Output the total number of ICIS-AIR facilities plotted.
+print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
+```
+
+These are distributed along business and industrial sectors as expected, but we can't infer much else from this map.
+
+Let’s look for regulated facilities that have been in violation status. We can plot all the facilities with at least one violation during a reporting quarter and use graduated symbols that reflect the total number of quarters with violations. This information is in the `AIRQtrsWithViol` column.
+
+```{python}
+# Convert the 'AIRQtrsWithViol' column to numeric, replacing any non-numeric values with NaN.
+gdf_icis_air_bm['AIRQtrsWithViol'] = pd.to_numeric(gdf_icis_air_bm['AIRQtrsWithViol'], errors='coerce')
+
+# Subset the dataset to include only ICIS-AIR facilities with reported violations (quarters with violations > 0).
+gdf_icis_air_violators = gdf_icis_air_bm = gdf_icis_air_bm[gdf_icis_air_bm['AIRQtrsWithViol'] > 0]
+
+# Set up the plot with a 7x7 inch figure.
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Plot the Detroit metro area boundary and bounding box for geographical context.
+detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
+
+# Plot the violators (facilities with violations) using graduated symbol sizes based on 'AIRQtrsWithViol' values.
+# The symbol size is scaled (multiplied by 10) to make differences more visible.
+scatter = ax.scatter(gdf_icis_air_violators.geometry.x,
+                     gdf_icis_air_violators.geometry.y, 
+                     s=gdf_icis_air_violators['AIRQtrsWithViol']*10,  # Adjust marker size by violation count
+                     c='orangered', # Color the violators in 'orangered' for visibility
+                     edgecolor='yellow', # Add a yellow edge to make the points stand out
+                     linewidth=1, 
+                     alpha=0.7) # Set transparency for better map visibility
+
+# Add an OpenStreetMap basemap to enhance the visual context of the plot.
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the map's extent to match the bounding box around the Detroit metro area.
+ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
+ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
+
+# Hide axes for a cleaner map.
+ax.set_axis_off()
+
+# Add a legend to label and distinguish facilities with violations.
+ax.legend()
+
+# Set the plot title and finalize the layout for professional presentation.
+plt.title("Detroit Metro Area ICIS-AIR Facilities w/ Violations", fontsize=16)
+plt.tight_layout()
+plt.show()
+```
+
+We can also create a table showing which businesses have been in violation status, their name, address, and the date of their most recent violation using the **tabulate** module.
+
+```{python}
+from tabulate import tabulate
+
+# Filter the dataset to include only facilities with 10 or more quarters of violations.
+gdf_icis_air_violators = gdf_icis_air_bm = gdf_icis_air_bm[gdf_icis_air_bm['AIRQtrsWithViol'] >= 10]
+
+# Define the columns to be displayed in the final table.
+table_columns = ['AIRName', 'AIRStreet', 'AIRCity', 'AIRQtrsWithViol', 'AIRLastViolDate']
+
+# Create a new DataFrame with only the selected columns for table generation.
+table_data = gdf_icis_air_violators[table_columns].copy()
+
+# Convert the 'AIRLastViolDate' column to a datetime format for proper sorting and display.
+table_data['AIRLastViolDate'] = pd.to_datetime(table_data['AIRLastViolDate'])
+
+# Sort the DataFrame by the 'AIRLastViolDate' column in descending order to show the most recent violations first.
+table_data = table_data.sort_values('AIRLastViolDate', ascending=False)
+
+# Define a dictionary to map the original column names to more readable/pretty names for the table.
+pretty_names = {
+    'AIRName': 'Name',
+    'AIRStreet': 'Street',
+    'AIRCity': 'City',
+    'AIRQtrsWithViol': 'Violations',
+    'AIRLastViolDate': 'Violation Date'
+}
+
+# Apply the new readable column names.
+table_data.rename(columns=pretty_names, inplace=True)
+
+# Optionally, format the 'Violation Date' column to display dates in a 'YYYY-MM-DD' format.
+table_data['Violation Date'] = table_data['Violation Date'].dt.strftime('%Y-%m-%d')
+
+# Generate the table using the 'tabulate' library and format it as an HTML table for presentation.
+table = tabulate(table_data, headers='keys', tablefmt='html', showindex=False)
+
+# Display the resulting table.
+table 
+```
+
+ICIS-AIR is a powerful tool for communities and policy-makers to identify regulated facilities and their compliance status, but the dataset does have limitations. For example, we can not examine the types or amounts of chemicals being released into the community.
+
+Next, we’ll take a look at facilities required to report to the TRI.
+
+::: {.callout-tip style="color: #9f0b64;"}
+#### Knowledge Check
+
+Which of the following best describes the ICIS-AIR database?
+
+a)  A database of air quality measurements from monitoring stations
+b)  A comprehensive database of air quality compliance and enforcement data
+c)  A public health database tracking respiratory illnesses
+d)  A database of weather patterns affecting air quality
+:::
+
+## Toxic Release Inventory
+
+The [Toxic Release Inventory (TRI)](https://www.epa.gov/toxics-release-inventory-tri-program) is a crucial resource in understanding and addressing air quality issues in the United States. Established under the Emergency Planning and Community Right-to-Know Act of 1986, the TRI is a publicly accessible database maintained by the Environmental Protection Agency (EPA). It requires certain industrial facilities to report annually on their releases of toxic chemicals into the environment, including air emissions. The TRI provides valuable data on over 770 chemicals and chemical categories, offering insights into the types and quantities of pollutants released into the air by various industries. This information is vital to researchers, policymakers, and community advocates in assessing local air quality, identifying potential health risks, and developing targeted strategies to reduce toxic air emissions. By making this data publicly available, the TRI plays an important role in promoting transparency and supporting environmental justice initiatives focused on improving air quality in communities across the nation.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Data Review
+
+The Toxics Release Inventory (TRI) and the Integrated Compliance Information System for Air (ICIS-AIR) are two important but distinct environmental reporting systems maintained by the U.S. Environmental Protection Agency (EPA). They have several key differences:
+
+-   **Regulatory Basis**
+    -   TRI: Established under the Emergency Planning and Community Right-to-Know Act (EPCRA) of 1986
+    -   ICIS-AIR: Part of the Clean Air Act (CAA) compliance and enforcement program
+-   **Focus**
+    -   TRI: Tracks the management of certain toxic chemicals that may pose a threat to human health and the environment
+    -   ICIS-AIR: Focuses specifically on air quality and emissions from facilities regulated under the Clean Air Act
+-   **Reported Information**
+    -   TRI: Facilities report on releases, waste management, and pollution prevention activities for specific toxic chemicals
+    -   ICIS-AIR: Tracks emissions data, compliance status, and enforcement actions related to air quality regulations
+-   **Facility Coverage**
+    -   TRI: Covers facilities in specific industries that manufacture, process, or use TRI-listed chemicals above certain thresholds
+    -   ICIS-AIR: Includes a broader range of facilities that emit air pollutants, regardless of the specific chemicals involved
+-   **Reporting Thresholds**
+    -   TRI: Has specific chemical thresholds that trigger reporting requirements
+    -   ICIS-AIR: Generally doesn't have chemical-specific thresholds; requirements are based on overall emissions and facility type
+-   **Public Accessibility**
+    -   TRI: Designed with a strong focus on public right-to-know, with data easily accessible to the public
+    -   ICIS-AIR: While public, it's primarily designed for regulatory and enforcement purposes
+-   **Data Frequency**
+    -   TRI: Annual reporting is required for covered facilities
+    -   ICIS-AIR: May involve more frequent reporting, depending on permit requirements and compliance status
+-   **Scope of Pollutants**
+    -   TRI: Focuses on a specific list of toxic chemicals and chemical categories
+    -   ICIS-AIR: Covers a wider range of air pollutants, including criteria air pollutants and hazardous air pollutants
+-   **Use in Environmental Management**
+    -   TRI: Often used for assessing long-term trends in toxic chemical releases and waste management practices
+    -   ICIS-AIR: More commonly used for day-to-day air quality management and enforcement activities
+-   **Geographic Coverage**
+    -   TRI: Nationwide program with consistent reporting across states
+    -   ICIS-AIR: While national, implementation can vary more by state or local air quality management district
+:::
+
+### Envirofacts API
+
+[EnviroFacts](https://www.google.com/url?q=https://enviro.epa.gov/&sa=D&source=docs&ust=1733163481208997&usg=AOvVaw0dJjyDJg-FG1iSnwyCuuaH) is a comprehensive online database and information system maintained by the U.S. Environmental Protection Agency (EPA). It serves as a centralized hub for accessing a wide range of environmental data collected by the EPA and other federal agencies. EnviroFacts integrates information from multiple EPA databases, covering various aspects of environmental health, including air quality, water quality, hazardous waste, and toxic releases. One of the key components of EnviroFacts is the Toxic Release Inventory (TRI) data. Through EnviroFacts, users can easily access and query TRI information, allowing them to investigate toxic chemical releases and waste management activities in their local areas. The integration of TRI data within the broader EnviroFacts system enables researchers, policymakers, and community members to contextualize toxic release information alongside other environmental indicators.
+
+Envirofacts is available as a [web based search and data platform](https://enviro.epa.gov/) and also as a [programmatic API](https://www.epa.gov/enviro/envirofacts-data-service-api). The web platform is a great way to familiarize yourself with the available datasets and create simple downloads, however, for analytical purposes we recommend learning to navigate their API so you can create repeatable and reliable analysis.
+
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Environmental Justice In the News
+
+[The Michigan Department of Environment, Great Lakes and Energy (EGLE) has settled a civil rights complaint regarding a hazardous waste facility in Detroit](https://www.detroitnews.com/story/news/local/michigan/2024/08/29/egle-settles-civil-rights-complaint-about-detroit-hazardous-waste-approval-us-ecology-north/75001763007/). The complaint, filed in 2020 by environmental groups and local residents, challenged the renewal and expansion of [U.S. Ecology North's](https://www.michigan.gov/egle/about/organization/materials-management/hazardous-waste/liquid-industrial-byproducts/us-ecology-detroit-north/license-information) license, arguing it was unjust to increase hazardous waste storage in a predominantly low-income and minority neighborhood. As part of the settlement, EGLE will now consider environmental justice concerns in future licensing decisions for hazardous waste facilities.
+
+The agreement, described as "groundbreaking" by the [Sierra Club](https://www.sierraclub.org/), introduces several new measures. EGLE will conduct environmental justice and cumulative impact analyses for future licensing decisions, potentially denying licenses that would have an unlawful impact on human health and the environment. The settlement also includes provisions for improved community engagement, such as better translation services, public input processes, and the installation of air monitors around U.S. Ecology North. Additionally, the state will work with local residents to conduct a community health assessment. While some details remain to be clarified, environmental advocates view this as a significant step towards advancing environmental justice in Michigan.
+:::
+
+### Querying the API
+
+We'll continue to use the Detroit metro boundary we created earlier. We assigned them the names `detroit_metro` and `detroit_metro_bm` (projected to mercator to match **b**ase**m**aps for plotting).
+
+```{python}
+# Print the coordinates of the bounding box, which defines the rectangular boundary for the area of interest
+print("Bounding Box:")
+
+# Display the minimum longitude (X-axis) of the bounding box
+print(f"Minimum X (Longitude): {bbox[0]}")
+
+# Display the minimum latitude (Y-axis) of the bounding box
+print(f"Minimum Y (Latitude): {bbox[1]}")
+
+# Display the maximum longitude (X-axis) of the bounding box
+print(f"Maximum X (Longitude): {bbox[2]}")
+
+# Display the maximum latitude (Y-axis) of the bounding box
+print(f"Maximum Y (Latitude): {bbox[3]}")
+```
+
+Now we'll create an empty list to store the TRI data, loop through each county making an API query, and place the retrieved data in the empty list.
+
+```{python}
+# Initialize a list to hold TRI (Toxic Release Inventory) facility data for each county in Michigan
+tri_data = []
+
+# Loop through each county in the specified list to fetch TRI data separately
+# (avoiding issues encountered when querying all counties at once)
+for county in counties:
+    # Construct the API URL to query TRI facilities for the current county
+    api_url = f"https://data.epa.gov/efservice/tri_facility/state_abbr/MI/county_name/{county}/JSON"
+    response = requests.get(api_url)
+
+    # Check if the response was successful
+    if response.status_code == 200:
+        county_data = response.json()
+        # Append the current county's TRI data to the overall list
+        tri_data.extend(county_data)
+    else:
+        # Print an error message if data retrieval failed for the county
+        print(f"Failed to fetch data for {county} County. Status code: {response.status_code}")
+
+```
+
+### Processing the Data
+
+The TRI data comes in json format. This format can be confusing to interpret, because each record (traditionally a row in a table) is viewed with columns structured vertically. Let’s look at the first record.
+
+```{python}
+# Access and print the second entry in the TRI data list to inspect a sample facility's data structure
+tri_data[1]
+```
+
+This record shows all the information for *PPG GROW DETROIT* with columns and values listed side-by-side ('city_name': 'DETROIT'). This may seem difficult to deal with, but most programming languages have tools to easily parse json data into traditional tables. `pd.DataFrame` does it automatically when you attempt to create a **pandas** data frame.
+
+```{python}
+# Convert the collected TRI data list into a Pandas DataFrame for easier data manipulation and analysis
+tri_df = pd.DataFrame(tri_data)
+
+# Output the total count of facilities retrieved to confirm successful data fetching
+print(f"Number of facilities fetched: {len(tri_df)}")
+
+# Display the first few rows of the DataFrame for a quick data preview (uncomment if needed for inspection)
+# tri_df.head()
+```
+
+Checking the first few rows--everything looks as it should. We want to geocode the facility locations into a point layer using the latitude and longitude values. Therefore, we should start by making sure all the facilities have coordinate values.
+
+We'll check and remove those without.
+
+```{python}
+# Create a copy of the TRI DataFrame to prevent modifications that could trigger a SettingWithCopyWarning
+tri_df_clean = tri_df.copy()
+
+# Remove rows where latitude or longitude is missing to ensure data completeness
+tri_df_clean = tri_df_clean.dropna(subset=['pref_latitude', 'pref_longitude'])
+
+print(f"Number of facilities after removing empty coordinates: {len(tri_df_clean)}")
+
+# Convert latitude and longitude columns to numeric, handling non-numeric values by setting them to NaN
+tri_df_clean['pref_latitude'] = pd.to_numeric(tri_df_clean['pref_latitude'], errors='coerce')
+tri_df_clean['pref_longitude'] = pd.to_numeric(tri_df_clean['pref_longitude'], errors='coerce')
+```
+
+Ouch! We lost roughly 300 records due to missing coordinate information (789 vs. 478). If this were an important analysis for policy-making or scientific research we would take the time to [geocode](https://www.mapbox.com/insights/geocoding) the listed addresses into latitude/longitude coordinates, but for the purposes of this exercise we’ll move on.
+
+In my personal investigations of this data, I noticed that some longitude coordinates were not negative, but had an absolute value (e.g. 83.25) that made sense for the Detroit metro area, therefore we will flip the sign on these records.
+
+```{python}
+# Define a function to correct longitudes that are mistakenly positive, converting them to negative values for North America
+def correct_longitude(lon):
+    if lon > 0:
+        return -lon
+    return lon
+
+# Apply longitude correction to all facilities in the DataFrame
+tri_df_clean['pref_longitude'] = tri_df_clean['pref_longitude'].apply(correct_longitude)
+```
+
+Additionally, there are some records with wild longitudinal values that are not simply from a missing negative sign. We'll identify these outliers using the interquantile range. Anything outside the range will be tossed. One of the downsides of the TRI database is that many aspects are provided directly by the facility (and therefore subject to errors). Again, if this were a more important analysis we would carefully explore all of these missing records and possibly geocode using the address.
+
+Toss the quartile outliers.
+
+```{python}
+# Calculate the Interquartile Range (IQR) for longitude to identify and remove outlier values
+Q1 = tri_df_clean['pref_longitude'].quantile(0.25)
+Q3 = tri_df_clean['pref_longitude'].quantile(0.75)
+IQR = Q3 - Q1
+
+# Define acceptable range for longitude, filtering out points beyond 1.5 * IQR
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+lower_bound, upper_bound
+
+# Remove facilities with longitudes outside of the defined bounds to eliminate extreme outliers
+tri_df_clean = tri_df_clean[(tri_df_clean['pref_longitude'] >= lower_bound) & 
+                            (tri_df_clean['pref_longitude'] <= upper_bound)]
+
+print(f"Number of facilities after removing longitude outliers: {len(tri_df_clean)}")
+```
+
+Thankfully we only lost 2 more records from outliers.
+
+### Visualizing the Data
+
+The data has been cleaned up a bit so now lets create a spatial point object from the data with **geopandas** and use **matplotlib** to plot the values on top of a basemap of Detroit we'll acquire using **contextily** and our original Wayne, Macomb, and Oakland counties boundary.
+
+```{python}
+# Create a GeoDataFrame from the cleaned TRI data, converting latitude and longitude into geometric points
+detroit_tri = gpd.GeoDataFrame(
+    tri_df_clean, 
+    geometry=gpd.points_from_xy(tri_df_clean.pref_longitude, tri_df_clean.pref_latitude),
+    crs="EPSG:4326" # Set the coordinate reference system to WGS 84 (latitude/longitude)
+)
+
+# Reproject TRI data to the Web Mercator projection (EPSG:3857) for compatibility with the basemap
+detroit_tri = detroit_tri.to_crs(epsg=3857)
+
+# Initialize a plot with a fixed size
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Plot the Detroit metro area boundaries and the bounding box as background layers
+detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
+
+# Plot TRI facilities as purple points with a grey edge, representing facilities' locations in the metro area
+detroit_tri.plot(ax=ax, color='purple', edgecolor='grey', markersize=50, alpha=0.5, label='TRI Facilities')
+
+# Plot ICIS-AIR facilities as cyan points with a grey edge, indicating the locations of air-quality-monitored facilities
+gdf_icis_air_bm.plot(ax=ax, color='cyan', edgecolor='grey', markersize=50, alpha=0.5, label='ICIS-AIR Facilities')
+
+# Overlay a basemap for geographical context, using OpenStreetMap tiles
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set the map's viewing area to the bounding box’s coordinates, zooming in on the Detroit metro area
+ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
+ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
+
+# Hide axis labels and ticks for a cleaner map presentation
+ax.set_axis_off()
+
+# Add a legend to differentiate TRI and ICIS-AIR facilities on the map
+ax.legend()
+
+# Add a title for context and adjust layout for better spacing
+plt.title("Detroit Metro Area TRI and ICIS-AIR Facilities", fontsize=16)
+plt.tight_layout()
+plt.show()
+
+# Print the number of facilities included in the plot for confirmation
+print(f"Number of TRI facilities plotted: {len(detroit_tri)}")
+print(f"Number of ICIS-AIR facilities plotted: {len(gdf_icis_air)}")
+```
+
+We can see that there are far fewer facilities being tracked in TRI compared to ICIS-AIR. Some of this can be attributed to the records we tossed after checking for valid geographic coordinates and outliers, but generally speaking ICIS-AIR will contain far more as it tracks every facility regulated by the Clean Air Act as opposed to only those that are part of TRI.
+
+You may have also noticed that this dataset does not contain any actual pollution data; only facility information for those that are regulated by TRI.
+
+TRI is made up of numerous tables containing a wealth of information regarding the facilities themselves and all the regulated chemicals that are handled at each site. The TRI_FACILITY table we requested is the starter table used in most of the examples in the Envirofacts API documentation, however, it does not contain any chemical release data.
+
+Navigating the TRI Envirofacts interface can be overwhelming at times. Multiple tables can be queried with a single URL, however, for a proper join to be carried out both tables must contain at least one column in common. In most cases this can be accomplished using TRI_FACILITY_ID. That said, air pollution release data (column name [AIR_TOTAL_RELEASE](https://enviro.epa.gov/enviro/ef_metadata_html.tri_page?p_column_name=air_total_release)) is only found in the [TRI_FORM_R](https://enviro.epa.gov/enviro/ef_metadata_html.ef_metadata_table?p_table_name=TRI_FORM_R&p_topic=TRI) table, which does not contain the FACILITY_ID column.
+
+You can querry the V_TRI_FORM_R_EZ using the API even though it’s not a documented table listed in the API website. This form contains facility information and AIR_TOTAL_RELEASE reporting, but it only goes until 2021. To get the most recent data (2023) you would have to manually download the individual tables with separate calls, perform the joins, or use the [custom form search web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). We’ll demonstrate a quick API call for the V_TRI_FORM_R_EZ, but move forward with the most recent data available in the custom form search web portal.
+
+::: {.callout-tip style="color: #9f0b64;"}
+#### Knowledge Check
+
+What is the primary purpose of the Toxic Release Inventory (TRI)?
+
+a)  To track emissions of greenhouse gases
+b)  To monitor compliance with the Clean Air Act
+c)  To provide data on toxic chemical releases from industrial facilities
+d)  To record air quality index values for major cities
+:::
+
+## Toxic Release Inventory: Form R
+
+We can make the query to Envirofacts. Let's break down the call.
+
+```{python}
+# Define the URL for the CSV file containing Toxic Release Inventory Form R data
+# This query requests data from the EPA Envirofacts API, specifying:
+# - Reporting Year: 2021
+# - Air releases greater than 0
+# - State: Michigan (MI)
+# - Counties: Wayne, Oakland, and Macomb
+url = "https://data.epa.gov/efservice/V_TRI_FORM_R_EZ/REPORTING_YEAR/2021/AIR_TOTAL_RELEASE/>/0/STATE_ABBR/MI/COUNTY_NAME/CONTAINING/WAYNE/CONTAINING/OAKLAND/CONTAINING/MACOMB/CSV"
+```
+
+-   Base url: https://data.epa.gov/efservice/
+-   The table we're requesting: V_TRI_FORM_R_EZ/
+-   For just 2021: REPORTING_YEAR/2021/
+-   Only facilities that report some air release: AIR_TOTAL_RELEASE/\>/0/
+-   Just Michigan: STATE_ABBR/MI/
+-   Our counties: COUNTY_NAME/CONTAINING/WAYNE/CONTAINING/OAKLAND/CONTAINING/MACOMB/
+-   We want it as a csv: CSV
+
+```{python}
+# Read the TRI Form R data CSV file directly into a pandas DataFrame
+tri_form_r = pd.read_csv(url)
+
+# Confirm successful data loading by printing the number of records
+print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
+
+# Display column names to understand the structure of the dataset
+print("\nColumns in the dataset:")
+print(tri_form_r.columns)
+```
+
+We have roughly the same number of facilities as before, but this table has a lot of columns (568). We should make it more manageable.
+
+```{python}
+# The dataset contains numerous columns (568), so we will retain only essential columns for analysis
+# Select columns: facility name, address, city, reporting year, and air release amounts
+keeps = [
+    'facility_name', 'street_address', 'city_name',
+    'reporting_year', 'air_total_release']
+
+# Update DataFrame to only include the selected columns
+tri_form_r = tri_form_r[keeps]
+```
+
+This works well but we can get more recent data that is already filtered using the [web portal](https://enviro.epa.gov/facts/tri/form_ra_download.html). The user selects location, years of interest, and columns of interests. The portal serves up your requested dataset in an Amazon S3 cloud storage. We can import the dataset directly from the address they provide.
+
+```{python}
+# Read a secondary TRI Form R CSV file directly from the URL
+# This may contain additional or alternative data for further analysis
+tri_form_r = pd.read_csv("https://dmap-epa-enviro-prod-export.s3.amazonaws.com/396975438.CSV")
+
+# Confirm successful reading by printing the number of records and dataset structure
+print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
+print("\nColumns in the dataset:")
+print(tri_form_r.columns)
+```
+
+This is a bit more manageable, but we have multiple records per facility because each chemical release has a separate record. This allows the user to investigate specific chemicals, but for the purposes of this exercise we will aggregate `AIR_TOTAL_RELEASE` for each facility, to get a single row per facility.
+
+```{python}
+# Display the first few rows of the dataset for a quick inspection
+# Note: this printout is limited to avoid excessive output in a web environment
+# tri_form_r.head
+```
+
+Let's aggregate it.
+
+```{python}
+# Group the dataset by facility name and location details, summing the total air releases per facility
+# This aggregation step consolidates all entries for each unique facility based on name, latitude, longitude, and address
+tri_form_r = tri_form_r.groupby(['FACILITY_NAME', 'LATITUDE','LONGITUDE','STREET_ADDRESS'], as_index=False).agg({
+    'AIR_TOTAL_RELEASE': 'sum' # Sum the air release values for each facility
+})
+# Display the total number of unique facilities after grouping
+print(f"Successfully read CSV. Number of records: {len(tri_form_r)}")
+```
+
+There were only 211 unique listings in the 2023 data.
+
+As before, we should check for valid coordinates and missing air release data.
+
+```{python}
+# Define column names for latitude, longitude, and air release values
+# Assumes column names match; adjust 'LATITUDE', 'LONGITUDE', and 'AIR_TOTAL_RELEASE' if necessary
+lat_col = 'LATITUDE'
+lon_col = 'LONGITUDE'
+release_col = 'AIR_TOTAL_RELEASE'  # Column for the total air release per facility
+
+# Remove any records with missing coordinates or air release data to ensure data integrity for spatial analysis
+df_tri_clean = tri_form_r.dropna(subset=[lat_col, lon_col, release_col])
+
+# Output the number of records remaining after removing rows with missing data
+print(f"\nNumber of records after removing missing data: {len(df_tri_clean)}")
+```
+
+There were no missing coordinates or missing air release data.
+
+Now we can create a spatial object with **GeoPandas** using the latitude and longitude coordinates in the table.
+
+```{python}
+# Convert the cleaned TRI data to a GeoDataFrame for spatial analysis
+# Creates a 'geometry' column based on longitude and latitude, setting the coordinate system to EPSG:4326 (WGS 84)
+gdf_tri_form_r = gpd.GeoDataFrame(
+    df_tri_clean, 
+    geometry=gpd.points_from_xy(df_tri_clean[lon_col], df_tri_clean[lat_col]),
+    crs="EPSG:4326"
+)
+```
+
+Let’s check the distribution of the air release data for outliers.
+
+```{python}
+
+# Plot a histogram to visualize the distribution of total air release values across facilities
+plt.figure(figsize=(8, 8))  # Define plot size
+plt.hist(gdf_tri_form_r['AIR_TOTAL_RELEASE'], bins=10, edgecolor='black') # Set bin count and edge color
+plt.title('Distribution of Air Total Release Values') # Plot title
+plt.xlabel('Air Total Release Sum') # X-axis label for air release values
+plt.ylabel('Frequency') # Y-axis label for frequency of values
+plt.grid(True, alpha=0.3) # Add grid with slight transparency for readability
+
+# Display the histogram
+plt.show()
+```
+
+Looks like there are outliers around 100,000 lbs and 400,000 lbs. Before we map the data, it would be a good idea to perform a log transformation of `AIR_TOTAL_RELEASE` to smooth out the visuals. You can't take the log of negative or zero values, so we'll use the `log1p` function, which adds 1 to every value before taking the log.
+
+```{python}
+import numpy as np
+
+# Calculate the natural logarithm of air release values +1 to handle any zero values safely
+# This transformation helps normalize the data, reducing skew for clearer visualization
+gdf_tri_form_r['LOG_AIR_RELEASE'] = np.log1p(gdf_tri_form_r['AIR_TOTAL_RELEASE'])
+
+# Plot a histogram to visualize the distribution of the log-transformed air release values
+plt.figure(figsize=(8, 8))
+plt.hist(gdf_tri_form_r['LOG_AIR_RELEASE'], bins=10, edgecolor='black') # Set bin count and edge color
+plt.title('Distribution of Log-Transformed Air Release Values') # Plot title
+plt.xlabel('Log of Air Total Release Sum') # X-axis label for log air release values
+plt.ylabel('Frequency') # Y-axis label for frequency of values
+plt.grid(True, alpha=0.3) # Add grid with slight transparency for readability
+
+# Display the histogram
+plt.show()
+
+```
+
+That looks much better.
+
+Now we can visualize the data, by overlaying the points on a basemap of Detroit while using graduated symbols to illustrate the amount of air releases for a given facility.
+
+```{python}
+# Reproject TRI facility data to Web Mercator (EPSG:3857) to align with the basemap projection
+gdf_tri_form_r_bm = gdf_tri_form_r.to_crs(epsg=3857)
+
+# Create the map plot
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Plot the Detroit metro area boundary and bounding box with customized colors
+detroit_metro_bm.plot(ax=ax, facecolor='none', edgecolor='blue', linewidth=2)
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=2)
+
+# Scatter plot TRI facilities with symbol sizes proportional to the log of air releases
+# Scaling factor applied for better visibility; adjust as needed
+scatter = ax.scatter(gdf_tri_form_r_bm.geometry.x, gdf_tri_form_r_bm.geometry.y, 
+                     s=gdf_tri_form_r_bm['LOG_AIR_RELEASE']*20,  # Scale size of symbols by log air releases
+                     c='orangered',  # Color fill of symbols
+                     edgecolor='yellow',  # Outline color of symbols
+                     linewidth=1,  # Outline thickness for clarity
+                     alpha=0.7) # Adjust transparency level
+
+# Add OpenStreetMap basemap for spatial context
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Set map view to focus on the bounding box area
+ax.set_xlim(bbox_polygon_bm.total_bounds[0], bbox_polygon_bm.total_bounds[2])
+ax.set_ylim(bbox_polygon_bm.total_bounds[1], bbox_polygon_bm.total_bounds[3])
+
+# Remove axes for a cleaner map view
+ax.set_axis_off()
+
+# Add a legend with sample sizes for symbol scaling reference
+legend_sizes = [0,4,8,12]  # Adjust sample sizes based on data scale
+legend_elements = [plt.scatter([], [], s=size*20, c='orangered', edgecolor='yellow', 
+                               linewidth=1, alpha=1, label=f'{size:,}') 
+                   for size in legend_sizes]
+ax.legend(handles=legend_elements, title='Log Total Air Releases (lbs)', 
+          loc='lower right', title_fontsize=12, fontsize=10) # Customize legend title and text
+
+# Set the plot title
+plt.title("Detroit Metro Area TRI Facilities - Total Air Releases (Custom Data)", fontsize=16)
+plt.tight_layout()
+plt.show()
+
+# Output summary statistics for TRI facilities plotted and air release values
+print(f"\nNumber of TRI facilities plotted: {len(gdf_tri_form_r)}")
+print(f"Total air releases: {gdf_tri_form_r[release_col].sum():,.2f} lbs")
+print(f"Average air release per facility: {gdf_tri_form_r[release_col].mean():,.2f} lbs")
+```
+
+The point source air release data provides a good snapshot of the locations and relative amounts of chemical releases. With some basic understanding of the demographic dynamics of Detroit one might theorize who is being subjected to high levels of pollution, however, we’ll need additional data to develop any type of systematic analysis.
+
+::: {.callout-tip style="color: #9f0b64;"}
+#### Knowledge Check
+
+What key information does Form R of the Toxic Release Inventory provide?
+
+a)  Facility names and locations only
+b)  Chemical storage capacities of facilities
+c)  Detailed data on chemical releases, including air releases
+d)  Employee health records related to chemical exposure
+:::
+
+## Social Vulnerability Index
+
+NASA's [U.S. Social Vulnerability Index Grids (SVI), v1.01](https://sedac.ciesin.columbia.edu/data/set/usgrid-us-social-vulnerability-index-rev01) raster dataset, available through the NASA [Socioeconomic Data and Applications Center (SEDAC)](https://earthdata.nasa.gov/centers/sedac-daac), is a high-resolution geospatial resource that quantifies social vulnerability across the United States. This dataset is based on the CDC's Social Vulnerability Index but is presented in a raster format, providing continuous coverage at a 250-meter resolution. The SVI incorporates various socioeconomic and demographic factors such as poverty, lack of vehicle access, crowded housing, and minority status to assess communities' capacity to prepare for, respond to, and recover from hazards, including environmental threats like poor air quality.
+
+The raster format allows for more detailed spatial analysis and integration with other environmental datasets. This makes it particularly valuable for researchers and policymakers studying the intersection of social vulnerability and environmental risks, such as air pollution exposure. By overlaying this SVI data with air quality information, for instance, analysts can identify areas where socially vulnerable populations may be disproportionately affected by poor air quality, supporting environmental justice initiatives and targeted intervention strategies.
+
+As part of NASA’s [Earth Observing System Data and Information System (EOSDIS)](https://www.earthdata.nasa.gov/about/esdis/eosdis), SEDAC hosts this dataset along with other socioeconomic and environmental data, facilitating interdisciplinary research on human-environment interactions. The SVI raster dataset’s high resolution and comprehensive coverage make it a powerful tool for assessing environmental equity and informing policy decisions at various geographic scales.
+
+The SVI dataset is free to users with a NASA Earth Data account. The Earth Data account is free and gives you access to all SEDAC data as well as a wide range of NASA Earth science data. It’s a valuable resource for researchers, students, and anyone interested in environmental and socioeconomic data.
+
+If you don’t already have an Earth Data account you can follow these steps to download the SVI dataset on your local computer:
+
+1.  Visit the [NASA Earthdata website](https://urs.earthdata.nasa.gov/). Click on the “Register” button on the top right corner of the page.
+2.  Fill out the registration form with the required information, including your name, email address, and a password. Create a username.
+3.  Verify your email. NASA will send a verification email to the address you provided. Click on the link in this email to confirm your account.
+4.  Once your account is verified, log in to Earth Data using your username and password.
+5.  Visit the [SEDAC](https://sedac.ciesin.columbia.edu/) website and search for the U.S. Social Vulnerability Index Grids, v1.01 dataset by entering “SVI” in the search bar.
+6.  Download the 2020 WGS84 SVI grids; enter your Earth Data credentials to log in when prompted.
+
+### Data Processing
+
+Once you’ve downloaded the dataset to your working directory, you can proceed with the analysis.
+
+The different layers of SVI are provided as individual files, but sometimes it's easier to work with a multilayer object. We can create one using **xarray**. To begin, we'll read in each file individually, clip it to our border of Detroit metro, and create an individual data array.
+
+```{python}
+import xarray as xr
+import rasterio
+import rasterio.mask
+
+# Set xarray display options for enhanced attribute visibility when viewing data
+xr.set_options(
+    keep_attrs=True,  # Retain attributes in computations
+    display_expand_attrs=True, # Expand attribute display
+    display_expand_coords=True, # Show all coordinates
+    display_expand_data=False, # Collapse data display to save space
+    display_expand_data_vars=True # Expand variable display
+)
+
+# Define paths to SVI (Social Vulnerability Index) TIF files, each representing a different aspect of vulnerability
+tif_files = [
+    "data/svi/svi_2020_tract_overall_wgs84.tif",
+    "data/svi/svi_2020_tract_minority_wgs84.tif",
+    "data/svi/svi_2020_tract_socioeconomic_wgs84.tif",
+    "data/svi/svi_2020_tract_housing_wgs84.tif",
+    "data/svi/svi_2020_tract_household_wgs84.tif"
+]
+
+# Initialize an empty list to store DataArrays created from each raster
+data_arrays = []
+
+# Iterate over each TIF file to read, clip to Detroit metro area, and convert to xarray DataArray
+for file in tif_files:
+    with rasterio.open(file) as src:
+        # Align Detroit metro boundary to raster CRS for compatibility
+        metro_reprojected = detroit_metro.to_crs(src.crs)
+        
+        # Clip the raster to the Detroit metro area based on its geometry
+        out_image, out_transform = rasterio.mask.mask(src, metro_reprojected.geometry, crop=True)
+        out_meta = src.meta.copy() # Copy metadata for adjustments
+        
+        # Update metadata with new dimensions and transformation details after cropping
+        out_meta.update({"driver": "GTiff",
+                         "height": out_image.shape[1],
+                         "width": out_image.shape[2],
+                         "transform": out_transform})
+        
+        # Set up mesh grid coordinates to match the raster's new dimensions
+        height, width = out_meta['height'], out_meta['width']
+        cols, rows = np.meshgrid(np.arange(width), np.arange(height))
+        xs, ys = rasterio.transform.xy(out_transform, rows, cols)
+        
+        # Convert lists to numpy arrays and reshape to match the raster dimensions
+        xs, ys = np.array(xs).reshape(height, width), np.array(ys).reshape(height, width)
+        
+        # Create an xarray DataArray with coordinates for each cell based on the raster grid
+        da = xr.DataArray(out_image[0],  # Extract the first band of the clipped image
+                          coords={'y': ('y', ys[:, 0]),  # Latitude
+                                  'x': ('x', xs[0, :])}, # Longitude
+                          dims=['y', 'x'])
+        da.attrs['crs'] = str(src.crs)  # Store CRS as an attribute in string format
+        da.attrs['transform'] = out_transform # Add transform details to attributes
+        data_arrays.append(da) # Append DataArray to list
+```
+
+Now we can combine them together and give the layers "pretty" names.
+
+```{python}
+# Combine all DataArrays from different SVI files into a single xarray DataSet
+svi_detroit = xr.concat(data_arrays, dim='layer')
+
+# Define and assign layer names to clarify SVI aspect for each data layer in the combined dataset
+layer_names = ['Overall', 'Minority', 'Socioeconomic', 'Housing', 'Household']
+svi_detroit = svi_detroit.assign_coords(layer=('layer', layer_names))
+svi_detroit # Display the DataSet for verification
+```
+
+Now we can plot each layer.
+
+```{python}
+# Define minimum and maximum values for the color scale; SVI ranges from 0 (low) to 1 (high vulnerability)
+vmin, vmax = 0, 1
+
+# Create a multi-panel plot with subplots arranged in a 3x2 grid
+fig, axes = plt.subplots(3, 2, figsize=(8, 10))
+axes = axes.flatten()  # Flatten the 2D array of axes for easier iteration
+
+# Plot each SVI layer in a separate subplot
+for i, layer in enumerate(svi_detroit.layer.values):
+    # Render the layer with a plasma colormap and fixed color range for consistency
+    im = svi_detroit.sel(layer=layer).plot(ax=axes[i], add_colorbar=False, vmin=vmin, vmax=vmax, cmap='plasma')
+    axes[i].set_title(layer) # Title each subplot with the SVI aspect
+    axes[i].axis('off') # Turn off axis ticks for cleaner appearance
+    
+    # Overlay Detroit metro boundary on each subplot
+    metro_reprojected.boundary.plot(ax=axes[i], color='red', linewidth=1)
+
+# Remove the unused subplot in the 3x2 grid layout
+fig.delaxes(axes[5])
+
+# Add a single shared colorbar to indicate the SVI score scale across all subplots
+cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7]) # Position colorbar at right side of plot
+cbar = fig.colorbar(im, cax=cbar_ax, label='SVI Score', 
+                    fraction=0.047, pad=0.04, aspect=20) # Customize colorbar properties
+
+plt.tight_layout()  # Adjust layout for clarity and spacing
+plt.show() # Display the final plot
+```
+
+This provides an excellent look at demographic trends in the Detroit metro area. Overall vulnerability is highest in the inner city. The most striking drivers are the concentration of minorities and socioeconomic vulnerability in the downtown area. The housing and household components are slightly more varied throughout the region.
+
+::: {.callout-tip style="color: #9f0b64;"}
+#### Knowledge Check
+
+What does the Social Vulnerability Index (SVI) primarily measure?
+
+a)  Air pollution levels in different communities
+b)  Economic growth rates of different regions
+c)  Communities' capacity to prepare for and respond to hazards
+d)  Population density in urban areas
+:::
+
+## Integrating TRI and SVI
+
+There are numerous ways to assess the relationships between the SVI and TRI data. For this lesson we’ll identify areas where air releases and vulnerability are highest together by creating a new rasterized index that combines both layers.
+
+To begin we need to rasterize the air release point data. We will create an empty raster grid and “fill” the cells with the sum of the air release values from any points that are overlapped by the cells.
+
+Start by getting the bounds from our boundary object, specify the desired resolution, and set up the transform.
+
+```{python}
+from rasterio.transform import from_origin
+
+# Retrieve the spatial boundaries (min/max x and y coordinates) of the Detroit metro area
+minx, miny, maxx, maxy = detroit_metro_bm.total_bounds
+
+# Define the resolution of each cell in meters (5,000 meters = 5km) to align with SVI data resolution
+resolution = 5000
+
+# Calculate the number of cells needed to cover the Detroit metro area extent
+# in both x (width) and y (height) directions based on the resolution
+nx = int((maxx - minx) / resolution) # Number of cells horizontally
+ny = int((maxy - miny) / resolution) # Number of cells vertically
+
+# Create the transformation for converting between the spatial extent and pixel grid of the raster
+transform = from_origin(minx, maxy, resolution, resolution)
+```
+
+Now we have to prepare the point values and rasterize them. A key thing to note here is the `merge_alg=rasterio.enums.MergeAlg.add` argument passed to the rasterize function. This argument makes sure that cells with more than 1 point will add the values together (the default is to simply replace).
+
+```{python}
+from rasterio import features
+
+# Prepare the geometries (points) and their associated values for rasterization
+# Each tuple contains a geometry (location) and the AIR_TOTAL_RELEASE value for raster cell assignment
+shapes = ((geom, value) for geom, value in zip(gdf_tri_form_r_bm.geometry, gdf_tri_form_r_bm.AIR_TOTAL_RELEASE))
+
+# Rasterize the point data into a grid, with each cell reflecting the air release values
+air_release_raster = features.rasterize(
+    shapes=shapes, # Geometries and values to rasterize
+    out_shape=(ny, nx), # Output raster shape, matching previously calculated cell count
+    transform=transform, # Transformation matrix for raster alignment with spatial extent
+    fill=0,  # Default fill value (0) for cells without data
+    all_touched=True, # Includes all cells touched by a geometry to ensure full coverage
+    merge_alg=rasterio.enums.MergeAlg.add) # Merge algorithm to sum overlapping values in cells
+```
+
+We rasterized with **rasterio**, but we need to convert this to an **xarray** object to continue and we need **rioxarray** to write the crs information for the **xarray** object.
+
+```{python}
+import rioxarray
+
+# Convert the rasterized array to an xarray DataArray for enhanced data handling
+# Set coordinates to spatial extent using latitude (y) and longitude (x) for geospatial consistency
+air_release_raster_da = xr.DataArray(
+    air_release_raster, # Rasterized air release data
+    coords={'y': np.linspace(maxy, miny, ny), # Y-axis coordinates, from top to bottom
+        'x': np.linspace(minx, maxx, nx)}, # X-axis coordinates, from left to right
+    dims=['y', 'x']) # Dimension labels for DataArray
+
+# Write the Detroit metro area CRS to the DataArray for georeferencing
+air_release_raster_da.rio.write_crs(detroit_metro_bm.crs, inplace=True)
+```
+
+The spaces between county borders can create odd values because there are no points right next to each other. We can clip the raster to our Detroit metro boundary to fix this.
+
+```{python}
+# Clip the rasterized DataArray to the Detroit metro boundary to limit data to the target area
+air_release_raster_da = air_release_raster_da.rio.clip(
+    detroit_metro_bm.geometry.values,  # Boundary geometry for clipping
+    detroit_metro_bm.crs,  # Coordinate reference system of the boundary
+    drop=False,   # Retain original raster size; cells outside geometry are masked
+    all_touched=True)  # Include any cells touched by the boundary for full coverage
+```
+
+Now we can see how our rasterized air release values look.
+
+```{python}
+from matplotlib.colors import BoundaryNorm, ListedColormap
+
+# Define class intervals (breaks) for categorizing air release values into discrete color bands
+breaks = [0, 1, 10, 100, 1000, 10000, 100000, 250000, 500000]
+
+# Create a custom colormap to represent different levels of air release with distinct colors
+colors = ['#fffff3', '#FFFFCC', '#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#B10026']
+cmap = ListedColormap(colors)
+
+# Create a normalization scheme to map values to the defined color breaks
+norm = BoundaryNorm(breaks, cmap.N)
+
+# Set up the plot with a defined size
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Plot TRI facility points in blue, with adjusted transparency (alpha) for visibility
+gdf_tri_form_r_bm.plot(ax=ax, color='blue', markersize=10, alpha=0.7)
+
+# Plot the air release raster, using the custom colormap and normalization scheme
+im = ax.imshow(
+    air_release_raster_da,  # Raster data for air release
+    extent=[minx, maxx, miny, maxy],  # Spatial extent to match the Detroit metro bounds
+    origin='upper',  # Ensure raster is oriented correctly (top-down)
+    cmap=cmap,  # Apply custom colormap
+    norm=norm)  # Normalize color according to defined breaks
+
+# Add a color bar with labels indicating air release levels (discrete)
+cbar = plt.colorbar(
+    im, ax=ax, extend='max',  # Display max extension on color bar
+    label='Total Air Releases (pounds)',  # Label for color bar
+    ticks=breaks,  # Set breaks as tick positions
+    fraction=0.047, pad=0.04, aspect=20)  # Adjust color bar size and position
+cbar.ax.set_yticklabels([f'{b:,}' for b in breaks])  # Format tick labels with thousands separator
+
+# Plot Detroit metro area boundary as a black outline
+detroit_metro_bm.boundary.plot(ax=ax, color='black', linewidth=2)
+
+# Set plot extent to focus on Detroit metro area
+ax.set_xlim(minx, maxx)
+ax.set_ylim(miny, maxy)
+
+# Add a title and axis labels
+
+ax.set_title('TRI Air Total Release (100m resolution sum) with Facility Locations', fontsize=16)
+ax.set_xlabel('X Coordinate')
+ax.set_ylabel('Y Coordinate')
+
+# Optimize layout and display the plot
+plt.tight_layout()
+plt.show()
+
+# Output summary information
+print(f"Number of TRI facilities plotted: {len(gdf_tri_form_r_bm)}")
+print(f"Total air releases: {gdf_tri_form_r_bm['AIR_TOTAL_RELEASE'].sum():,.2f}")
+print(f"Maximum cell value in raster: {air_release_raster_da.max().values:,.2f}")
+```
+
+The raster looks as expected with the highest values in locations where our previous map had the largest circles. We overlaid the points to see the sources of the values. The cell resolution is set to 5000m. This was selected so we can evaluate the map and the process we used to create the raster, but any value could be set depending on the intended use.
+
+### Air Release Vulnerability Index
+
+Now that we've created our air release raster layer we can combine it with the SVI raster to create a new index identifying areas with the highest combination of air releases and vulnerability.
+
+Start by selecting just the SVI Overall layer and converting it to a **rioxarray** object so we can perform raster calculations. We'll also ensure the 2 raster layers "line up" by reprojecting into the same coordinate reference system and matching their resolutions.
+
+```{python}
+from rasterio.enums import Resampling
+
+# Select the 'Overall' layer from the Social Vulnerability Index (SVI) dataset specific to Detroit
+svi_overall = svi_detroit.sel(layer='Overall')
+
+# Convert SVI layer to rioxarray for CRS-based geospatial operations
+svi_overall = svi_overall.rio.write_crs("EPSG:4326")
+
+# Reproject the SVI layer to match the CRS and spatial alignment of the air release raster
+svi_reprojected = svi_overall.rio.reproject_match(air_release_raster_da)
+
+# Adjust the resolution of air release data to match the SVI resolution using bilinear resampling
+air_release_disaggregated = svi_reprojected.rio.reproject_match(
+    svi_reprojected,
+    resampling=Resampling.bilinear
+)
+```
+
+There are a few more steps that will aid in interpretation.
+
+1.  We will take the log of the air release data to reduce the impact of major outliers.
+2.  We will scale the logged air release data to 0-1 to match the SVI data. Now the resulting index we create will have equal contributions from both datasets.
+
+```{python}
+# Apply log transformation (log1p) to compress wide-ranging air release values, then normalize to a 0-1 scale
+air_release_log = np.log1p(air_release_disaggregated)
+air_release_scaled = (air_release_log - air_release_log.min()) / (air_release_log.max() - air_release_log.min())
+
+
+# Multiply the scaled air release data with the reprojected SVI data to create a vulnerability indicator
+# This indicator combines environmental impact (air releases) with social vulnerability
+vulnerability_indicator = air_release_scaled * svi_reprojected
+```
+
+Now let's visualize our index along with the inputs.
+
+```{python}
+# Create a figure with 3 subplots stacked vertically for SVI, Air Release, and Vulnerability Indicator
+fig, axs = plt.subplots(3, 1, figsize=(8, 20))
+
+# Plot SVI Overall data with a color map (viridis), normalized between 0 and 1
+im1 = svi_reprojected.plot(ax=axs[0], cmap='viridis', vmin=0, vmax=1, add_colorbar=False)
+plt.colorbar(im1, ax=axs[0], label='SVI Overall', 
+                    fraction=0.047, pad=0.04, aspect=20)
+axs[0].set_title('Social Vulnerability Index (Overall)', fontsize=16)
+detroit_metro.boundary.plot(ax=axs[0], color='black', linewidth=2) # Add Detroit metro boundary
+
+# Plot the log-transformed Air Release data for enhanced visual differentiation
+im2 = np.log1p(air_release_disaggregated).plot(ax=axs[1], cmap='YlOrRd', add_colorbar=False)
+plt.colorbar(im2, ax=axs[1], label='Log(Air Release + 1)', 
+                    fraction=0.047, pad=0.04, aspect=20)
+axs[1].set_title('Air Release (Log-transformed)', fontsize=16)
+detroit_metro.boundary.plot(ax=axs[1], color='black', linewidth=2)
+
+# Plot the Vulnerability Indicator as the product of SVI and scaled air release data
+im3 = vulnerability_indicator.plot(ax=axs[2], cmap='YlOrRd', vmin=0, vmax=1, add_colorbar=False)
+plt.colorbar(im3, ax=axs[2], label='Air Release Vulnerability Indicator', 
+                    fraction=0.047, pad=0.04, aspect=20)
+axs[2].set_title('Air Release Vulnerability Indicator\n(Scaled Air Release * SVI)', fontsize=16)
+detroit_metro.boundary.plot(ax=axs[2], color='black', linewidth=2)
+
+# Set consistent axis limits and labels across all subplots
+for ax in axs:
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.set_xlim(svi_reprojected.x.min(), svi_reprojected.x.max())
+    ax.set_ylim(svi_reprojected.y.min(), svi_reprojected.y.max())
+
+# Adjust layout and display the plots
+plt.tight_layout()
+plt.show()
+
+# Print out the maximum value of the vulnerability indicator for reference
+print(f"Maximum vulnerability indicator: {vulnerability_indicator.max().values:.4f}")
+```
+
+As one would expect, there are several areas in the downtown river corridor with very high combinations of SVI and TRI releases. The maximum score for our index is 0.9286! That is an extremely vulnerable community facing extraordinary levels of air pollution.
+
+We can get a better sense of where these communities are by extracting the location of the cells with the highest scores and placing them on a basemap of Detroit.
+
+We'll convert the raster into a data frame, sort the values in descending order, and then extract the coordinates.
+
+```{python}
+# Convert vulnerability indicator to a DataFrame for easy sorting and manipulation
+vulnerability_df = vulnerability_indicator.to_dataframe(name='index').reset_index()
+
+# Sort by index value (descending) to identify top 10 most vulnerable areas
+top_10 = vulnerability_df.sort_values('index', ascending=False).head(10)
+
+# Create GeoDataFrame from the top 10 points using coordinates as geometry
+top_10['geometry'] = gpd.points_from_xy(top_10.x, top_10.y)
+top_10_gdf = gpd.GeoDataFrame(top_10, geometry='geometry', crs=vulnerability_indicator.rio.crs)
+```
+
+Now let's make a map.
+
+```{python}
+# Create the final map plot to display top 10 vulnerable areas with basemap and boundaries
+fig, ax = plt.subplots(figsize=(8, 8))
+
+# Plot Detroit metro area boundary in black
+detroit_metro_bm.boundary.plot(ax=ax, color='black', linewidth=2)
+
+# Plot the top 10 highest vulnerability points with blue markers
+top_10_gdf.plot(ax=ax, color='blue', markersize=100, alpha=0.7)
+
+# Annotate each top point with its rank for clarity
+for idx, row in top_10_gdf.iterrows():
+    ax.annotate(f"#{idx+1}", (row.geometry.x, row.geometry.y), 
+                xytext=(3, 3), textcoords="offset points", 
+                color='black', fontweight='bold')
+
+# Add a basemap to provide geographic context, using OpenStreetMap tiles
+ctx.add_basemap(ax, crs=vulnerability_indicator.rio.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Overlay a bounding box in blue as a border around the plotted area
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
+
+# Limit map extent to focus on Detroit metro
+ax.set_xlim(vulnerability_indicator.x.min(), vulnerability_indicator.x.max())
+ax.set_ylim(vulnerability_indicator.y.min(), vulnerability_indicator.y.max())
+
+# Add title and remove axis display for a cleaner map
+ax.set_title('Top 10 Areas with Highest Air Release Vulnerability Index', fontsize=16)
+ax.set_axis_off()
+
+# Display the final map
+plt.tight_layout()
+plt.show()
+
+# Output index and vulnerability value of the top 10 areas for review
+print("Row index and index value of the top 10 points:")
+for i, (idx, row) in enumerate(top_10_gdf.iterrows(), 1):
+    print(f"Row index = {idx}, Index value = {round(row['index'], 2)}")
+```
+
+As the input layers suggest, the most vulnerable and polluted areas are along the river corridor in Lincoln Park, Melvindale, Mexicantown, and River Rouge. There are multiple locations with indexes greater than 0.70. This is valuable information for targeted relief or mitigation programs.
+
+::: {.callout-tip style="color: #9f0b64;"}
+#### Knowledge Check
+
+What was the main purpose of combining the TRI and SVI data in this analysis?
+
+a)  To calculate total pollution levels for each county
+b)  To identify areas with both high air releases and high social vulnerability
+c)  To determine the most populous areas in Detroit
+d)  To predict future industrial development zones
+:::
+
+## CDC PLACES
+
+The CDC [Population Level Analysis and Community Estimates (PLACES)](https://www.cdc.gov/places/index.html) dataset is a collaboration between the [Centers for Disease Control and Prevention (CDC)](https://www.cdc.gov/index.html), the [Robert Wood Johnson Foundation](https://www.rwjf.org/), and the [CDC Foundation](https://www.cdcfoundation.org/). It provides model-based population-level analysis and community estimates of health indicators for all counties, places (incorporated and census designated places), census tracts, and ZIP Code Tabulation Areas (ZCTAs) across the United States. Some key points to consider when working with CDC PLACES:
+
+1.  **Spatial Extent:** Entire United States, including all 50 states, the District of Columbia, and Puerto Rico.
+2.  **Spatial Resolution:** Multiple levels including counties, cities/towns, census tracts, and ZIP codes.
+3.  **Indicators:** Wide range of chronic disease measures related to health outcomes, prevention, and health risk behaviors.
+4.  **Data Sources:**
+    -   [Behavioral Risk Factor Surveillance System (BRFSS)](https://www.cdc.gov/brfss/index.html)
+    -   [U.S. Census Bureau's American Community Survey (ACS)](https://www.census.gov/programs-surveys/acs)
+5.  [**Methodology:**](https://www.cdc.gov/places/methodology/index.html) Uses small area estimation methods for small geographic areas.
+6.  **Health Measures Include:**
+    -   Chronic diseases: e.g., asthma, COPD, heart disease, diabetes
+    -   Health risk behaviors: e.g., smoking, physical inactivity, binge drinking
+    -   Prevention practices: e.g., health insurance coverage, dental visits, cholesterol screening
+7.  **Socioeconomic Data:** Includes some socioeconomic and demographic variables.
+8.  **Annual Updates:** Providing recent estimates for local areas.
+
+This dataset is valuable for public health researchers, policymakers, and community organizations. It provides a standardized way to compare health indicators across different geographic areas and can be used to inform targeted interventions and policy decisions, especially in addressing health disparities at a local level.
+
+As with ICIS-AIR and TRI, PLACES is available through a web search interface and a programmatic API. We will focus on the API in this example.
+
+#### Processing
+
+We'll start by accessing the CDC PLACES data through their API and processing it for our analysis. First we set up our API request. We specify the endpoint URL, define our target counties, and create a filter to select data only for these counties in Michigan.
+
+```{python}
+# Define the GeoJSON API endpoint URL, specific to CDC health data
+url = "https://data.cdc.gov/resource/cwsq-ngmh.geojson"
+
+# Define the list of Detroit metro area counties of interest
+detroit_counties = ['Wayne', 'Oakland', 'Macomb']
+
+# Construct the query filter string to specify only Detroit metro counties
+county_filter = " OR ".join([f"countyname = '{county}'" for county in detroit_counties])
+
+# Define query parameters to retrieve data for Detroit metro counties in Michigan
+params = {
+    "$where": f"stateabbr = 'MI' AND ({county_filter})",
+    "$limit": 50000   # Limit the results to a manageable number
+}
+```
+
+Next, let's make the API request and process the response:
+
+```{python}
+# Perform the API request to retrieve GeoJSON data for Detroit area health statistics
+response = requests.get(url, params=params)
+
+# Check if the request was successful
+if response.status_code == 200:
+    data = response.json() # Parse the JSON data
+    print(f"Successfully retrieved data")
+else:
+    print(f"Failed to retrieve data. Status code: {response.status_code}")
+    print(response.text)
+
+# Convert the GeoJSON text to a GeoDataFrame for spatial analysis
+gdf = gpd.read_file(response.text)
+```
+
+You can inspect the `gdf` return object on your own; it's too large to print here. Let's just take a look at the available health measures in CDC PLACES.
+
+```{python}
+# Display unique health measures available in the dataset to understand data variety
+print("\nAvailable health measures:")
+print(gdf['measure'].unique())
+
+# Print essential details of the GeoDataFrame structure and content
+print("\nGeoDataFrame Info:")
+print(gdf.info())
+```
+
+There's a lot of great data here considering the rarity of health outcomes data; especially at this resolution (census tracts). Because we’re dealing with air quality in this lesson we’ll use “Current asthma among adults.” The asthma data all comes from 2022 (you can verify with `gdf_asthma[‘year’].unique()`).
+
+Let's make a quick map to see how it looks.
+
+```{python}
+# Create a sample map to visualize data for a specific health measure, such as asthma prevalence
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Filter the data for the asthma measure and ensure numeric conversion of data values
+gdf_asthma = gdf[gdf['measure'] == 'Current asthma among adults'].copy()
+gdf_asthma['data_value'] = pd.to_numeric(gdf_asthma['data_value'], errors='coerce')
+
+# Plot asthma data with color variation based on prevalence
+gdf_asthma.plot(column='data_value', 
+                ax=ax, 
+                legend=True, 
+                legend_kwds={'label': 'Asthma Prevalence (%)', 'orientation': 'horizontal'},
+                cmap='YlOrRd',
+                missing_kwds={'color': 'lightgrey'}) # Specify color for missing data
+
+# Add basemap for geographic context
+ctx.add_basemap(ax, crs=gdf_asthma.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Overlay the Detroit metro area boundary
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
+
+# Set map extent to focus on the Detroit metro area
+ax.set_xlim(gdf_asthma.total_bounds[0], gdf_asthma.total_bounds[2])
+ax.set_ylim(gdf_asthma.total_bounds[1], gdf_asthma.total_bounds[3])
+
+# Add map title and hide axis lines for a cleaner visualization
+plt.title('Asthma Prevalence in Detroit Metro Area', fontsize=16)
+ax.axis('off')
+
+# Adjust layout and show the map
+plt.tight_layout()
+plt.show()
+```
+
+If you hadn't already noticed while inspecting the object we returned from the API, the census tract data are actually centroid points--not census tract boundaries.
+
+We created a choropleth map showing asthma prevalence across the Detroit metro area. With the `YlOrRd` colormap darker red indicates higher asthma prevalence.
+
+Finally, let's print some statistics about the asthma data:
+
+```{python}
+# Calculate and display key statistics for asthma prevalence in the dataset
+print("\nAsthma Statistics:")
+print(f"Average asthma prevalence: {gdf_asthma['data_value'].mean():.2f}%")
+print(f"Minimum asthma prevalence: {gdf_asthma['data_value'].min():.2f}%")
+print(f"Maximum asthma prevalence: {gdf_asthma['data_value'].max():.2f}%")
+
+# Count and display the number of census tracts in each county to understand data distribution
+print("\nNumber of census tracts per county:")
+print(gdf_asthma['countyname'].value_counts())
+```
+
+Wow. Some census tracts along the river front and central downtown area have adult asthma prevalence of nearly 20%! I’m not an epidemiologist, but that seems extremely high; especially when you compare to the outer suburbs and more affluent areas in the Royal Oak-Ferndale area. However, in light of our exploration of TRI and ICIS-AIR data it might not be surprising to see elevated asthma rates in these areas.
+
+Given that we've mostly been working with and creating raster data in the previous sections, it might be easier to draw systematic comparisons between pollution and health outcomes if the CDC data is also in a raster format.
+
+#### Interpolate a Surface w/ IDW
+
+While the choropleth map provides a good overview, it can be affected by the varying sizes of census tracts. To get a smoother representation of the data that resembles our air quality data, we can use Inverse Distance Weighting (IDW) interpolation to create a continuous surface.
+
+First, let’s prepare our data for interpolation by reprojecting to the basemap projection, extracting the coordinates and the asthma value, and masking the data for any asthma values that may be NA.
+
+```{python}
+from scipy.interpolate import griddata
+from rasterio.transform import from_origin
+from rasterio.warp import transform_bounds
+
+# Ensure the GeoDataFrame for asthma data is in EPSG:4326 (latitude and longitude)
+gdf_asthma = gdf_asthma.to_crs(epsg=4326)
+
+# Extract longitude (X), latitude (Y), and asthma prevalence values (Z)
+X = gdf_asthma.geometry.x.values
+Y = gdf_asthma.geometry.y.values
+Z = gdf_asthma['data_value'].values
+
+# Mask out any NaN values in the prevalence data to ensure valid input for interpolation
+mask = ~np.isnan(Z)
+X, Y, Z = X[mask], Y[mask], Z[mask]
+```
+
+:::: column-margin
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Data Science Review
+
+Inverse Distance Weighting (IDW) is a spatial interpolation method used to estimate values at unknown locations based on known values at nearby points. The fundamental principle of IDW is that points closer to the location being estimated have more influence than those farther away. IDW calculates the estimated value as a weighted average of nearby known values, with weights inversely proportional to the distance between the known point and the estimation location. IDW is popular in geographic information systems (GIS) and environmental sciences due to its simplicity and effectiveness in creating continuous surfaces from point data, such as elevation, temperature, or pollution levels. While IDW has advantages like preserving local variation and working well with evenly distributed points, it also has limitations; including potential "bull's-eye" patterns around data points, inability to account for spatial trends or barriers, and sensitivity to outliers and clustering of input points.
+:::
+::::
+
+Now let’s create the structure of the raster we’ll create. This is based on our desired resolution and the extent of our data.
+
+```{python}
+# Define grid properties to perform interpolation over a defined spatial extent and resolution
+
+# Set the grid resolution in degrees for interpolation
+grid_resolution = 0.025
+# Define the spatial bounds (extent) of the grid based on asthma data coverage
+x_min, y_min, x_max, y_max = gdf_asthma.total_bounds
+
+# Generate equally spaced coordinates based on grid resolution for X and Y dimensions
+grid_x = np.arange(x_min, x_max, grid_resolution)
+grid_y = np.arange(y_min, y_max, grid_resolution)
+
+# Create a 2D grid of coordinates by meshing grid_x and grid_y
+grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
+```
+
+Now we're ready to interpolate the surface.
+
+```{python}
+# Perform interpolation using Inverse Distance Weighting (IDW)
+
+# Stack longitude and latitude into coordinate pairs for IDW interpolation
+points = np.column_stack((X, Y))
+
+# Use linear interpolation to estimate asthma prevalence values on the grid
+grid_z = griddata(points, Z, (grid_xx, grid_yy), method='linear')
+```
+
+First we created a regular grid over our study area and then used the `griddata` function to perform linear interpolation (which is a form of IDW) on our asthma prevalence data.
+
+Now, let's convert our interpolated data into an xarray Dataset so it's easier to manipulate.
+
+```{python}
+# Convert the interpolated grid into an xarray Dataset for easier handling and export
+
+# Create an xarray dataset with interpolated asthma prevalence data, labeled by grid coordinates
+ds = xr.Dataset({
+    'asthma': (['y', 'x'], grid_z),  # 'asthma' is the interpolated variable over the grid
+    'x': grid_x,  # X-coordinates (longitude)
+    'y': grid_y  # Y-coordinates (latitude)
+})
+
+# Assign a coordinate reference system (CRS) to the dataset for spatial consistency
+ds.rio.write_crs("EPSG:4326", inplace=True)
+```
+
+This step allows us to work with our interpolated data using **xarray**, which provides powerful tools for working with multi-dimensional arrays.
+
+Next, we'll clip our interpolated surface to the Detroit metro area. This ensures our data matches our other rasters. Then we'll project it to match basemaps so we can create a map of the data.
+
+```{python}
+# Clip the asthma dataset to the boundaries of the Detroit metro area
+# Ensures data outside of the metro area is excluded
+ds_clipped = ds.rio.clip(detroit_metro.geometry, drop=False)
+
+# Reproject the clipped dataset to Web Mercator (EPSG:3857) for basemap compatibility
+ds_3857 = ds_clipped.rio.reproject("EPSG:3857")
+```
+
+Finally, let's create a map of our interpolated asthma prevalence:
+
+```{python}
+# Initialize the plot for visualizing interpolated asthma prevalence
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Display the interpolated asthma prevalence data, adjusting transparency and color map
+im = ds_3857.asthma.plot(ax=ax, cmap='YlOrRd', 
+                         alpha=0.7, add_colorbar=False)
+
+# Add a colorbar with custom size and label for asthma prevalence
+cbar = plt.colorbar(im, ax=ax, label='Asthma Prevalence', 
+                    fraction=0.047, pad=0.04, aspect=20)
+
+# Add a basemap for geographical context using Web Mercator projection
+ctx.add_basemap(ax, crs=ds_3857.rio.crs, 
+                source=ctx.providers.OpenStreetMap.Mapnik)
+
+# Plot Detroit metro area boundary for clear region distinction
+bbox_polygon_bm.boundary.plot(ax=ax, color='#315c86', linewidth=3)
+
+# Set plot boundaries to focus on the Detroit metro area only
+bounds_3857 = transform_bounds("EPSG:4326", "EPSG:3857", 
+                               x_min, y_min, x_max, y_max)
+ax.set_xlim(bounds_3857[0], bounds_3857[2])
+ax.set_ylim(bounds_3857[1], bounds_3857[3])
+
+# Add title and remove default axis for clean presentation
+plt.title('IDW Interpolated Asthma Prevalence in Detroit Metro Area', fontsize=16)
+ax.axis('off')
+
+# Optimize layout
+plt.tight_layout()
+plt.show()
+```
+
+This code creates a map of the interpolated asthma prevalence, providing a smooth surface that shows the spatial variation in asthma rates across the Detroit metro area. The use of IDW interpolation helps to create a continuous surface from our discrete census tract data, potentially revealing patterns that might be less apparent in the choropleth map.
+
+By comparing this interpolated surface with our earlier maps of air pollution and social vulnerability, we can start to explore potential relationships between environmental factors, social conditions, and health outcomes in the Detroit metro area.
+
+We can start with a simple correlation analysis and then visualize it with a scatterplot. The simplest way to perform the analysis is to extract the raw value pairs and calculate the Pearson correlation.
+
+```{python}
+from scipy import stats
+
+# Reproject the air release data to align with the asthma dataset for comparison
+air_release_aligned = air_release_raster_da.rio.reproject_match(ds_clipped)
+
+# Flatten the raster arrays for correlation analysis
+air_release_flat = air_release_aligned.values.flatten()
+# Apply logarithmic transformation to air release data to reduce impact of extreme values
+air_release_flat = np.log1p(air_release_flat)
+asthma_flat = ds_clipped.asthma.values.flatten()
+
+# Mask to exclude NaN values for accurate correlation calculation
+mask = ~np.isnan(air_release_flat) & ~np.isnan(asthma_flat)
+
+# Compute Pearson correlation coefficient to measure association between air releases and asthma prevalence
+correlation, p_value = stats.pearsonr(air_release_flat[mask], asthma_flat[mask])
+print(f"Correlation coefficient: {correlation}")
+print(f"P-value: {p_value}")
+```
+
+Creating a scatterplot of the paired values can provide a better look at what's going on.
+
+```{python}
+# Initialize the figure for scatter plot
+plt.figure(figsize=(7, 7))
+
+# Create a scatter plot comparing TRI Air Releases against Asthma Prevalence
+plt.scatter(air_release_flat[mask], asthma_flat[mask], alpha=0.5)
+
+# Label axes for clarity
+plt.xlabel('TRI Air Releases')
+plt.ylabel('Asthma Prevalence')
+
+# Add a descriptive title to convey the analysis purpose
+plt.title('TRI Air Releases vs Asthma Prevalence')
+
+# Display the scatter plot
+plt.show()
+```
+
+This paints a clearer picture. Although there is a modest positive correlation, there are numerous cells with 0 TRI Air Release and a wide variety of Asthma prevalence values, which negates any correlation we might be seeing at higher release levels. This is a simple pixel by pixel comparison of matching values. We can perform a more robust analysis accounting for the spatial structure using a global autocorrelation analysis and Moran’s I.
+
+Pearson’s correlation and Moran’s I are both measures of association, but they serve different purposes and account for different aspects of data. Pearson’s correlation measures the linear relationship between two variables without considering their spatial context. It simply looks at how two variables change together, regardless of where the data points are located in space.
+
+In contrast, Moran’s I is specifically designed for spatial data and measures spatial autocorrelation – the degree to which a variable is correlated with itself across geographic space. Moran’s I takes into account both the values of observations and their spatial relationships, typically using a spatial weights matrix.
+
+While Pearson’s correlation can tell you if two variables are related overall, Moran’s I can reveal whether high or low values of a variable tend to cluster together in space, or if they’re randomly distributed. This makes Moran’s I particularly useful for analyzing geographical patterns and spatial dependencies, which are crucial in fields like environmental science, epidemiology, and urban planning.
+
+We can perform this analysis in Python using **pysal**. We already know our data is spatially aligned from the previous code chunks. We can create a spatial data frame and continue on.
+
+```{python}
+from pysal.explore import esda
+from pysal.lib import weights
+import shapely
+
+# Convert aligned raster data to a GeoDataFrame for spatial analysis
+df = gpd.GeoDataFrame(
+    {
+        # Include air release and asthma prevalence data as columns
+        'air_release': air_release_aligned.values.flatten(),
+        'asthma': ds_clipped.asthma.values.flatten(),
+
+        # Create geometry points for each raster cell
+        'geometry': [
+            shapely.geometry.Point(x, y) 
+            for x, y in zip(
+                np.repeat(air_release_aligned.x.values, len(air_release_aligned.y)),
+                np.tile(air_release_aligned.y.values, len(air_release_aligned.x))
+            )
+        ]
+    }
+)
+```
+
+:::: column-margin
+::: {.callout-tip style="color: #5a7a2b;"}
+#### Statistics Review
+
+A p-value, or probability value, is a statistical concept used to determine the significance of results in hypothesis testing. It represents the probability of obtaining results at least as extreme as the observed results, assuming that the null hypothesis is true. In simpler terms, it measures the strength of evidence against the null hypothesis. P-values range from 0 to 1, with lower values indicating stronger evidence against the null hypothesis. Typically, a p-value below a predetermined threshold (often 0.05) is considered statistically significant, suggesting that the observed results are unlikely to have occurred by chance alone. However, it's important to note that while p-values can indicate the strength of evidence against the null hypothesis, they do not prove or disprove hypotheses, nor do they measure the size or importance of an effect. They should be interpreted in conjunction with other factors such as effect size, sample size, and practical significance.
+:::
+::::
+
+Check for missing values and create the spatial weights matrix that determines how wide of a net we want to cast as we search for a local dependence structure (you could change these values and see how it impacts the results). You can read more about settings for spatial autocorrelation and Moran's I analysis [here](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-statistics/spatial-autocorrelation.htm).
+
+```{python}
+# Remove rows with any NaN values to ensure valid spatial statistics
+df = df.dropna()
+
+# Create a spatial weights matrix based on the 8 nearest neighbors for each observation
+# The row-standardization ('r') ensures that each row sums to 1, which is useful for Moran's I calculation
+w = weights.distance.KNN.from_dataframe(df, k=8)  
+w.transform = 'r'  
+```
+
+Now we'll cycle through the Moran function for air release, current asthma among adults, and the 2 combined (bivariate). First, air releases.
+
+```{python}
+# Import the moran_scatterplot function for visualizing spatial autocorrelation
+from splot.esda import moran_scatterplot
+
+# Calculate Moran's I statistic to measure spatial autocorrelation in air release data
+moran_air = esda.Moran(df['air_release'], w)
+
+# Print Moran's I value and the associated p-value for significance assessment
+print("Moran's I for Air Release:")
+print(f"I: {moran_air.I}")
+print(f"p-value: {moran_air.p_sim}")
+
+# Generate a Moran scatter plot to visualize spatial autocorrelation for air release values
+fig, ax = plt.subplots(figsize=(7, 7))
+moran_scatterplot(moran_air, ax=ax)
+
+# Set plot limits to ensure both axes have the same range for accurate spatial comparison
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+vmin = min(xlim[0], ylim[0])
+vmax = max(xlim[1], ylim[1])
+ax.set_xlim(vmin, vmax)
+ax.set_ylim(vmin, vmax)
+
+# Set the aspect ratio to 1:1 to maintain equal scaling on both axes
+ax.set_aspect('equal', adjustable='box')
+
+# Add a descriptive title to the plot
+ax.set_title("Moran Scatter Plot: Air Release")
+plt.show()
+```
+
+When evaluating Moran's I for single variables we are assessing how clustered like values are, i.e. do high or low values of air release tend to appear next to each other. On a scale of -1 to 1 a 0.12 suggests a slight positive correlation. High values of air release tend to cluster in similar spots. That said the correlation is moderate so we can state that there are a large amount of 0 values that are mixed in all throughout the data. You could attempt to address this issue by using a larger resolution when creating the raster layer depicting air release sums (we used 5000m), or by including different sources of air pollution.
+
+```{python}
+# Calculate Moran's I statistic for spatial autocorrelation in asthma prevalence values
+moran_asthma = esda.Moran(df['asthma'], w)
+
+# Display Moran's I value and p-value to assess the spatial pattern in asthma prevalence
+print("\nMoran's I for Asthma Prevalence:")
+print(f"I: {moran_asthma.I}")
+print(f"p-value: {moran_asthma.p_sim}")
+
+# Generate a Moran scatter plot to visualize spatial autocorrelation in asthma prevalence data
+fig, ax = plt.subplots(figsize=(7, 7))
+moran_scatterplot(moran_asthma, ax=ax)
+
+# Set plot limits and aspect ratio to ensure a 1:1 scale
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+vmin = min(xlim[0], ylim[0])
+vmax = max(xlim[1], ylim[1])
+ax.set_xlim(vmin, vmax)
+ax.set_ylim(vmin, vmax)
+ax.set_aspect('equal', adjustable='box')
+
+# Set title for the plot
+ax.set_title("Moran Scatter Plot: Asthma Prevalence")
+plt.show()
+```
+
+Asthma prevalence has a much stronger correlation structure. High asthma levels are clustered together spatially and have a value of 0.52. Also note that the scatterplot shows a nice fit without any odd artifacts or outliers.
+
+```{python}
+# Calculate Bivariate Moran's I to examine spatial correlation between air release and asthma prevalence
+moran_bv = esda.Moran_BV(df['air_release'], df['asthma'], w)
+
+# Display Bivariate Moran's I value and p-value to assess significance
+print("\nBivariate Moran's I (Air Release vs Asthma):")
+print(f"I: {moran_bv.I}")
+print(f"p-value: {moran_bv.p_sim}")
+
+# Generate a bivariate Moran scatter plot to visualize spatial correlation between air release and asthma prevalence
+fig, ax = plt.subplots(figsize=(7, 7))
+moran_scatterplot(moran_bv, ax=ax)
+
+# Set plot limits and aspect ratio for consistent scaling
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+vmin = min(xlim[0], ylim[0])
+vmax = max(xlim[1], ylim[1])
+ax.set_xlim(vmin, vmax)
+ax.set_ylim(vmin, vmax)
+ax.set_aspect('equal', adjustable='box')
+
+# Set title for the bivariate Moran scatter plot
+ax.set_title("Bivariate Moran Scatter Plot: Air Release vs Asthma")
+plt.show()
+```
+
+Similar to the Pearson analysis, when we analyze their combined spatial dependence the relationship is not as strong; largely due to the high levels of 0 air release values. That said, the relationship is positive and it is statistically significant (p-value 0.001).
+
+This could be due to several factors that went unaccounted for in our simple analysis.
+
+-   Our choice of size/resolution when creating our summed air release raster.
+-   The impacts of TRI air releases could be much more widespread than the 5km resolution we specified.
+-   We only analyze TRI regulated facilities and their emissions; we do not have data from unregulated facilities
+-   We did not account for traffic density or other sources of particulate matter emissions.
+-   We did not control for socioeconomic status, preventative healthcare access, and a whole host of other confounding variables.
+-   There is no underlying relationship. This is unlikely, based on large amounts of peer reviewed literature, but a possibility nonetheless.
+
+::: {.callout-tip style="color: #9f0b64;"}
+#### Knowledge Check
+
+What type of data does the CDC PLACES dataset provide?
+
+a)  Real-time air quality measurements
+b)  Estimates of various health indicators at local levels
+c)  Hospital admission rates for air pollution-related illnesses
+d)  Locations of healthcare facilities in each county
+:::
+
+## Conclusion
+
+This lesson provided a comprehensive exploration of four environmental and public health datasets, focusing on the Detroit metropolitan area. By analyzing data from ICIS-AIR, the Toxic Release Inventory (TRI), the Social Vulnerability Index (SVI), and CDC PLACES, we gained insights into the complex relationships between industrial air pollution, social vulnerability, and health outcomes. The integration of these datasets, combined with geospatial analysis techniques, allowed us to identify areas where environmental hazards and social vulnerabilities intersect, highlighting potential environmental justice concerns. This approach demonstrates the power of combining diverse datasets and utilizing geospatial tools to inform policy decisions and target interventions in areas of greatest need.
+
+## Key Learning Points
+
+Congratulations! In this lesson you:
+
+-   Accessed and processed data from multiple EPA and CDC APIs, including ICIS-AIR, TRI, and PLACES datasets
+-   Created and manipulated geospatial objects using libraries such as **GeoPandas** and **rasterio**
+-   Visualized point data on maps using **Matplotlib** and **Contextily**
+-   Performed data cleaning and preprocessing, including handling missing coordinates and outliers
+-   Created choropleth maps to visualize health outcomes data at the census tract level
+-   Utilized Inverse Distance Weighting (IDW) interpolation to create continuous surfaces from point data
+-   Integrated multiple datasets to create a composite index (Air Release Vulnerability Index)
+-   Analyzed spatial patterns of air pollution, social vulnerability, and health outcomes
+-   Applied raster math and resampling techniques to align and compare different spatial datasets
+-   Interpreted results in the context of environmental justice and public health concerns
+-   Performed Pearson and Moran’s I correlation analyses
+
+## Lesson 3
+
+In this lesson, we explored ....
+
+[Lesson 3](https://ciesin-geospatial.github.io/TOPSTSCHOOL-air-quality/m203-grdiv1-pm25.html){.btn .btn-primary .btn role="button"}
