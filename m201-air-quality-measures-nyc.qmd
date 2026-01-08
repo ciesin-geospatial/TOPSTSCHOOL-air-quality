@@ -1,6 +1,6 @@
 ---
 title: "Comparing Air Quality Measures in New York City: Sensors on the Ground and from Space"
-author: "Kytt MacManus, Greg Yetman, Camilla Green, Brandon, Muhammad"
+author: "Kytt MacManus, Greg Yetman, Camilla Green, Muhammad Kamboh, Brandon Ortiz"
 date: "December 2025"
 df-print: paged
 code-block-bg: true
